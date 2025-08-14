@@ -33,20 +33,14 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// oracle cloud
+	implementation 'com.oracle.database.security:oraclepki:21.5.0.0'
+	implementation 'com.oracle.database.security:osdt_cert:21.5.0.0'
+	implementation 'com.oracle.database.security:osdt_core:21.5.0.0'
+
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
-}
-
-// Oracle Autonomous Database를 위한 JVM 옵션 추가
-tasks.named('bootRun') {
-	jvmArgs = [
-			'-Doracle.net.tns_admin=/Users/gojol-kim/Desktop/Wallet_GE1UPT447T1Q9Y2W',
-			'-Djavax.net.ssl.trustStore=/Users/gojol-kim/Desktop/Wallet_GE1UPT447T1Q9Y2W/truststore.jks',
-			'-Djavax.net.ssl.trustStorePassword=your_wallet_password_here',
-			'-Djavax.net.ssl.keyStore=/Users/gojol-kim/Desktop/Wallet_GE1UPT447T1Q9Y2W/keystore.jks',
-			'-Djavax.net.ssl.keyStorePassword=your_wallet_password_here',
-			'-Doracle.net.ssl_client_authentication=false'
-	]
 }
