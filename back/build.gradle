@@ -35,22 +35,14 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	// CODEF Java SDK 추가
 	implementation 'io.codef.api:easycodef-java:1.0.6'
+
+	// oracle cloud
+	implementation 'com.oracle.database.security:oraclepki:21.5.0.0'
+	implementation 'com.oracle.database.security:osdt_cert:21.5.0.0'
+	implementation 'com.oracle.database.security:osdt_core:21.5.0.0'
+
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
-}
-
-// Oracle Autonomous Database를 위한 JVM 옵션 추가
-tasks.named('bootRun') {
-	/* // DB를 사용하지 않을 경우 임시로 주석 처리
-		jvmArgs = [
-				'-Doracle.net.tns_admin=C:/kdy/Moca/Wallet_GE1UPT447T1Q9Y2W',
-				'-Djavax.net.ssl.trustStore=C:/kdy/Moca/Wallet_GE1UPT447T1Q9Y2W/truststore.jks',
-				'-Djavax.net.ssl.trustStorePassword=YOUR_WALLET_PASSWORD', // ⬅️ 실제 지갑 비밀번호로 변경하세요.
-				'-Djavax.net.ssl.keyStore=C:/kdy/Moca/Wallet_GE1UPT447T1Q9Y2W/keystore.jks',
-				'-Djavax.net.ssl.keyStorePassword=YOUR_WALLET_PASSWORD', // ⬅️ 실제 지갑 비밀번호로 변경하세요.
-				'-Doracle.net.ssl_client_authentication=false'
-		]
-	*/
 }
