@@ -1,28 +1,27 @@
 import { useState } from 'react'
+import { Routes, Route, Link } from 'react-router-dom'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import DriverLicensePage from './pages/DriverLicensePage'
 
-function App() {
+// Home 페이지 (연결 테스트)
+function Home() {
     const [message, setMessage] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
-    // 백엔드 API 호출 함수
     const testConnection = async () => {
         setLoading(true)
         setError('')
         setMessage('')
-
         try {
             const response = await fetch('/api/hello')
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`)
-            }
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
             const data = await response.json()
             setMessage(data.message)
         } catch (err) {
-            console.error('API 호출 에러:', err)
+            console.error('API call error:', err)
             setError('백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.')
         } finally {
             setLoading(false)
@@ -30,12 +29,12 @@ function App() {
     }
 
     return (
-        <div className="App">
+        <>
             <div>
-                <a href="https://vite.dev" target="_blank">
+                <a href="https://vite.dev" target="_blank" rel="noreferrer">
                     <img src={viteLogo} className="logo" alt="Vite logo" />
                 </a>
-                <a href="https://react.dev" target="_blank">
+                <a href="https://react.dev" target="_blank" rel="noreferrer">
                     <img src={reactLogo} className="logo react" alt="React logo" />
                 </a>
             </div>
@@ -44,47 +43,29 @@ function App() {
             <h2>React + Spring Boot 연결 테스트</h2>
 
             <div className="card">
-                <button
-                    onClick={testConnection}
-                    disabled={loading}
-                    className="test-button"
-                >
+                <button onClick={testConnection} disabled={loading}>
                     {loading ? '연결 테스트 중...' : '백엔드 연결 테스트'}
                 </button>
 
-                {message && (
-                    <div className="success-message">
-                        <h3>✅ 연결 성공!</h3>
-                        <p>{message}</p>
-                    </div>
-                )}
-
-                {error && (
-                    <div className="error-message">
-                        <h3>❌ 연결 실패</h3>
-                        <p>{error}</p>
-                        <p>
-                            <strong>해결 방법:</strong><br/>
-                            1. 백엔드 서버가 실행 중인지 확인 (http://localhost:8080)<br/>
-                            2. 터미널에서 <code>cd back && ./gradlew bootRun</code> 실행
-                        </p>
-                    </div>
-                )}
+                {message && <div className="success-message">✅ {message}</div>}
+                {error && <div className="error-message">❌ {error}</div>}
             </div>
+        </>
+    )
+}
 
-            <div className="info">
-                <h3>🚀 실행 방법</h3>
-                <div className="steps">
-                    <div className="step">
-                        <h4>1. 백엔드 실행</h4>
-                        <code>cd back && ./gradlew bootRun</code>
-                    </div>
-                    <div className="step">
-                        <h4>2. 프론트엔드 실행</h4>
-                        <code>cd front && npm run dev</code>
-                    </div>
-                </div>
-            </div>
+function App() {
+    return (
+        <div className="App">
+            <nav style={{ marginBottom: '2rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
+                <Link to="/" style={{ marginRight: '1rem' }}>홈 (연결 테스트)</Link>
+                <Link to="/driver-license">운전면허증 OCR</Link>
+            </nav>
+
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/driver-license" element={<DriverLicensePage />} />
+            </Routes>
         </div>
     )
 }

@@ -1,5 +1,6 @@
 package com.moca.codef;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,22 +11,19 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/codef/ocr")
+@RequiredArgsConstructor
+@RequestMapping("/ocr/driver-license")
 public class OcrController {
+    private final OcrService ocrService;
 
-    private final CodefService codefService;
-
-    public OcrController(CodefService codefService) {
-        this.codefService = codefService;
-    }
-
-    @PostMapping("/driver-license")
-    public ResponseEntity<?> ocrDriverLicense(@RequestParam("image") MultipartFile imageFile) {
-        if (imageFile.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "이미지 파일이 없습니다."));
-        }
+    @PostMapping("/recognize")
+    public ResponseEntity<?> recognize(@RequestParam("file") MultipartFile file) {
         try {
-            Map<String, Object> result = codefService.ocrDriverLicense(imageFile);
+            byte[] bytes = file.getBytes();
+            Map<String, Object> result = ocrService.recognizeDriverLicense(bytes);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+}
