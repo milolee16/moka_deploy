@@ -3,7 +3,6 @@ import {useNavigate} from "react-router-dom";
 import {
     HiOutlineBell,
     HiOutlineMenu,
-    HiOutlineCalendar,
     HiOutlineCreditCard,
     HiOutlineQuestionMarkCircle,
 } from "react-icons/hi";
@@ -17,7 +16,7 @@ const Index = () => {
         <>
             {/* 헤더 */}
             <Header>
-                <LogoImage src={logoSrc} alt="Moca 로고" onClick={() => navigate("/")} />
+                <LogoImage src={logoSrc} alt="Moca 로고" onClick={() => navigate("/")}/>
                 <HeaderActions>
                     <IconButton onClick={() => navigate("/notifications")}>
                         <HiOutlineBell size={22}/>
@@ -32,7 +31,6 @@ const Index = () => {
             <Main>
                 <BigCard role="button" onClick={() => navigate("/reserve")}>
                     <CardIcon>
-                        <HiOutlineCalendar size={36}/>
                     </CardIcon>
                     <CardTitle>예약</CardTitle>
                 </BigCard>
@@ -106,8 +104,13 @@ const IconButton = styled.button`
     cursor: pointer;
     transition: all 0.2s ease-in-out;
 
-    &:active { transform: scale(0.95); }
-    &:hover { background: #f1f3f5; }
+    &:active {
+        transform: scale(0.95);
+    }
+
+    &:hover {
+        background: #f1f3f5;
+    }
 `;
 
 const Main = styled.main`
@@ -135,6 +138,7 @@ const CardBase = styled.div`
         transform: translateY(-3px);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
     }
+
     &:active {
         transform: translateY(0);
         transition-duration: 0.05s;
@@ -192,8 +196,15 @@ const PanelButton = styled.button`
     color: #495057;
     transition: background 0.2s ease, transform 0.1s ease;
 
-    &:hover { background: #f8f9fa; }
-    &:active { transform: scale(0.98); }
+    &:hover {
+        background: #f8f9fa;
+    }
 
-    & > span { white-space: nowrap; }
+    &:active {
+        transform: scale(0.98);
+    }
+
+    & > span {
+        white-space: nowrap;
+    }
 `;
