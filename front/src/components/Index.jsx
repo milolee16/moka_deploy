@@ -1,126 +1,52 @@
 import styled from "styled-components";
 import {useNavigate} from "react-router-dom";
-import {
-    HiOutlineBell,
-    HiOutlineMenu,
-    HiOutlineCreditCard,
-    HiOutlineQuestionMarkCircle,
-} from "react-icons/hi";
-import {IoMegaphoneOutline} from "react-icons/io5";
-import logoSrc from "../assets/Mocalogo.png";
 
 const Index = () => {
     const navigate = useNavigate();
 
     return (
-        <>
-            {/* 헤더 */}
-            <Header>
-                <LogoImage src={logoSrc} alt="Moca 로고" onClick={() => navigate("/")}/>
-                <HeaderActions>
-                    <IconButton onClick={() => navigate("/notifications")}>
-                        <HiOutlineBell size={22}/>
-                    </IconButton>
-                    <IconButton onClick={() => navigate("/menu")}>
-                        <HiOutlineMenu size={24}/>
-                    </IconButton>
-                </HeaderActions>
-            </Header>
+        <PageLayout>
+            <BigCard role="button" onClick={() => navigate("/reserve")}>
+                <CardIcon>📅</CardIcon>
+                <CardTitle>예약</CardTitle>
+            </BigCard>
 
-            {/* 메인 */}
-            <Main>
-                <BigCard role="button" onClick={() => navigate("/reserve")}>
-                    <CardIcon>
-                    </CardIcon>
-                    <CardTitle>예약</CardTitle>
-                </BigCard>
+            <TwoCol>
+                <SmallCard role="button" onClick={() => navigate("/reservations")}>
+                    <CardIcon>📝</CardIcon>
+                    <CardTitle>예약내역</CardTitle>
+                </SmallCard>
+                <SmallCard role="button" onClick={() => navigate("/events")}>
+                    <CardIcon>🎉</CardIcon>
+                    <CardTitle>이벤트</CardTitle>
+                </SmallCard>
+            </TwoCol>
 
-                <TwoCol>
-                    <SmallCard role="button" onClick={() => navigate("/reservations")}>
-                        <CardTitle>예약내역</CardTitle>
-                    </SmallCard>
-                    <SmallCard role="button" onClick={() => navigate("/events")}>
-                        <CardTitle>이벤트</CardTitle>
-                    </SmallCard>
-                </TwoCol>
-
-                <BottomPanel>
-                    <PanelButton onClick={() => navigate("/notices")}>
-                        <IoMegaphoneOutline size={24}/>
-                        <span>공지사항</span>
-                    </PanelButton>
-                    <PanelButton onClick={() => navigate("/payments-licenses")}>
-                        <HiOutlineCreditCard size={24}/>
-                        <span>결제·면허</span>
-                    </PanelButton>
-                    <PanelButton onClick={() => navigate("/support")}>
-                        <HiOutlineQuestionMarkCircle size={24}/>
-                        <span>고객센터</span>
-                    </PanelButton>
-                </BottomPanel>
-            </Main>
-        </>
+            <BottomPanel>
+                <PanelButton onClick={() => navigate("/notices")}>
+                    <span role="img" aria-label="공지사항">📢</span>
+                    <span>공지사항</span>
+                </PanelButton>
+                <PanelButton onClick={() => navigate("/payments-licenses")}>
+                    <span role="img" aria-label="결제·면허">💳</span>
+                    <span>결제·면허</span>
+                </PanelButton>
+                <PanelButton onClick={() => navigate("/support")}>
+                    <span role="img" aria-label="고객센터">❓</span>
+                    <span>고객센터</span>
+                </PanelButton>
+            </BottomPanel>
+        </PageLayout>
     );
 };
 
 export default Index;
 
 /* ============ styles ============ */
-const Header = styled.header`
-    position: relative; /* 자식 요소의 absolute 포지셔닝 기준점 */
-    padding: 16px;
+const PageLayout = styled.div`
     display: flex;
-    align-items: center;
-    justify-content: center; /* 로고를 가운데로 정렬 */
-    background: #ffffff;
-    border-bottom: 1px solid #e9ecef;
-    width: 100%;
-    box-sizing: border-box; /* 패딩이 너비 계산에 포함되도록 보장 */
-`;
-
-const LogoImage = styled.img`
-    height: 60px;
-    cursor: pointer;
-`;
-
-const HeaderActions = styled.div`
-    position: absolute; /* 헤더를 기준으로 위치 지정 */
-    right: 16px; /* 오른쪽 여백과 동일하게 설정 */
-    top: 50%;
-    transform: translateY(-50%); /* 수직 가운데 정렬 */
-    display: flex;
-    gap: 6px;
-`;
-
-const IconButton = styled.button`
-    width: 38px;
-    height: 38px;
-    display: grid;
-    place-items: center;
-    border-radius: 12px;
-    border: none;
-    background: transparent;
-    color: #495057;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-
-    &:active {
-        transform: scale(0.95);
-    }
-
-    &:hover {
-        background: #f1f3f5;
-    }
-`;
-
-const Main = styled.main`
-    padding: 16px;
-    display: grid;
-    gap: 16px;
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 560px;
-    margin: 0 auto; /* 메인 콘텐츠를 화면 가운데로 정렬 */
+    flex-direction: column;
+    gap: 16px; /* 컴포넌트 사이의 간격을 일정하게 관리합니다 */
 `;
 
 const CardBase = styled.div`
@@ -146,13 +72,39 @@ const CardBase = styled.div`
 `;
 
 const BigCard = styled(CardBase)`
-    height: 132px;
-    grid-template-rows: auto 1fr;
-    gap: 8px;
+    height: 140px; /* 전체적인 균형을 위해 높이를 살짝 늘립니다 */
+    /* 아이콘과 텍스트가 그룹으로 묶여 중앙 정렬되도록 수정 */
+    grid-template-rows: auto auto;
+    align-content: center;
+    gap: 12px; /* 아이콘과 텍스트 사이의 간격을 조금 더 줍니다 */
+`;
+
+const CardIcon = styled.div`
+    display: grid;
+    place-items: center;
+    font-size: 36px;
+    line-height: 1;
+`;
+
+const CardTitle = styled.div`
+    font-size: 18px;
+    font-weight: 500; /* 폰트 두께를 살짝 올려 가독성을 높입니다 */
 `;
 
 const SmallCard = styled(CardBase)`
     height: 100px;
+    /* 아이콘과 제목을 세로로 배치합니다 */
+    grid-template-rows: auto auto;
+    align-content: center;
+    gap: 8px;
+
+    /* 작은 카드에 맞게 아이콘과 제목 크기를 조정합니다 */
+    & > ${CardIcon} {
+        font-size: 28px;
+    }
+    & > ${CardTitle} {
+        font-size: 16px;
+    }
 `;
 
 const TwoCol = styled.div`
@@ -160,19 +112,8 @@ const TwoCol = styled.div`
     grid-template-columns: 1fr 1fr;
     gap: 16px;
 `;
-
-const CardIcon = styled.div`
-    display: grid;
-    place-items: center;
-`;
-
-const CardTitle = styled.div`
-    font-size: 18px;
-    font-weight: 400;
-`;
-
 const BottomPanel = styled.section`
-    margin-top: 8px;
+    /* margin-top: 8px; // PageLayout으로 대체되어 더 이상 필요 없습니다 */
     padding: 12px;
     background: #ffffff;
     border-radius: 20px;
@@ -200,8 +141,15 @@ const PanelButton = styled.button`
         background: #f8f9fa;
     }
 
+    /* 첫 번째 span(이모지) 스타일 */
+    & > span:first-of-type {
+        font-size: 24px;
+        line-height: 1;
+    }
+
     &:active {
-        transform: scale(0.98);
+        transform: translateY(1px); /* 헤더 버튼과 동일하게 눌리는 효과로 변경 */
+        transition-duration: 0.05s;
     }
 
     & > span {
