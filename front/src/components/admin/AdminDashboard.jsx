@@ -15,11 +15,11 @@ function AdminDashboard() {
             <aside className="admin-sidebar">
                 <h3>관리자 메뉴</h3>
                 <nav className="admin-nav">
-                    {/* NavLink를 사용하면 현재 활성화된 링크에 'active' 클래스가 자동으로 추가됩니다. */}
+                    {/* 모든 경로를 절대 경로로 명시하여 명확성을 높입니다. */}
                     <NavLink to="/admin" end>통계</NavLink>
-                    <NavLink to="reservations">예약 관리</NavLink>
-                    <NavLink to="users">사용자 관리</NavLink>
-                    <NavLink to="vehicles">차량 관리</NavLink>
+                    <NavLink to="/admin/reservations">예약 관리</NavLink>
+                    <NavLink to="/admin/users">사용자 관리</NavLink>
+                    <NavLink to="/admin/vehicles">차량 관리</NavLink>
                 </nav>
             </aside>
             <main className="admin-content">
