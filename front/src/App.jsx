@@ -3,7 +3,6 @@ import { Routes, Route, Link } from 'react-router-dom'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
-import DriverLicensePage from './pages/DriverLicensePage'
 
 // Home 페이지 (연결 테스트)
 function Home() {
@@ -59,12 +58,10 @@ function App() {
         <div className="App">
             <nav style={{ marginBottom: '2rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
                 <Link to="/" style={{ marginRight: '1rem' }}>홈 (연결 테스트)</Link>
-                <Link to="/driver-license">운전면허증 OCR</Link>
             </nav>
 
             <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/driver-license" element={<DriverLicensePage />} />
             </Routes>
         </div>
     )
