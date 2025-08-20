@@ -3,18 +3,20 @@ import styled from "styled-components";
 import { Outlet, useNavigate } from "react-router-dom";
 import { HiOutlineBell, HiOutlineMenu } from "react-icons/hi";
 import logoSrc from "../assets/Mocalogo.png";
-import NotificationModal from "./common/NotificationModal";
+import NotificationModal from "./common/NotificationModal.jsx";
+import SideMenu from "./common/SideMenu.jsx";
 
 const Layout = () => {
     const navigate = useNavigate();
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const notificationRef = useRef(null);
 
     // Hook to close modal when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-                setIsModalOpen(false);
+                setIsNotificationOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -30,17 +32,18 @@ const Layout = () => {
                 <LogoImage src={logoSrc} alt="Moca 로고" onClick={() => navigate("/")}/>
                 <HeaderActions>
                     <NotificationWrapper ref={notificationRef}>
-                        <IconButton onClick={() => setIsModalOpen(prev => !prev)} aria-label="알림">
+                        <IconButton onClick={() => setIsNotificationOpen(prev => !prev)} aria-label="알림">
                             <HiOutlineBell size={22}/>
                             {hasNewNotifications && <NotificationBadge />}
                         </IconButton>
-                        <NotificationModal show={isModalOpen} />
+                        <NotificationModal show={isNotificationOpen} />
                     </NotificationWrapper>
-                    <IconButton onClick={() => navigate("/menu")} aria-label="메뉴">
+                    <IconButton onClick={() => setIsMenuOpen(true)} aria-label="메뉴">
                         <HiOutlineMenu size={22}/>
                     </IconButton>
                 </HeaderActions>
             </Header>
+            <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
             <Main>
                 {/* 페이지별 컨텐츠가 여기에 렌더링됩니다 */}
                 <Outlet />
