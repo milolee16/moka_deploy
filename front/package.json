@@ -10,9 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+<<<<<<< HEAD
     "react-router-dom": "^7.8.0"
+=======
+    "react-icons": "^5.5.0",
+    "react-kakao-maps-sdk": "^1.2.0",
+    "react-router-dom": "^7.8.1",
+    "styled-components": "^6.1.19",
+    "tabler-icons-react": "^1.56.0"
+>>>>>>> 0b8225ee88dd3d666438cf373d23808c00af3c1b
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
