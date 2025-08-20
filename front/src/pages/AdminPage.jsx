@@ -1,13 +1,43 @@
-import AdminDashboard from '../components/admin/AdminDashboard'
+import { useState } from 'react';
+import Statistics from '../components/admin/Statistics';
+import UserStatistics from '../components/admin/UserStatistics';
+import CafeStatistics from '../components/admin/CafeStatistics';
+import './AdminPage.css';
+
+const TABS = {
+    RESERVATIONS: '예약 통계',
+    USERS: '사용자 통계',
+    CAFES: '카페 통계',
+};
 
 function AdminPage() {
-    // 향후 이곳에서 관리자 인증 로직을 추가할 수 있습니다.
-    // 예를 들어, 로그인 상태가 아니면 로그인 페이지로 리디렉션합니다.
+    const [activeTab, setActiveTab] = useState(TABS.RESERVATIONS);
+
+    const renderContent = () => {
+        switch (activeTab) {
+            case TABS.USERS:
+                return <UserStatistics />;
+            case TABS.CAFES:
+                return <CafeStatistics />;
+            case TABS.RESERVATIONS:
+            default:
+                return <Statistics />;
+        }
+    };
+
     return (
-        <div>
-            <AdminDashboard />
+        <div className="admin-page">
+            <h1>관리자 대시보드</h1>
+            <nav className="admin-tabs">
+                {Object.values(TABS).map((tab) => (
+                    <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)}>
+                        {tab}
+                    </button>
+                ))}
+            </nav>
+            <div className="admin-content">{renderContent()}</div>
         </div>
-    )
+    );
 }
 
-export default AdminPage
+export default AdminPage;
