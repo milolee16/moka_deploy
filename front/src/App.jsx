@@ -78,6 +78,7 @@ import Layout from "./components/Layout.jsx";
 import MapPage from "./components/Map.jsx"; // MapPage 컴포넌트를 import 합니다.
 import CarSelect from "./components/CarSelect.jsx";
 import InsuranceSelect from "./components/InsuranceSelect.jsx";
+import AdminPage from './pages/AdminPage'
 
 function App() {
     return (
@@ -90,6 +91,7 @@ function App() {
                 <Route path="/map" element={<MapPage />} />
                 <Route path="/cars" element={<CarSelect />} />
                 <Route path="/insurance" element={<InsuranceSelect />} />
+                <Route path="/admin/*" element={<AdminPage />} />
             </Route>
         </Routes>
     );
