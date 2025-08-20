@@ -37,7 +37,7 @@ const Header = styled.header`
     align-items: center;
     justify-content: center;
     background: #ffffff;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid #e7e0d9; /* Moca: Beige Border */
     width: 100%;
     box-sizing: border-box;
 `;
@@ -65,7 +65,7 @@ const IconButton = styled.button`
     border-radius: 12px;
     border: none;
     background: transparent;
-    color: #495057;
+    color: #5d4037; /* Moca: Dark Brown */
 `;
 
 const Main = styled.main`

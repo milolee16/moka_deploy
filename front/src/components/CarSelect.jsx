@@ -92,7 +92,8 @@ const Wrap = styled.div`
 const HeaderCard = styled.div`
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
   padding: 14px 16px;
   margin-bottom: 14px;
 `;
@@ -106,21 +107,21 @@ const HeaderLine = styled.div`
 
 const Label = styled.span`
   font-size: 12px;
-  color: #777;
+  color: #795548; /* Moca: Medium Brown */
   min-width: 60px;
 `;
 
 const Value = styled.span`
   font-weight: 600;
   font-size: 14px;
-  color: #222;
+  color: #5d4037; /* Moca: Dark Brown */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
 
 const Dot = styled.span`
-  width: 6px; height: 6px; border-radius: 50%; background:#222; display:inline-block;
+  width: 6px; height: 6px; border-radius: 50%; background:#a47551; display:inline-block; /* Moca: Primary */
 `;
 
 const List = styled.ul`
@@ -139,7 +140,8 @@ const Item = styled.li`
   gap: 16px; /* 이미지와 글씨 사이의 간격을 넓힙니다. */
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
   /* padding을 제거하고, 이미지가 카드의 일부가 되도록 overflow: hidden을 추가합니다. */
   padding-right: 16px; /* 오른쪽 버튼의 여백만 남겨둡니다. */
   overflow: hidden;
@@ -160,15 +162,15 @@ const Meta = styled.div`
 `;
 
 const CarName = styled.div`
-  font-size: 16px; font-weight: 700; color:#111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 16px; font-weight: 700; color:#5d4037; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; /* Moca: Dark Brown */
 `;
 
 const Price = styled.div`
-  font-size: 13px; color:#666;
+  font-size: 13px; color:#795548; /* Moca: Medium Brown */
 `;
 
 const NextIcon = styled.div`
-  width: 28px; height: 28px; border-radius: 999px; border: 1px solid #e5e5e5; background:#fff;
+  width: 28px; height: 28px; border-radius: 999px; border: 1px solid #e7e0d9; background:#fff; /* Moca: Beige Border */
   display: grid; place-items: center;
   color: #adb5bd; /* 아이콘 색상을 살짝 연하게 조정하여 덜 튀게 만듭니다. */
 `;

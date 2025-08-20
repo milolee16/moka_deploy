@@ -273,8 +273,8 @@ const BoxCard = styled.section`
 const SectionTitle = styled.h2`
   font-size: 16px;
   font-weight: 600;
-  margin: 0 0 4px 0;
-  color: #222;
+  margin: 0;
+  color: #5d4037; /* Moca: Dark Brown */
 `;
 
 const FieldRow = styled.div`
@@ -286,7 +286,7 @@ const FieldRow = styled.div`
 
 const FieldLabel = styled.div`
   font-size: 14px;
-  color: #495057;
+  color: #795548; /* Moca: Medium Brown */
 `;
 
 const SelectGroup = styled.div`
@@ -299,33 +299,34 @@ const Select = styled.select`
   width: 100%;
   height: 42px;
   border-radius: 12px;
-  border: 1px solid #e9ecef;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
   padding: 0 12px;
-  background: #f8f9fa;
+  background: #fdfbfa; /* Moca: Light Beige BG */
   font-size: 14px;
-  color: #212529;
+  color: #5d4037; /* Moca: Dark Brown */
   outline: none;
   &:focus {
-    border-color: #ced4da;
+    border-color: #a47551; /* Moca: Primary Brown */
     background: #fff;
   }
 `;
 
 const Divider = styled.hr`
   border: none;
-  border-top: 1px dashed #e9ecef;
+  border-top: 1px dashed #e7e0d9; /* Moca: Beige Border */
   margin: 8px 0;
 `;
 
 const Summary = styled.div`
   font-size: 15px;
-  color: #343a40;
-  padding: 8px 12px;
-  background: #f8f9fa;
+  color: #795548; /* Moca: Medium Brown */
+  padding: 10px 12px;
+  background: #f5f1ed; /* Moca: Light Brown BG */
   border-radius: 12px;
   text-align: center;
   strong {
     font-weight: 700;
+    color: #5d4037; /* Moca: Dark Brown */
   }
 `;
 
@@ -333,19 +334,21 @@ const ConfirmButton = styled.button`
   margin-top: 4px;
   height: 52px;
   border: none;
-  border-radius: 16px;
-  background: #1f8ef1;
+  border-radius: 999px; /* Pill shape */
   color: #fff;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
-  transition: transform 0.1s ease, opacity 0.2s ease;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  background: #a47551; /* Moca: Primary */
+  box-shadow: 0 10px 24px rgba(164, 117, 81, .35); /* Moca: Shadow */
   &:active {
     transform: scale(0.99);
   }
   &:disabled {
-    opacity: 0.5;
+    background: #d7ccc8; /* Moca: Disabled */
     cursor: not-allowed;
+    box-shadow: none;
   }
 `;
 
@@ -353,7 +356,7 @@ const ConfirmButton = styled.button`
 const ModalTitle = styled.h2`
     font-size: 18px;
     font-weight: 700;
-    color: #212529;
+    color: #5d4037; /* Moca: Dark Brown */
     margin: 0;
     text-align: center;
 `;
@@ -362,20 +365,18 @@ const InfoGrid = styled.div`
     display: grid;
     grid-template-columns: 80px 1fr;
     gap: 12px;
-    background-color: #f8f9fa;
+    background-color: #f5f1ed; /* Moca: Light Brown BG */
     padding: 16px;
     border-radius: 12px;
 `;
 
 const InfoLabel = styled.span`
     font-weight: 600;
-    color: #495057;
+    color: #795548; /* Moca: Medium Brown */
 `;
 
 const InfoValue = styled.span`
-    color: #212529;
+    color: #5d4037; /* Moca: Dark Brown */
 `;
 
-const ModalConfirmButton = styled(ConfirmButton)`
-    background-color: #20c997; /* 다음 단계로 넘어가는 버튼 색상 변경 */
-`;
+const ModalConfirmButton = styled(ConfirmButton)``; /* ConfirmButton 스타일을 그대로 상속 */

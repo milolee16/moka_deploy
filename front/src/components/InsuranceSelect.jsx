@@ -112,7 +112,7 @@ const Header = styled.div`
   align-items: center;
   font-weight: 700;
   margin-bottom: 12px;
-  color: #0f172a;
+  color: #5d4037; /* Moca: Dark Brown */
 `;
 
 const Cards = styled.div`
@@ -125,28 +125,28 @@ const Cards = styled.div`
   }
 `;
 
-const Card = styled.button`
+const Card = styled.div`
   position: relative;
   text-align: left;
   background: #fff;
   border-radius: 16px;
   padding: 16px 14px;
-  border: 2px solid ${({ $active }) => ($active ? "#4f46e5" : "#f0f0f0")};
+  border: 2px solid ${({ $active }) => ($active ? "#a47551" : "#e7e0d9")}; /* Moca: Primary Brown / Beige */
   box-shadow: ${({ $active }) =>
-    $active ? "0 10px 24px rgba(79,70,229,.18)" : "0 6px 18px rgba(0,0,0,.06)"};
+    $active ? "0 10px 24px rgba(164, 117, 81, .18)" : "0 6px 18px rgba(0,0,0,.06)"}; /* Moca: Shadow */
   transform: ${({ $active }) => ($active ? "translateY(-2px)" : "none")};
   transition: all .15s ease;
   cursor: pointer;
   outline: none;
 
-  &:hover { border-color: #4f46e5; }
+  &:hover { border-color: #a47551; } /* Moca: Primary Brown */
 `;
 
 const Title = styled.h3`
   font-size: 18px;
   font-weight: 800;
   margin: 2px 0 10px;
-  color: #111827;
+  color: #5d4037; /* Moca: Dark Brown */
 `;
 
 const List = styled.ul`
@@ -154,7 +154,7 @@ const List = styled.ul`
   gap: 8px;
   li {
     font-size: 14px;
-    color: #374151;
+    color: #795548; /* Moca: Medium Brown */
     list-style: disc;
     margin-left: 18px;
     line-height: 1.35;
@@ -166,16 +166,16 @@ const Badge = styled.div`
   top: 10px; right: 10px;
   width: 28px; height: 28px;
   border-radius: 999px;
-  background: #4f46e5;
+  background: #a47551; /* Moca: Primary Brown */
   color: #fff;
   display: grid; place-items: center;
-  box-shadow: 0 6px 16px rgba(79,70,229,.35);
+  box-shadow: 0 6px 16px rgba(164, 117, 81, .35); /* Moca: Shadow */
 `;
 
 const Ribbon = styled.span`
   position: absolute;
   top: -8px; left: 12px;
-  background: #111827;
+  background: #5d4037; /* Moca: Dark Brown */
   color: #fff;
   font-size: 11px;
   padding: 4px 8px;
@@ -197,8 +197,8 @@ const PayButton = styled.button`
   font-weight: 800;
   font-size: 16px;
   color: #fff;
-  background: ${({ disabled }) => (disabled ? "#c7cbe0" : "#4f46e5")};
+  background: ${({ disabled }) => (disabled ? "#d7ccc8" : "#a47551")}; /* Moca: Disabled / Primary */
   box-shadow: ${({ disabled }) =>
-    disabled ? "none" : "0 10px 24px rgba(79,70,229,.35)"};
+    disabled ? "none" : "0 10px 24px rgba(164, 117, 81, .35)"}; /* Moca: Shadow */
   cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 `;

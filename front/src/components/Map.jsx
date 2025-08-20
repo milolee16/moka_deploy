@@ -180,24 +180,31 @@ const BottomSheet = styled.section`
 const Row = styled.div`
     display: grid; grid-template-columns: 90px 1fr; gap: 12px; align-items: center;
 `;
-const Label = styled.div`font-size: 14px; color: #495057;`;
+const Label = styled.div`font-size: 14px; color: #795548; /* Moca: Medium Brown */`;
 const Select = styled.select`
-    height: 44px; border-radius: 12px; border: 1px solid #e9ecef;
-    background: #f8f9fa; padding: 0 12px; font-size: 14px; color: #212529; outline: none;
-    &:focus{ border-color:#ced4da; background:#fff; }
+    height: 44px; border-radius: 12px; border: 1px solid #e7e0d9; /* Moca: Beige Border */
+    background: #fdfbfa; padding: 0 12px; font-size: 14px; color: #5d4037; outline: none;
+    &:focus{ border-color:#a47551; background:#fff; } /* Moca: Primary Brown */
 `;
 const TimePill = styled.div`
     height: 44px; border-radius: 12px; display: grid; align-items: center;
-    padding: 0 12px; background: #f8f9fa; font-size: 14px; color: #343a40;
+    padding: 0 12px; background: #f5f1ed; font-size: 14px; color: #5d4037; /* Moca: Light Brown BG, Dark Brown Text */
 `;
 const Actions = styled.div`
     /* 버튼을 전체 너비로 만들기 위해 grid 레이아웃 제거 */
     margin-top: 4px;
 `;
 const ActionButton = styled.button`
-    width: 100%; /* '확인' 버튼처럼 전체 너비 차지 */
-    height: 52px; /* '확인' 버튼과 높이 통일 */
-    border: none; border-radius: 14px;
-    background: #1f8ef1; color: #fff; font-size: 16px; /* '확인' 버튼과 폰트 크기 통일 */ font-weight: 600; cursor: pointer;
-    transition: transform .1s ease, opacity .2s ease; &:active{ transform: scale(.99); }
+    width: 100%;
+    height: 52px;
+    border-radius: 999px; /* Pill shape */
+    border: none;
+    background: #a47551; /* Moca: Primary */
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 10px 24px rgba(164, 117, 81, .35); /* Moca: Shadow */
+    &:active{ transform: scale(.99); }
 `;

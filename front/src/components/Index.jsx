@@ -51,18 +51,20 @@ const PageLayout = styled.div`
 
 const CardBase = styled.div`
     background: #ffffff;
-    border-radius: 20px;
+    border-radius: 24px; /* 모서리를 좀 더 둥글게 */
     padding: 24px;
     cursor: pointer;
     display: grid;
     place-items: center;
     text-align: center;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e7e0d9; /* Moca: Beige Border */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
 
     &:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(164, 117, 81, .15); /* Moca: Shadow */
+        border-color: #d7ccc8;
     }
 
     &:active {
@@ -88,7 +90,8 @@ const CardIcon = styled.div`
 
 const CardTitle = styled.div`
     font-size: 18px;
-    font-weight: 500; /* 폰트 두께를 살짝 올려 가독성을 높입니다 */
+    font-weight: 700; /* 폰트 두께를 살짝 올려 가독성을 높입니다 */
+    color: #5d4037; /* Moca: Dark Brown */
 `;
 
 const SmallCard = styled(CardBase)`
@@ -114,11 +117,11 @@ const TwoCol = styled.div`
 `;
 const BottomPanel = styled.section`
     /* margin-top: 8px; // PageLayout으로 대체되어 더 이상 필요 없습니다 */
-    padding: 12px;
+    padding: 8px;
     background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-radius: 24px;
     display: grid;
+    border: 1px solid #e7e0d9; /* Moca: Beige Border */
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
 `;
@@ -134,11 +137,12 @@ const PanelButton = styled.button`
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
-    color: #495057;
+    color: #795548; /* Moca: Medium Brown */
     transition: background 0.2s ease, transform 0.1s ease;
 
     &:hover {
-        background: #f8f9fa;
+        background: #f5f1ed; /* Moca: Light Brown BG */
+        color: #5d4037; /* Moca: Dark Brown */
     }
 
     /* 첫 번째 span(이모지) 스타일 */
