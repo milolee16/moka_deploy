@@ -2,12 +2,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 
 // 실제 애플리케이션에서는 API를 통해 데이터를 받아옵니다.
 const sampleData = [
-    { name: '1월', '예약 건수': 400, '매출(만원)': 240 },
-    { name: '2월', '예약 건수': 300, '매출(만원)': 139 },
-    { name: '3월', '예약 건수': 200, '매출(만원)': 980 },
-    { name: '4월', '예약 건수': 278, '매출(만원)': 390 },
-    { name: '5월', '예약 건수': 189, '매출(만원)': 480 },
-    { name: '6월', '예약 건수': 239, '매출(만원)': 380 },
+    { name: '1월', '예약 건수': 40, '매출(억원)': 24 },
+    { name: '2월', '예약 건수': 30, '매출(억원)': 19 },
+    { name: '3월', '예약 건수': 20, '매출(억원)': 90 },
+    { name: '4월', '예약 건수': 28, '매출(억원)': 39 },
+    { name: '5월', '예약 건수': 19, '매출(억원)': 48 },
+    { name: '6월', '예약 건수': 29, '매출(억원)': 38 },
 ];
 
 function Statistics() {
@@ -28,7 +28,7 @@ function Statistics() {
                         <Tooltip />
                         <Legend />
                         <Bar dataKey="예약 건수" fill="#8884d8" />
-                        <Bar dataKey="매출(만원)" fill="#82ca9d" />
+                        <Bar dataKey="매출(억원)" fill="#82ca9d" />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
