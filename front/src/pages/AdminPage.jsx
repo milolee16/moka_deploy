@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import Statistics from '../components/admin/Statistics';
 import UserStatistics from '../components/admin/UserStatistics';
-import CafeStatistics from '../components/admin/CafeStatistics';
+import CarStatistics from '../components/admin/CarStatistics';
 import './AdminPage.css';
 
 const TABS = {
     RESERVATIONS: '예약 통계',
     USERS: '사용자 통계',
-    CAFES: '카페 통계',
+    CARS: '차량 통계',
 };
 
 function AdminPage() {
@@ -17,8 +17,8 @@ function AdminPage() {
         switch (activeTab) {
             case TABS.USERS:
                 return <UserStatistics />;
-            case TABS.CAFES:
-                return <CafeStatistics />;
+            case TABS.CARS:
+                return <CarStatistics />;
             case TABS.RESERVATIONS:
             default:
                 return <Statistics />;

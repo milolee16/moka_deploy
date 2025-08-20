@@ -42,12 +42,11 @@ const Index = () => {
         </PanelButton>
       </BottomPanel>
 
-        {/* 관리자 페이지로 이동하는 버튼 추가 */}
-        <AdminCard role="button" onClick={() => navigate('/admin')}>
-            <CardIcon>⚙️</CardIcon>
-            <CardTitle>관리자 페이지</CardTitle>
-        </AdminCard>
-
+      {/* 관리자 페이지로 이동하는 버튼 추가 */}
+      <AdminCard role="button" onClick={() => navigate('/admin')}>
+        <CardIcon>⚙️</CardIcon>
+        <CardTitle>관리자 페이지</CardTitle>
+      </AdminCard>
     </PageLayout>
   );
 };
