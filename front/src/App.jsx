@@ -1,24 +1,28 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-import HomePage from './pages/HomePage'
+import { Route, Routes } from "react-router-dom";
+import Index from "./components/Index.jsx";
+import Welcome from "./components/Welcome.jsx";
+import Reservation from "./components/Reservation.jsx";
+import Layout from "./components/Layout.jsx";
+import MapPage from "./components/Map.jsx"; // MapPage 컴포넌트를 import 합니다.
+import CarSelect from "./components/CarSelect.jsx";
+import InsuranceSelect from "./components/InsuranceSelect.jsx";
 import AdminPage from './pages/AdminPage'
-import './App.css'
 
 function App() {
     return (
-        <Router>
-            {/* 간단한 페이지 이동을 위한 네비게이션 */}
-            <nav className="main-nav">
-                <Link to="/">홈</Link>
-                <Link to="/admin">관리자 대시보드</Link>
-            </nav>
-
-            <Routes>
-                <Route path="/" element={<HomePage />} />
-                {/* /admin으로 시작하는 모든 경로를 AdminPage에서 처리합니다. */}
+        <Routes>
+            {/* Layout 컴포넌트가 하위 모든 페이지의 공통 레이아웃을 담당합니다. */}
+            <Route element={<Layout />}>
+                <Route path="/" element={<Welcome />} />
+                <Route path="/home" element={<Index />} />
+                <Route path="/reserve" element={<Reservation />} />
+                <Route path="/map" element={<MapPage />} />
+                <Route path="/cars" element={<CarSelect />} />
+                <Route path="/insurance" element={<InsuranceSelect />} />
                 <Route path="/admin/*" element={<AdminPage />} />
-            </Routes>
-        </Router>
-    )
+            </Route>
+        </Routes>
+    );
 }
 
-export default App
+export default App;
