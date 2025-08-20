@@ -25,13 +25,7 @@ public class ApiSampleController {
 	@Autowired
 	private ApiSampleService sampleService;
 
-	@GetMapping("/")
-	public String index() {
-		return "index.html";
-	}
-
-
-	@PostMapping("/ocrtest")
+	@PostMapping("/ocr")
 	@ResponseBody
 	public String ocrAPI(HttpServletRequest request, HttpServletResponse response, @RequestBody String reqdata) throws InterruptedException, IOException, ParseException {
 		

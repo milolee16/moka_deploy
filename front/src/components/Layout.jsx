@@ -1,24 +1,49 @@
+import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { Outlet, useNavigate } from "react-router-dom";
 import { HiOutlineBell, HiOutlineMenu } from "react-icons/hi";
 import logoSrc from "../assets/Mocalogo.png";
+import NotificationModal from "./common/NotificationModal.jsx";
+import SideMenu from "./common/SideMenu.jsx";
 
 const Layout = () => {
     const navigate = useNavigate();
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const notificationRef = useRef(null);
+
+    // Hook to close modal when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+                setIsNotificationOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // API 응답 등에 따라 새로운 알림 유무를 결정합니다.
+    const hasNewNotifications = true;
 
     return (
         <>
             <Header>
                 <LogoImage src={logoSrc} alt="Moca 로고" onClick={() => navigate("/")}/>
                 <HeaderActions>
-                    <IconButton onClick={() => navigate("/notifications")} aria-label="알림">
-                        <HiOutlineBell size={22}/>
-                    </IconButton>
-                    <IconButton onClick={() => navigate("/menu")} aria-label="메뉴">
+                    <NotificationWrapper ref={notificationRef}>
+                        <IconButton onClick={() => setIsNotificationOpen(prev => !prev)} aria-label="알림">
+                            <HiOutlineBell size={22}/>
+                            {hasNewNotifications && <NotificationBadge />}
+                        </IconButton>
+                        <NotificationModal show={isNotificationOpen} />
+                    </NotificationWrapper>
+                    <IconButton onClick={() => setIsMenuOpen(true)} aria-label="메뉴">
                         <HiOutlineMenu size={22}/>
                     </IconButton>
                 </HeaderActions>
             </Header>
+            <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
             <Main>
                 {/* 페이지별 컨텐츠가 여기에 렌더링됩니다 */}
                 <Outlet />
@@ -66,6 +91,24 @@ const IconButton = styled.button`
     border: none;
     background: transparent;
     color: #5d4037; /* Moca: Dark Brown */
+`;
+
+const NotificationWrapper = styled.div`
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+`;
+
+const NotificationBadge = styled.span`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    background-color: #ff4d4f;
+    border-radius: 50%;
+    border: 1.5px solid #ffffff;
 `;
 
 const Main = styled.main`
