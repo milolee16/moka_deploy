@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Modal from "./Modal";
@@ -26,7 +26,7 @@ const Reservation = () => {
     }, []);
 
     // 00:00 ~ 23:50, 10분 단위
-    const timeOptions = useMemo(() => {
+    const allTimeOptions = useMemo(() => {
         const arr = [];
         for (let h = 0; h < 24; h++) {
             for (let m = 0; m < 60; m += 10) {
@@ -64,6 +64,48 @@ const Reservation = () => {
     const start = useMemo(() => toDateObj(startDate, startTime), [startDate, startTime]);
     const end = useMemo(() => toDateObj(endDate, endTime), [endDate, endTime]);
 
+    // 실시간을 반영한 대여 시작 시간 옵션 목록을 만듭니다.
+    // [수정] 날짜 계산 로직을 더 명확하고 안전하게 변경하여 오류를 방지합니다.
+    const startTimeOptions = useMemo(() => {
+        const realTodayStr = toDateStr(new Date());
+        // 선택된 날짜가 오늘이 아니면 모든 시간을 보여줍니다.
+        if (startDate !== realTodayStr) {
+            return allTimeOptions;
+        }
+
+        // 선택된 날짜가 오늘일 때:
+        const roundedNow = roundTo10(new Date());
+        // 만약 현재 시각을 반올림했더니 다음날이 되었다면, 오늘 선택 가능한 시간은 없습니다.
+        if (toDateStr(roundedNow) !== realTodayStr) {
+            return [];
+        }
+        // 그렇지 않으면, 현재 시간 이후의 시간만 필터링해서 보여줍니다.
+        const roundedNowTime = toTimeStr(roundedNow);
+        return allTimeOptions.filter((t) => t >= roundedNowTime);
+    }, [startDate, allTimeOptions]);
+
+    // 날짜나 시간이 바뀔 때마다, 유효하지 않은 시간을 자동으로 보정해주는 기능입니다.
+    // [수정] 날짜가 유효하지 않을 때 프로그램이 멈추는 문제를 해결하고, 로직을 보강합니다.
+    useEffect(() => {
+        // 1. 시작 시간이 유효한 옵션 목록에 없으면, 가능한 가장 빠른 시간으로 변경합니다.
+        if (startTimeOptions.length > 0 && !startTimeOptions.includes(startTime)) {
+            setStartTime(startTimeOptions[0]);
+            return; // 상태 변경 후에는 다음 렌더링에서 나머지 로직을 처리합니다.
+        }
+
+        // 2. 날짜 객체가 유효하지 않으면(e.g. "선택 불가") 오류를 방지하기 위해 여기서 중단합니다.
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return;
+        }
+
+        // 3. 시작 시간이 바뀌어서 반납 시간이 더 빨라졌다면, 반납 시간도 자동으로 조정합니다.
+        if (end <= start) {
+            const newEnd = new Date(start.getTime() + (4 * 60 + 30) * 60 * 1000);
+            setEndDate(toDateStr(newEnd));
+            setEndTime(toTimeStr(newEnd));
+        }
+    }, [start, end, startTime, startTimeOptions]);
+
     const [isModalOpen, setModalOpen] = useState(false);
 
     const diff = useMemo(() => {
@@ -100,12 +142,15 @@ const Reservation = () => {
                             </option>
                         ))}
                     </Select>
-                    <Select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
-                        {timeOptions.map((t) => (
-                            <option key={t} value={t}>
-                                {t}
-                            </option>
-                        ))}
+                    <Select value={startTime} onChange={(e) => setStartTime(e.target.value)} disabled={startTimeOptions.length === 0}>
+                        {startTimeOptions.length > 0
+                            ? startTimeOptions.map((t) => (
+                                <option key={t} value={t}>
+                                    {t}
+                                </option>
+                              ))
+                            : <option>선택 불가</option>
+                        }
                     </Select>
                 </SelectGroup>
             </FieldRow>
@@ -123,7 +168,7 @@ const Reservation = () => {
                         ))}
                     </Select>
                     <Select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
-                        {timeOptions.map((t) => (
+                        {allTimeOptions.map((t) => (
                             <option key={t} value={t}>
                                 {t}
                             </option>

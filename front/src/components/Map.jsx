@@ -69,10 +69,10 @@ const MapPage = () => {
     }, [start, end]);
 
     // 6) 결제 버튼 핸들러
-    const handlePay = () => {
-        const place = HOTEL_5STAR.find((h) => h.id === placeId)?.name;
-        navigate("/payment", {
-            state: { start, end, pickup: place, dropoff: place },
+    const handleSelectCar = () => {
+        const locationName = HOTEL_5STAR.find((h) => h.id === placeId)?.name;
+        navigate("/cars", {
+            state: { start, end, locationName },
         });
     };
 
@@ -149,7 +149,7 @@ const MapPage = () => {
                 </Row>
 
                 <Actions>
-                    <PayButton onClick={handlePay}>결제</PayButton>
+                    <ActionButton onClick={handleSelectCar}>이 위치에서 차량선택</ActionButton>
                 </Actions>
             </BottomSheet>
         </Page>
@@ -194,7 +194,7 @@ const Actions = styled.div`
     /* 버튼을 전체 너비로 만들기 위해 grid 레이아웃 제거 */
     margin-top: 4px;
 `;
-const PayButton = styled.button`
+const ActionButton = styled.button`
     width: 100%; /* '확인' 버튼처럼 전체 너비 차지 */
     height: 52px; /* '확인' 버튼과 높이 통일 */
     border: none; border-radius: 14px;

@@ -62,8 +62,8 @@ const IconButton = styled.button`
     height: var(--button-size);
     display: grid;
     place-items: center;
-    //border-radius: 12px;
-    //border: none;
+    border-radius: 12px;
+    border: none;
     background: transparent;
     color: #495057;
 `;
