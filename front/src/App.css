@@ -122,6 +122,89 @@
   word-break: break-all;
 }
 
+.info {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 30px;
+}
+
+.steps {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.step {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  min-width: 250px;
+}
+
+.step h4 {
+  margin-top: 0;
+  color: #495057;
+}
+
+.step code {
+  background-color: #e9ecef;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-family: monospace;
+  display: block;
+  margin-top: 10px;
+  word-break: break-all;
+}
+
+.license-form {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  text-align: left;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: #495057;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+}
+
+.submit-button {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1.1rem;
+  background-color: #28a745;
+}
+
+.result-container {
+  margin-top: 2rem;
+  text-align: left;
+  background-color: #2d333b;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
 .read-the-docs {
   color: #888;
 }

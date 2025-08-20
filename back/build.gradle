@@ -1,7 +1,7 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.5.4'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.boot' version '3.3.1'
+	id 'io.spring.dependency-management' version '1.1.5'
 }
 
 group = 'com.moca'
@@ -33,7 +33,16 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	// CODEF Java SDK 추가
+	implementation 'io.codef.api:easycodef-java:1.0.6'
+	// Json
+	implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 
+	// Commons IO
+	implementation 'commons-io:commons-io:2.6'
+
+	// Commons Codec
+	implementation 'commons-codec:commons-codec:1.17.0'
 	// oracle cloud
 	implementation 'com.oracle.database.security:oraclepki:21.5.0.0'
 	implementation 'com.oracle.database.security:osdt_cert:21.5.0.0'
