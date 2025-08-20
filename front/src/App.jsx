@@ -7,6 +7,7 @@ import MapPage from './components/Map.jsx'; // MapPage 컴포넌트를 import �
 import CarSelect from './components/CarSelect.jsx';
 import InsuranceSelect from './components/InsuranceSelect.jsx';
 import AdminPage from './pages/AdminPage';
+import OcrPage from './pages/OcrPage'; // 새로 만든 OCR
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/cars" element={<CarSelect />} />
         <Route path="/insurance" element={<InsuranceSelect />} />
         <Route path="/admin/*" element={<AdminPage />} />
+        <Route path="/ocr" element={<OcrPage />} />
       </Route>
     </Routes>
   );
