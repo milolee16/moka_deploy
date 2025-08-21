@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 페이지가 새로고침 되어도 로그인 상태를 유지하기 위해 localStorage를 확인합니다.
+    // 페이지 새로고침 시 localStorage를 확인하여 로그인 상태를 유지합니다.
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
       const userData = { username: foundUser.username, role: foundUser.role };
       localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
-      navigate("/"); // 로그인 성공 시 홈으로 이동
+      navigate("/home"); // 로그인 성공 시 대시보드(홈) 페이지로 이동
       return true;
     } else {
       alert("아이디 또는 비밀번호가 일치하지 않습니다.");
@@ -40,9 +40,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/home"); // 로그아웃 시 메인 페이지로 이동
+    // 1. 먼저 메인 페이지로 이동시켜, 현재 페이지(e.g. /admin)의
+    //    ProtectedRoute가 재실행되는 것을 방지합니다.
+    navigate("/");
+
+    // 2. 페이지 이동이 완전히 처리될 시간을 벌기 위해,
+    //    상태 변경 로직을 이벤트 루프의 다음 틱으로 보냅니다.
+    setTimeout(() => {
+      localStorage.removeItem("user");
+      setUser(null);
+    }, 0);
   };
 
   const value = { user, login, logout };
