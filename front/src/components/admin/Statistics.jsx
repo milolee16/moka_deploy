@@ -1,3 +1,4 @@
+import styled from 'styled-components';
 import {
   BarChart,
   Bar,
@@ -32,64 +33,150 @@ const COLORS = ['#0088FE', '#FFBB28', '#FF8042'];
 
 function Statistics() {
   return (
-    <>
-      <div className="statistics-widget">
-        <h2>월별 예약 및 매출</h2>
-        <div style={{ width: '100%', height: 400 }}>
-          <ResponsiveContainer>
-            <BarChart
-              data={barSampleData}
-              margin={{
-                top: 5,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="예약 건수" fill="#8884d8" />
-              <Bar dataKey="매출(억원)" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="statistics-widget" style={{ marginTop: '2rem' }}>
-        <h2>예약 상태 분포</h2>
-        <div style={{ width: '100%', height: 400 }}>
-          <ResponsiveContainer>
-            <PieChart>
-              <Pie
-                data={pieSampleData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={150}
-                fill="#8884d8"
-                dataKey="value"
-                label={({ name, percent }) =>
-                  `${name} ${(percent * 100).toFixed(0)}%`
-                }
+      <StatisticsContainer>
+        <Widget>
+          <WidgetTitle>월별 예약 및 매출</WidgetTitle>
+          <ChartContainer>
+            <ResponsiveContainer>
+              <BarChart
+                  data={barSampleData}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 20,
+                  }}
               >
-                {pieSampleData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 13 }}
+                />
+                <YAxis
+                    tick={{ fontSize: 13 }}
+                />
+                <Tooltip
+                    contentStyle={{
+                      fontSize: '0.9rem',
+                      borderRadius: '8px',
+                      border: '1px solid #e7e0d9'
+                    }}
+                />
+                <Legend
+                    wrapperStyle={{ fontSize: '0.9rem' }}
+                />
+                <Bar dataKey="예약 건수" fill="#8884d8" />
+                <Bar dataKey="매출(억원)" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </Widget>
+
+        <Widget>
+          <WidgetTitle>예약 상태 분포</WidgetTitle>
+          <ChartContainer>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                    data={pieSampleData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius="80%"
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) =>
+                        `${name} ${(percent * 100).toFixed(0)}%`
+                    }
+                    labelStyle={{ fontSize: '0.9rem' }}
+                >
+                  {pieSampleData.map((entry, index) => (
+                      <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                      />
+                  ))}
+                </Pie>
+                <Tooltip
+                    contentStyle={{
+                      fontSize: '0.9rem',
+                      borderRadius: '8px',
+                      border: '1px solid #e7e0d9'
+                    }}
+                />
+                <Legend
+                    wrapperStyle={{
+                      fontSize: '0.9rem',
+                      paddingTop: '15px'
+                    }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </Widget>
+      </StatisticsContainer>
   );
 }
 
 export default Statistics;
+
+const StatisticsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 769px) {
+    gap: 24px;
+  }
+`;
+
+const Widget = styled.div`
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e7e0d9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  @media (max-width: 768px) {
+    padding: 18px 16px;
+  }
+
+  @media (min-width: 769px) {
+    padding: 28px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+`;
+
+const WidgetTitle = styled.h2`
+  margin-top: 0;
+  margin-bottom: 18px;
+  color: #5d4037;
+  font-size: 1.2rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.15rem;
+    margin-bottom: 16px;
+  }
+
+  @media (min-width: 769px) {
+    font-size: 1.4rem;
+    margin-bottom: 26px;
+  }
+`;
+
+const ChartContainer = styled.div`
+  width: 100%;
+  height: 320px;
+
+  @media (max-width: 480px) {
+    height: 300px;
+  }
+
+  @media (min-width: 481px) and (max-width: 768px) {
+    height: 360px;
+  }
+
+  @media (min-width: 769px) {
+    height: 450px;
+  }
+`;

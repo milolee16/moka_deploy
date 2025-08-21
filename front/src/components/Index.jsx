@@ -1,8 +1,10 @@
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <PageLayout>
@@ -43,10 +45,12 @@ const Index = () => {
       </BottomPanel>
 
       {/* 관리자 페이지로 이동하는 버튼 추가 */}
-      <AdminCard role="button" onClick={() => navigate('/admin')}>
-        <CardIcon>⚙️</CardIcon>
-        <CardTitle>관리자 페이지</CardTitle>
-      </AdminCard>
+      {user?.role === 'admin' && (
+        <AdminCard role="button" onClick={() => navigate('/admin')}>
+          <CardIcon>⚙️</CardIcon>
+          <CardTitle>관리자 페이지</CardTitle>
+        </AdminCard>
+      )}
     </PageLayout>
   );
 };
