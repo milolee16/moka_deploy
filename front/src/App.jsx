@@ -26,7 +26,7 @@ function App() {
           <Route path="/insurance" element={<InsuranceSelect />} />
           <Route path="/ocr" element={<OcrPage />} />
           <Route element={<ProtectedRoute adminOnly={true} />}>
-            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/*" element={<AdminPage />} />
           </Route>
         </Route>
         {/* Layout이 적용되지 않는 페이지 (예: 로그인) */}
