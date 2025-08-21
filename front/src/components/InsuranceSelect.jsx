@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import { HiCheck, HiOutlineShieldCheck } from "react-icons/hi";
+import { HiCheck, HiOutlineShieldCheck, HiOutlineChevronLeft } from "react-icons/hi";
 
 const PLANS = [
     {
         id: "basic",
         title: "베이직",
+        price: 500000,
         features: [
             "면책금: 수리비 20%",
             "보상한도: 100만",
@@ -16,6 +17,7 @@ const PLANS = [
     {
         id: "standard",
         title: "스탠다드",
+        price: 800000,
         features: [
             "면책금: 면제",
             "보상한도: 300만",
@@ -25,6 +27,7 @@ const PLANS = [
     {
         id: "premium",
         title: "프리미엄",
+        price: 1200000,
         features: [
             "면책금: 면제",
             "보상한도: 무제한",
@@ -43,14 +46,17 @@ const InsuranceSelect = () => {
 
     const handlePay = () => {
         if (!selected) return;
+        // 선택한 보험 정보와 함께, 이전 페이지들에서 받아온 모든 정보를 state에 담아 다음 페이지로 전달합니다.
         navigate("/checkout", { state: { ...info, insurance: selected } });
     };
 
     return (
         <Wrap>
             <Header>
-                <HiOutlineShieldCheck size={18} />
-                <span>보험 선택</span>
+                <BackButton onClick={() => navigate(-1)} aria-label="이전 페이지로">
+                    <HiOutlineChevronLeft size={24} />
+                </BackButton>
+                <Title>보험 선택</Title>
             </Header>
 
             <Cards role="radiogroup" aria-label="보험 선택">
@@ -74,7 +80,7 @@ const InsuranceSelect = () => {
                                 </Badge>
                             )}
                             {p.recommended && <Ribbon>추천</Ribbon>}
-                            <Title>{p.title}</Title>
+                            <CardTitle>{p.title}</CardTitle>
                             <List>
                                 {p.features.map((f, i) => (
                                     <li key={i}>{f}</li>
@@ -107,12 +113,27 @@ const Wrap = styled.div`
 `;
 
 const Header = styled.div`
-  display: inline-flex;
-  gap: 6px;
+  display: flex;
   align-items: center;
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: #5d4037; /* Moca: Dark Brown */
+  gap: 8px;
+  margin-bottom: 24px;
+`;
+
+const BackButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #5d4037;
+  padding: 0;
+  display: grid;
+  place-items: center;
+`;
+
+const Title = styled.h2`
+  font-size: 20px;
+  font-weight: 800;
+  color: #5d4037;
+  margin: 0;
 `;
 
 const Cards = styled.div`
@@ -142,7 +163,7 @@ const Card = styled.div`
   &:hover { border-color: #a47551; } /* Moca: Primary Brown */
 `;
 
-const Title = styled.h3`
+const CardTitle = styled.h3`
   font-size: 18px;
   font-weight: 800;
   margin: 2px 0 10px;
