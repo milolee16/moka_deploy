@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem("user");
     setUser(null);
-    navigate("/login"); // 로그아웃 시 로그인 페이지로 이동
+    navigate("/home"); // 로그아웃 시 메인 페이지로 이동
   };
 
   const value = { user, login, logout };

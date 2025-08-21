@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { useAuth } from "../contexts/AuthContext";
+import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext.jsx";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -31,6 +32,7 @@ const LoginPage = () => {
           required
         />
         <Button type="submit">로그인</Button>
+        <HomeLink to="/">메인 페이지로 돌아가기</HomeLink>
       </LoginForm>
     </LoginContainer>
   );
@@ -43,6 +45,9 @@ const LoginContainer = styled.div`
   justify-content: center;
   align-items: center;
   padding-top: 50px;
+  min-height: 100vh;
+  background-color: #f5f1ed;
+  box-sizing: border-box;
 `;
 
 const LoginForm = styled.form`
@@ -55,6 +60,7 @@ const LoginForm = styled.form`
   background-color: #fff;
   width: 100%;
   max-width: 400px;
+  margin: 20px;
 `;
 
 const Input = styled.input`
@@ -72,8 +78,20 @@ const Button = styled.button`
   color: white;
   font-size: 16px;
   cursor: pointer;
-
+  transition: background-color 0.2s;
   &:hover {
     background-color: #4e342e;
+  }
+`;
+
+const HomeLink = styled(Link)`
+  margin-top: 8px;
+  text-align: center;
+  color: #795548;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  &:hover {
+    text-decoration: underline;
   }
 `;
