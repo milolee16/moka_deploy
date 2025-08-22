@@ -1,9 +1,11 @@
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext.jsx";
 
-// 공통 레이아웃
+// Common Layout
 import Layout from "./components/Layout.jsx";
+import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
 
-// 페이지 컴포넌트
+// Page Components
 import Welcome from "./components/Welcome.jsx";
 import Index from "./components/Index.jsx";
 import Reservation from "./components/Reservation.jsx";
@@ -12,30 +14,38 @@ import CarSelect from "./components/CarSelect.jsx";
 import InsuranceSelect from "./components/InsuranceSelect.jsx";
 import Checkout from "./components/Checkout.jsx";
 import PaymentOptions from "./components/PaymentOptions.jsx";
-import AdminPage from './pages/AdminPage';
-import OcrPage from './pages/OcrPage';
 import PaymentResult from "./components/PaymentResult.jsx";
-
+import AdminPage from "./pages/AdminPage";
+import OcrPage from "./pages/OcrPage";
+import LoginPage from "./pages/LoginPage.jsx";
 
 function App() {
   return (
+    <AuthProvider>
       <Routes>
-        {/* Layout 컴포넌트가 하위 모든 페이지의 공통 레이아웃을 담당합니다. */}
+        {/* Routes with the common Layout */}
         <Route element={<Layout />}>
-            <Route path="/" element={<Welcome />} />
-            <Route path="/home" element={<Index />} />
-            <Route path="/reserve" element={<Reservation />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/cars" element={<CarSelect />} />
-            <Route path="/insurance" element={<InsuranceSelect />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/payment-options" element={<PaymentOptions />} />
+          <Route path="/" element={<Welcome />} />
+          <Route path="/home" element={<Index />} />
+          <Route path="/reserve" element={<Reservation />} />
+          <Route path="/map" element={<MapPage />} />
+          <Route path="/cars" element={<CarSelect />} />
+          <Route path="/insurance" element={<InsuranceSelect />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment-options" element={<PaymentOptions />} />
+          <Route path="/ocr" element={<OcrPage />} />
+
+          {/* Protected Route for Admin Page */}
+          <Route element={<ProtectedRoute adminOnly={true} />}>
             <Route path="/admin/*" element={<AdminPage />} />
-            <Route path="/ocr" element={<OcrPage />} />
+          </Route>
         </Route>
-        {/* 결제 결과 페이지는 헤더가 없는 독립적인 레이아웃을 가집니다. */}
+
+        {/* Routes without the common Layout */}
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/payment/result/:status" element={<PaymentResult />} />
       </Routes>
+    </AuthProvider>
   );
 }
 
