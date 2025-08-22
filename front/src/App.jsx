@@ -11,6 +11,7 @@ import AdminPage from './pages/AdminPage';
 import OcrPage from './pages/OcrPage';
 import LoginPage from './pages/LoginPage.jsx';
 import ProtectedRoute from './components/common/ProtectedRoute.jsx';
+import KakaoCallback from './components/common/KakaoCallback.jsx'; // KakaoCallback.jsx의 실제 경로로 수정해주세요.
 
 function App() {
   return (
@@ -29,8 +30,12 @@ function App() {
             <Route path="/admin/*" element={<AdminPage />} />
           </Route>
         </Route>
-        {/* Layout이 적용되지 않는 페이지 (예: 로그인) */}
-        <Route path="/login" element={<LoginPage />} />
+        {/* LoginPage 하나로 두 경로를 모두 처리 */}
+        <Route path="/login" element={<LoginPage redirectPath="/auth/kakao/callback" />} />
+        <Route path="/loginTest" element={<LoginPage redirectPath="/auth/kakao/callback/test" />} />
+        {/* KakaoCallback 컴포넌트가 두 개의 다른 콜백 경로를 모두 처리 */}
+        <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
+        <Route path="/auth/kakao/callback/test" element={<KakaoCallback />} />
       </Routes>
     </AuthProvider>
   );

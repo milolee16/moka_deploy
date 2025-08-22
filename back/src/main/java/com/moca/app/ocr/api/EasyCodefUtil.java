@@ -1,4 +1,4 @@
-package com.moca.ocr.api;
+package com.moca.app.ocr.api;
 
 import java.io.File;
 import java.io.IOException;

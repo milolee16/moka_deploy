@@ -1,8 +1,8 @@
-package com.moca.ocr.controller;
+package com.moca.app.ocr.controller;
 
 import java.io.IOException;
 
-import com.moca.ocr.service.ApiSampleService;
+import com.moca.app.ocr.service.ApiSampleService;
 import jakarta.servlet.http.*;
 
 import org.json.simple.JSONObject;
@@ -10,7 +10,6 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
