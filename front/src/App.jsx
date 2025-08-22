@@ -1,14 +1,13 @@
 import { Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 
-// Common Layout
-import Layout from "./components/Layout.jsx";
 import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
 
 // Page Components
 import Welcome from "./components/Welcome.jsx";
 import Index from "./components/Index.jsx";
 import Reservation from "./components/Reservation.jsx";
+import Layout from './components/Layout.jsx';
 import MapPage from "./components/Map.jsx";
 import CarSelect from "./components/CarSelect.jsx";
 import InsuranceSelect from "./components/InsuranceSelect.jsx";
@@ -18,6 +17,8 @@ import PaymentResult from "./components/PaymentResult.jsx";
 import AdminPage from "./pages/AdminPage";
 import OcrPage from "./pages/OcrPage";
 import LoginPage from "./pages/LoginPage.jsx";
+import KakaoCallback from './components/common/KakaoCallback.jsx'; // KakaoCallback.jsx의 실제 경로로 수정해주세요.
+
 
 function App() {
   return (
@@ -44,6 +45,13 @@ function App() {
         {/* Routes without the common Layout */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/payment/result/:status" element={<PaymentResult />} />
+        {/* LoginPage 하나로 두 경로를 모두 처리 */}
+        <Route path="/login" element={<LoginPage redirectPath="/auth/kakao/callback" />} />
+        <Route path="/payment/result/:status" element={<PaymentResult />} />
+        <Route path="/loginTest" element={<LoginPage redirectPath="/auth/kakao/callback/test" />} />
+        {/* KakaoCallback 컴포넌트가 두 개의 다른 콜백 경로를 모두 처리 */}
+        <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
+        <Route path="/auth/kakao/callback/test" element={<KakaoCallback />} />
       </Routes>
     </AuthProvider>
   );
