@@ -14,13 +14,13 @@ const Index = () => {
       </BigCard>
 
       <TwoCol>
-        <SmallCard role="button" onClick={() => navigate('/reservations')}>
+        <SmallCard role="button" onClick={() => navigate('/reservations')}> {/* 예약내역이 마이페이지의 주 기능이므로 링크는 유지합니다. */}
           <CardIcon>📝</CardIcon>
-          <CardTitle>예약내역</CardTitle>
+          <CardTitle>마이페이지</CardTitle>
         </SmallCard>
-        <SmallCard role="button" onClick={() => navigate('/events')}>
-          <CardIcon>🎉</CardIcon>
-          <CardTitle>이벤트</CardTitle>
+        <SmallCard role="button" onClick={() => navigate('/ocr')}>
+          <CardIcon>🪪</CardIcon>
+          <CardTitle>운전면허증 등록</CardTitle>
         </SmallCard>
       </TwoCol>
       <BottomPanel>

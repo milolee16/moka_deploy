@@ -1,25 +1,85 @@
 // src/pages/PaymentOptions.jsx
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi";
 import { SiNaver, SiKakao } from "react-icons/si";
 import { FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
+import axios from "axios";
+import React, { useState } from 'react';
 
 const PAYMENT_METHODS = [
-    { id: "creditcard", name: "신용/체크카드", icon: <FaCreditCard size={20} /> },
-    { id: "kakaopay", name: "카카오페이", icon: <SiKakao size={20} color="#FFEB00" /> },
-    { id: "naverpay", name: "네이버페이", icon: <SiNaver size={20} color="#03C75A" /> },
-    { id: "toss", name: "토스페이", icon: <FaMoneyBillWave size={20} color="#0064FF" /> }, // SiToss 아이콘을 임시로 변경
+    { id: "creditcard", name: "신용/체크카드", icon: <FaCreditCard size={20} />, supported: true },
+    { id: "kakaopay", name: "카카오페이", icon: <SiKakao size={20} color="#FFEB00" />, supported: true },
+    { id: "naverpay", name: "네이버페이", icon: <SiNaver size={20} color="#03C75A" />, supported: false },
+    { id: "toss", name: "토스페이", icon: <FaMoneyBillWave size={20} color="#0064FF" />, supported: false },
 ];
 
 const PaymentOptions = () => {
     const navigate = useNavigate();
+    const [paymentUrl, setPaymentUrl] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handlePaymentSelect = (method) => {
-        // 선택한 결제 수단에 따라 결제 로직을 구현합니다.
-        alert(`${method.name}로 결제 페이지로 이동합니다.`);
+    const handlePaymentSelect = async (method) => {
+        if (!method.supported) {
+            alert("추후 지원될 예정입니다.");
+            return;
+        }
+
+        if (method.id === 'kakaopay') {
+            setLoading(true);
+            try {
+                const amount = 50000;
+
+                const response = await axios.post('http://localhost:8080/api/kakaopay/ready', {
+                    partner_order_id: `MOCA-ORDER-${new Date().getTime()}`,
+                    partner_user_id: 'MOCA-USER-01',
+                    item_name: 'MOCA',
+                    quantity: 1,
+                    total_amount: amount,
+                    tax_free_amount: 0,
+                });
+
+                // PC버전 URL을 사용해야 QR코드가 나옵니다.
+                const url = response.data.next_redirect_pc_url;
+
+                if (url) {
+                    setPaymentUrl(url);
+                } else {
+                    alert("결제 페이지로 이동하는 데 실패했습니다. 다시 시도해주세요.");
+                }
+            } catch (error) {
+                console.error("카카오페이 결제 준비 중 오류 발생:", error);
+                alert("결제에 실패했습니다. 잠시 후 다시 시도해주세요.");
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
+
+        alert(`${method.name}(으)로 결제를 진행합니다.`);
     };
 
+    // 결제 화면에서 뒤로가기
+    const handleCancelPayment = () => {
+        setPaymentUrl('');
+    }
+
+    // 결제 화면을 렌더링
+    if (paymentUrl) {
+        return (
+            <Wrap>
+                <IframeContainer>
+                    <iframe
+                        src={paymentUrl}
+                        title="kakaopay-payment"
+                        style={{ width: '100%', height: '100%', border: 'none' }}
+                    />
+                </IframeContainer>
+            </Wrap>
+        )
+    }
+
+    // 결제 수단 선택 화면 렌더링
     return (
         <Wrap>
             <Header>
@@ -31,22 +91,22 @@ const PaymentOptions = () => {
             <Container>
                 <SectionTitle>결제 서비스</SectionTitle>
                 <MethodList>
-                    {PAYMENT_METHODS.map((method) => {
-                        return (
-                            <MethodItem
-                                key={method.id}
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => handlePaymentSelect(method)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") handlePaymentSelect(method);
-                                }}
-                            >
-                                <MethodContent>{method.icon}<span>{method.name}</span></MethodContent>
-                                <HiOutlineChevronRight size={18} />
-                            </MethodItem>
-                        );
-                    })}
+                    {PAYMENT_METHODS.map((method) => (
+                        <MethodItem
+                            key={method.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => handlePaymentSelect(method)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") handlePaymentSelect(method);
+                            }}
+                            $supported={method.supported}
+                            disabled={loading && method.id === 'kakaopay'}
+                        >
+                            <MethodContent $supported={method.supported}>{method.icon}<span>{method.name}</span></MethodContent>
+                            {method.supported ? <HiOutlineChevronRight size={18} /> : <ComingSoonBadge>준비중</ComingSoonBadge>}
+                        </MethodItem>
+                    ))}
                 </MethodList>
             </Container>
         </Wrap>
@@ -86,6 +146,16 @@ const Container = styled.div`
     margin: 0 auto;
 `;
 
+const IframeContainer = styled.div`
+    width: 100%;
+    max-width: 450px; // QR코드가 잘리지 않는 적절한 최대 너비
+    height: 600px;    // 높이
+    margin: 0 auto;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    overflow: hidden;
+`;
+
 const SectionTitle = styled.h3`
     font-size: 16px;
     font-weight: 700;
@@ -112,6 +182,22 @@ const MethodItem = styled.li`
     border-bottom: 1px solid #f5f1ed; /* Moca: Lighter Beige Border */
     transition: background-color 0.1s ease;
 
+    ${(props) =>
+            !props.$supported &&
+            css`
+                cursor: default;
+                &:hover {
+                    background-color: #fff;
+                }
+            `}
+    
+    ${(props) =>
+            props.disabled &&
+            css`
+                opacity: 0.5;
+                cursor: not-allowed;
+            `}
+
     &:last-child {
         border-bottom: none;
     }
@@ -128,4 +214,19 @@ const MethodContent = styled.div`
     font-size: 16px;
     font-weight: 500;
     color: #5d4037;
+
+    ${(props) =>
+            !props.$supported &&
+            css`
+                opacity: 0.4;
+            `}
+`;
+
+const ComingSoonBadge = styled.span`
+    font-size: 12px;
+    font-weight: 600;
+    color: #adb5bd;
+    background-color: #f1f3f5;
+    padding: 4px 8px;
+    border-radius: 12px;
 `;

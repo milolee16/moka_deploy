@@ -1,4 +1,7 @@
+<<<<<<< HEAD
+=======
 import styled from 'styled-components';
+>>>>>>> 1cd2f29692e9d8ec14a2f09dfb01e13317194592
 import {
   BarChart,
   Bar,
@@ -24,12 +27,12 @@ const barSampleData = [
 ];
 
 const pieSampleData = [
-  { name: '예약 완료', value: 750 },
-  { name: '예약 취소', value: 200 },
-  { name: '노쇼', value: 50 },
+  { name: "예약 완료", value: 750 },
+  { name: "예약 취소", value: 200 },
+  { name: "노쇼", value: 50 },
 ];
 
-const COLORS = ['#0088FE', '#FFBB28', '#FF8042'];
+const COLORS = ["#0088FE", "#FFBB28", "#FF8042"];
 
 function Statistics() {
   return (
