@@ -48,8 +48,14 @@ dependencies {
 	implementation 'com.oracle.database.security:osdt_cert:21.5.0.0'
 	implementation 'com.oracle.database.security:osdt_core:21.5.0.0'
 
+
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+
+springBoot {
+	mainClass = 'com.moca.app.AppApplication'
 }

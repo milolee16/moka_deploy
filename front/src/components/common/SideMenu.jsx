@@ -22,8 +22,8 @@ const SideMenu = ({ isOpen, onClose }) => {
 
     return (
         <>
-            <Backdrop isOpen={isOpen} onClick={onClose} />
-            <MenuContainer isOpen={isOpen}>
+            <Backdrop $isOpen={isOpen} onClick={onClose} />
+            <MenuContainer $isOpen={isOpen}>
                 <MenuHeader>
                     <Title>메뉴</Title>
                     <CloseButton onClick={onClose} aria-label="메뉴 닫기">
@@ -45,8 +45,8 @@ const SideMenu = ({ isOpen, onClose }) => {
 export default SideMenu;
 
 const visibility = css`
-  opacity: ${(props) => (props.isOpen ? 1 : 0)};
-  visibility: ${(props) => (props.isOpen ? 'visible' : 'hidden')};
+  opacity: ${(props) => (props.$isOpen ? 1 : 0)};
+  visibility: ${(props) => (props.$isOpen ? 'visible' : 'hidden')};
 `;
 
 const Backdrop = styled.div`
@@ -70,7 +70,7 @@ const MenuContainer = styled.aside`
   background-color: #ffffff;
   box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
   z-index: 2000;
-  transform: ${(props) => (props.isOpen ? 'translateX(0)' : 'translateX(100%)')};
+  transform: ${(props) => (props.$isOpen ? 'translateX(0)' : 'translateX(100%)')};
   transition: transform 0.3s ease-in-out;
   display: flex;
   flex-direction: column;

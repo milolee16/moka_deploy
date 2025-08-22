@@ -119,4 +119,7 @@ const Main = styled.main`
     width: 100%;
     max-width: 560px;
     margin: 0 auto;
+
+    /* 앱 전체에 일관된 폰트를 적용하여 통일성을 높입니다. */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 `;
