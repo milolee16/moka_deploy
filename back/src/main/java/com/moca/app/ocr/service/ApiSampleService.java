@@ -1,12 +1,12 @@
-package com.moca.ocr.service;
+package com.moca.app.ocr.service;
 
 import java.io.IOException;
 import java.util.HashMap;
 
 
-import com.moca.ocr.api.EasyCodef;
-import com.moca.ocr.api.EasyCodefClientInfo;
-import com.moca.ocr.api.EasyCodefServiceType;
+import com.moca.app.ocr.api.EasyCodef;
+import com.moca.app.ocr.api.EasyCodefClientInfo;
+import com.moca.app.ocr.api.EasyCodefServiceType;
 import org.springframework.stereotype.Service;
 
 

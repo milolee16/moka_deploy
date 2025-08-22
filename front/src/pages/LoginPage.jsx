@@ -2,8 +2,11 @@ import { useState } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
+// 1. 카카오 로그인 버튼 컴포넌트를 import 합니다.
+import KakaoLoginButton from '../components/KakaoLoginButton.jsx';
 
-const LoginPage = () => {
+// 2. App.jsx로부터 redirectPath를 props로 받도록 수정합니다.
+const LoginPage = ({ redirectPath }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
@@ -14,32 +17,38 @@ const LoginPage = () => {
   };
 
   return (
-    <LoginContainer>
-      <LoginForm onSubmit={handleSubmit}>
-        <h2>로그인</h2>
-        <Input
-          type="text"
-          placeholder="아이디 (admin 또는 user)"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-        <Input
-          type="password"
-          placeholder="비밀번호 (password)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <Button type="submit">로그인</Button>
-        <HomeLink to="/">메인 페이지로 돌아가기</HomeLink>
-      </LoginForm>
-    </LoginContainer>
+      <LoginContainer>
+        <LoginForm onSubmit={handleSubmit}>
+          <h2>로그인</h2>
+          <Input
+              type="text"
+              placeholder="아이디 (admin 또는 user)"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+          />
+          <Input
+              type="password"
+              placeholder="비밀번호 (password)"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+          />
+          <Button type="submit">로그인</Button>
+
+          {/* 3. '또는' 구분선과 카카오 로그인 버튼을 추가합니다. */}
+          <OrSeparator>또는</OrSeparator>
+          <KakaoLoginButton redirectPath={redirectPath} />
+
+          <HomeLink to="/">메인 페이지로 돌아가기</HomeLink>
+        </LoginForm>
+      </LoginContainer>
   );
 };
 
 export default LoginPage;
 
+// --- styled-components 코드는 그대로 유지 ---
 const LoginContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -74,7 +83,7 @@ const Button = styled.button`
   padding: 12px;
   border: none;
   border-radius: 4px;
-  background-color: #5d4037; /* Moca: Dark Brown */
+  background-color: #5d4037;
   color: white;
   font-size: 16px;
   cursor: pointer;
@@ -93,5 +102,30 @@ const HomeLink = styled(Link)`
   font-weight: 500;
   &:hover {
     text-decoration: underline;
+  }
+`;
+
+// 4. '또는' 구분선 스타일을 추가합니다.
+const OrSeparator = styled.div`
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.9rem;
+  margin: 8px 0;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+  }
+
+  &:not(:empty)::before {
+    margin-right: .25em;
+  }
+
+  &:not(:empty)::after {
+    margin-left: .25em;
   }
 `;

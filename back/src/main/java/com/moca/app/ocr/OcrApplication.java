@@ -1,4 +1,4 @@
-package com.moca.ocr;
+package com.moca.app.ocr;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
