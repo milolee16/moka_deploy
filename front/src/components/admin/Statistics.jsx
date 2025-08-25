@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 import styled from 'styled-components';
->>>>>>> 1cd2f29692e9d8ec14a2f09dfb01e13317194592
 import {
   BarChart,
   Bar,
@@ -27,97 +24,90 @@ const barSampleData = [
 ];
 
 const pieSampleData = [
-  { name: "예약 완료", value: 750 },
-  { name: "예약 취소", value: 200 },
-  { name: "노쇼", value: 50 },
+  { name: '예약 완료', value: 750 },
+  { name: '예약 취소', value: 200 },
+  { name: '노쇼', value: 50 },
 ];
 
-const COLORS = ["#0088FE", "#FFBB28", "#FF8042"];
+const COLORS = ['#0088FE', '#FFBB28', '#FF8042'];
 
 function Statistics() {
   return (
-      <StatisticsContainer>
-        <Widget>
-          <WidgetTitle>월별 예약 및 매출</WidgetTitle>
-          <ChartContainer>
-            <ResponsiveContainer>
-              <BarChart
-                  data={barSampleData}
-                  margin={{
-                    top: 20,
-                    right: 30,
-                    left: 20,
-                    bottom: 20,
-                  }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: 13 }}
-                />
-                <YAxis
-                    tick={{ fontSize: 13 }}
-                />
-                <Tooltip
-                    contentStyle={{
-                      fontSize: '0.9rem',
-                      borderRadius: '8px',
-                      border: '1px solid #e7e0d9'
-                    }}
-                />
-                <Legend
-                    wrapperStyle={{ fontSize: '0.9rem' }}
-                />
-                <Bar dataKey="예약 건수" fill="#8884d8" />
-                <Bar dataKey="매출(억원)" fill="#82ca9d" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </Widget>
+    <StatisticsContainer>
+      <Widget>
+        <WidgetTitle>월별 예약 및 매출</WidgetTitle>
+        <ChartContainer>
+          <ResponsiveContainer>
+            <BarChart
+              data={barSampleData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 20,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" tick={{ fontSize: 13 }} />
+              <YAxis tick={{ fontSize: 13 }} />
+              <Tooltip
+                contentStyle={{
+                  fontSize: '0.9rem',
+                  borderRadius: '8px',
+                  border: '1px solid #e7e0d9',
+                }}
+              />
+              <Legend wrapperStyle={{ fontSize: '0.9rem' }} />
+              <Bar dataKey="예약 건수" fill="#8884d8" />
+              <Bar dataKey="매출(억원)" fill="#82ca9d" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+      </Widget>
 
-        <Widget>
-          <WidgetTitle>예약 상태 분포</WidgetTitle>
-          <ChartContainer>
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie
-                    data={pieSampleData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius="80%"
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
-                    }
-                    labelStyle={{ fontSize: '0.9rem' }}
-                >
-                  {pieSampleData.map((entry, index) => (
-                      <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                      />
-                  ))}
-                </Pie>
-                <Tooltip
-                    contentStyle={{
-                      fontSize: '0.9rem',
-                      borderRadius: '8px',
-                      border: '1px solid #e7e0d9'
-                    }}
-                />
-                <Legend
-                    wrapperStyle={{
-                      fontSize: '0.9rem',
-                      paddingTop: '15px'
-                    }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </Widget>
-      </StatisticsContainer>
+      <Widget>
+        <WidgetTitle>예약 상태 분포</WidgetTitle>
+        <ChartContainer>
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={pieSampleData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius="80%"
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, percent }) =>
+                  `${name} ${(percent * 100).toFixed(0)}%`
+                }
+                labelStyle={{ fontSize: '0.9rem' }}
+              >
+                {pieSampleData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  fontSize: '0.9rem',
+                  borderRadius: '8px',
+                  border: '1px solid #e7e0d9',
+                }}
+              />
+              <Legend
+                wrapperStyle={{
+                  fontSize: '0.9rem',
+                  paddingTop: '15px',
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+      </Widget>
+    </StatisticsContainer>
   );
 }
 

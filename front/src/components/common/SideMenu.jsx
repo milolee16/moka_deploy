@@ -1,6 +1,6 @@
-import styled, { css } from "styled-components";
-import { Link } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import styled, { css } from 'styled-components';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const SideMenu = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
@@ -10,32 +10,10 @@ const SideMenu = ({ isOpen, onClose }) => {
     onClose(); // 로그아웃 후 메뉴 닫기
   };
 
-<<<<<<< HEAD
-    return (
-        <>
-            <Backdrop $isOpen={isOpen} onClick={onClose} />
-            <MenuContainer $isOpen={isOpen}>
-                <MenuHeader>
-                    <Title>메뉴</Title>
-                    <CloseButton onClick={onClose} aria-label="메뉴 닫기">
-                        <HiX size={24} />
-                    </CloseButton>
-                </MenuHeader>
-                <MenuList>
-                    {menuItems.map((item) => (
-                        <MenuItem key={item.path} onClick={() => handleNavigate(item.path)}>
-                            {item.label}
-                        </MenuItem>
-                    ))}
-                </MenuList>
-            </MenuContainer>
-        </>
-    );
-=======
   return (
     <>
-      <Overlay $isOpen={isOpen} onClick={onClose} />
-      <MenuContainer $isOpen={isOpen}>
+      <Overlay isOpen={isOpen} onClick={onClose} />
+      <MenuContainer isOpen={isOpen}>
         <CloseButton onClick={onClose}>&times;</CloseButton>
         {user && (
           <UserInfo>
@@ -47,20 +25,30 @@ const SideMenu = ({ isOpen, onClose }) => {
         )}
         <MenuList>
           <li>
-            <MenuLink to="/home" onClick={onClose}>홈</MenuLink>
+            <MenuLink to="/home" onClick={onClose}>
+              홈
+            </MenuLink>
           </li>
           <li>
-            <MenuLink to="/reserve" onClick={onClose}>예약하기</MenuLink>
+            <MenuLink to="/reserve" onClick={onClose}>
+              예약하기
+            </MenuLink>
           </li>
           <li>
-            <MenuLink to="/map" onClick={onClose}>내 주변 찾기</MenuLink>
+            <MenuLink to="/map" onClick={onClose}>
+              내 주변 찾기
+            </MenuLink>
           </li>
           <li>
-            <MenuLink to="/ocr" onClick={onClose}>면허증 등록</MenuLink>
+            <MenuLink to="/ocr" onClick={onClose}>
+              면허증 등록
+            </MenuLink>
           </li>
-          {user?.role === "admin" && (
+          {user?.role === 'admin' && (
             <li>
-              <MenuLink to="/admin" onClick={onClose}>관리자 페이지</MenuLink>
+              <MenuLink to="/admin" onClick={onClose}>
+                관리자 페이지
+              </MenuLink>
             </li>
           )}
         </MenuList>
@@ -68,51 +56,34 @@ const SideMenu = ({ isOpen, onClose }) => {
       </MenuContainer>
     </>
   );
->>>>>>> 1cd2f29692e9d8ec14a2f09dfb01e13317194592
 };
 
 export default SideMenu;
 
-<<<<<<< HEAD
-const visibility = css`
-  opacity: ${(props) => (props.$isOpen ? 1 : 0)};
-  visibility: ${(props) => (props.$isOpen ? 'visible' : 'hidden')};
-`;
-
-const Backdrop = styled.div`
-=======
 /* ============ styles ============ */
 const Overlay = styled.div`
->>>>>>> 1cd2f29692e9d8ec14a2f09dfb01e13317194592
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  display: ${({ $isOpen }) => ($isOpen ? "block" : "none")};
+  display: ${({ isOpen }) => (isOpen ? 'block' : 'none')};
   z-index: 999;
 `;
 
 const MenuContainer = styled.div`
   position: fixed;
   top: 0;
-  right: ${({ $isOpen }) => ($isOpen ? "0" : "-300px")};
+  right: ${({ isOpen }) => (isOpen ? '0' : '-300px')};
   width: 280px;
   height: 100%;
   background-color: #ffffff;
-<<<<<<< HEAD
-  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
-  z-index: 2000;
-  transform: ${(props) => (props.$isOpen ? 'translateX(0)' : 'translateX(100%)')};
-  transition: transform 0.3s ease-in-out;
-=======
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
   transition: right 0.3s ease-in-out;
   z-index: 1000;
   padding: 20px;
   box-sizing: border-box;
->>>>>>> 1cd2f29692e9d8ec14a2f09dfb01e13317194592
   display: flex;
   flex-direction: column;
 `;
@@ -163,7 +134,9 @@ const menuItemStyles = css`
   }
 `;
 
-const MenuLink = styled(Link)`${menuItemStyles}`;
+const MenuLink = styled(Link)`
+  ${menuItemStyles}
+`;
 
 const LogoutButton = styled.button`
   ${menuItemStyles}
