@@ -6,14 +6,14 @@ import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
 // Page Components
 import Welcome from "./components/Welcome.jsx";
 import Index from "./components/Index.jsx";
-import Reservation from "./components/Reservation.jsx";
+import Reservation from "./components/reservation/Reservation.jsx";
 import Layout from './components/Layout.jsx';
-import MapPage from "./components/Map.jsx";
-import CarSelect from "./components/CarSelect.jsx";
-import InsuranceSelect from "./components/InsuranceSelect.jsx";
-import Checkout from "./components/Checkout.jsx";
-import PaymentOptions from "./components/PaymentOptions.jsx";
-import PaymentResult from "./components/PaymentResult.jsx";
+import MapPage from "./components/reservation/Map.jsx";
+import CarSelect from "./components/reservation/CarSelect.jsx";
+import InsuranceSelect from "./components/reservation/InsuranceSelect.jsx";
+import Checkout from "./components/reservation/Checkout.jsx";
+import PaymentOptions from "./components/reservation/PaymentOptions.jsx";
+import PaymentResult from "./components/reservation/PaymentResult.jsx";
 import AdminPage from "./pages/AdminPage";
 import OcrPage from "./pages/OcrPage";
 import LoginPage from "./pages/LoginPage.jsx";
@@ -35,6 +35,7 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment-options" element={<PaymentOptions />} />
           <Route path="/ocr" element={<OcrPage />} />
+          <Route path="/payment/result/:status" element={<PaymentResult />} />
 
           {/* Protected Route for Admin Page */}
           <Route element={<ProtectedRoute adminOnly={true} />}>
@@ -43,11 +44,7 @@ function App() {
         </Route>
 
         {/* Routes without the common Layout */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/payment/result/:status" element={<PaymentResult />} />
-        {/* LoginPage 하나로 두 경로를 모두 처리 */}
         <Route path="/login" element={<LoginPage redirectPath="/auth/kakao/callback" />} />
-        <Route path="/payment/result/:status" element={<PaymentResult />} />
         <Route path="/loginTest" element={<LoginPage redirectPath="/auth/kakao/callback/test" />} />
         {/* KakaoCallback 컴포넌트가 두 개의 다른 콜백 경로를 모두 처리 */}
         <Route path="/auth/kakao/callback" element={<KakaoCallback />} />

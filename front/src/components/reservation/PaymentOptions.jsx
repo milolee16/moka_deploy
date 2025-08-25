@@ -39,8 +39,9 @@ const PaymentOptions = () => {
                     tax_free_amount: 0,
                 });
 
-                // PC버전 URL을 사용해야 QR코드가 나옵니다.
-                const url = response.data.next_redirect_pc_url;
+                // ✅ 이 부분을 수정했습니다.
+                // 모바일 환경에서는 모바일 버전 URL을 사용합니다.
+                const url = response.data.next_redirect_mobile_url;
 
                 if (url) {
                     setPaymentUrl(url);
@@ -151,7 +152,7 @@ const IframeContainer = styled.div`
     max-width: 450px; // QR코드가 잘리지 않는 적절한 최대 너비
     height: 600px;    // 높이
     margin: 0 auto;
-    border: 1px solid #ddd;
+    //border: 1px solid #ddd;
     border-radius: 12px;
     overflow: hidden;
 `;
@@ -190,7 +191,7 @@ const MethodItem = styled.li`
                     background-color: #fff;
                 }
             `}
-    
+
     ${(props) =>
             props.disabled &&
             css`
