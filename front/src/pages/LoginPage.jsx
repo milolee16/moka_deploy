@@ -53,7 +53,12 @@ const LoginPage = ({ redirectPath }) => {
           <OrSeparator>또는</OrSeparator>
           <KakaoLoginButton redirectPath={redirectPath} />
 
-          <HomeLink to="/">메인 페이지로 돌아가기</HomeLink>
+          <LinkSection>
+            <SignupLink to="/signup">
+              아직 계정이 없으신가요? <strong>회원가입하기</strong>
+            </SignupLink>
+            <HomeLink to="/">메인 페이지로 돌아가기</HomeLink>
+          </LinkSection>
         </LoginForm>
       </LoginContainer>
   );
@@ -61,6 +66,7 @@ const LoginPage = ({ redirectPath }) => {
 
 export default LoginPage;
 
+/* ============ styles ============ */
 const LoginContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -116,18 +122,6 @@ const Button = styled.button`
   }
 `;
 
-const HomeLink = styled(Link)`
-  margin-top: 8px;
-  text-align: center;
-  color: #795548;
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
 const OrSeparator = styled.div`
   display: flex;
   align-items: center;
@@ -149,5 +143,44 @@ const OrSeparator = styled.div`
 
   &:not(:empty)::after {
     margin-left: .25em;
+  }
+`;
+
+const LinkSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+`;
+
+const SignupLink = styled(Link)`
+  text-align: center;
+  color: #5d4037;
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #f5f1ed;
+    text-decoration: none;
+  }
+
+  strong {
+    font-weight: 600;
+  }
+`;
+
+const HomeLink = styled(Link)`
+  margin-top: 8px;
+  text-align: center;
+  color: #aaa;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  
+  &:hover {
+    text-decoration: underline;
   }
 `;

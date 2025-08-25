@@ -67,6 +67,83 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // 회원가입 함수
+  const register = async (userId, password, userName) => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          password: password,
+          userName: userName
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const token = data.accessToken;
+
+        // JWT 토큰을 localStorage에 저장
+        localStorage.setItem("accessToken", token);
+
+        // 토큰 디코딩하여 사용자 정보 추출
+        const decodedUser = jwtDecode(token);
+        const userData = {
+          username: decodedUser.username,
+          role: decodedUser.role
+        };
+
+        // 사용자 정보 저장 및 상태 업데이트
+        localStorage.setItem("user", JSON.stringify(userData));
+        setUser(userData);
+
+        // 회원가입 성공 시 홈 페이지로 이동
+        navigate("/home");
+        alert(`${userData.username}님, 환영합니다! 회원가입이 완료되었습니다.`);
+        return true;
+      } else {
+        const errorData = await response.text();
+        alert(errorData || "회원가입 중 오류가 발생했습니다.");
+        return false;
+      }
+    } catch (error) {
+      console.error("회원가입 중 오류 발생:", error);
+      alert("회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ID 중복 체크 함수
+  const checkUserId = async (userId) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/check-userid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data; // { exists: boolean, message: string }
+      } else {
+        throw new Error('ID 중복 체크 실패');
+      }
+    } catch (error) {
+      console.error("ID 중복 체크 중 오류 발생:", error);
+      throw error;
+    }
+  };
+
   // 카카오 로그인 성공 후 호출될 함수
   const loginWithToken = (token) => {
     try {
@@ -106,6 +183,8 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     login,
+    register,
+    checkUserId,
     logout,
     loginWithToken,
     loading
