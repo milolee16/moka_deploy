@@ -1,21 +1,20 @@
-import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
-import { Outlet, useNavigate, Link } from "react-router-dom";
-import { HiOutlineBell, HiOutlineMenu } from "react-icons/hi";
-import logoSrc from "../assets/Mocalogo.png";
-import NotificationModal from "./common/NotificationModal.jsx";
-import SideMenu from "./common/SideMenu.jsx";
-import { useAuth } from "../contexts/AuthContext.jsx";
+import { useState, useRef, useEffect } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import { HiOutlineBell, HiOutlineMenu } from 'react-icons/hi';
+import SideMenu from './common/SideMenu';
+import logoSrc from '../assets/MocaLogo.png';
+import NotificationModal from './common/NotificationModal';
+import { useAuth } from '../contexts/AuthContext';
 
 const Layout = () => {
   const navigate = useNavigate();
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const notificationRef = useRef(null);
 
-  const { user } = useAuth();
-
-  // Hook to close modal when clicking outside
+  // 알림 모달 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -25,11 +24,16 @@ const Layout = () => {
         setIsNotificationOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
-  // API 응답 등에 따라 새로운 알림 유무를 결정합니다.
+    if (isNotificationOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNotificationOpen]);
+
   const hasNewNotifications = true;
 
   return (
@@ -38,33 +42,30 @@ const Layout = () => {
         <LogoImage
           src={logoSrc}
           alt="Moca 로고"
-          onClick={() => navigate("/")}
+          onClick={() => navigate('/')}
         />
         <HeaderActions>
-          {user ? (
-            <>
-              <NotificationWrapper ref={notificationRef}>
-                <IconButton
-                  onClick={() => setIsNotificationOpen((prev) => !prev)}
-                  aria-label="알림"
-                >
-                  <HiOutlineBell size={22} />
-                  {hasNewNotifications && <NotificationBadge />}
-                </IconButton>
-                <NotificationModal show={isNotificationOpen} />
-              </NotificationWrapper>
-              <IconButton onClick={() => setIsMenuOpen(true)} aria-label="메뉴">
-                <HiOutlineMenu size={22} />
+          {/* 로그인된 사용자만 알림 아이콘 표시 */}
+          {user && (
+            <NotificationWrapper ref={notificationRef}>
+              <IconButton
+                onClick={() => setIsNotificationOpen((prev) => !prev)}
+                aria-label="알림"
+              >
+                <HiOutlineBell size={22} />
+                {hasNewNotifications && <NotificationBadge />}
               </IconButton>
-            </>
-          ) : (
-            <LoginButton to="/login">로그인</LoginButton>
+              <NotificationModal show={isNotificationOpen} />
+            </NotificationWrapper>
           )}
+          {/* 햄버거 메뉴는 항상 표시 */}
+          <IconButton onClick={() => setIsMenuOpen(true)} aria-label="메뉴">
+            <HiOutlineMenu size={22} />
+          </IconButton>
         </HeaderActions>
       </Header>
-      {user && (
-        <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-      )}
+      {/* 사이드메뉴는 항상 렌더링 */}
+      <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       <Main>
         {/* 페이지별 컨텐츠가 여기에 렌더링됩니다 */}
         <Outlet />
@@ -142,20 +143,6 @@ const Main = styled.main`
   margin: 0 auto;
 
   /* 앱 전체에 일관된 폰트를 적용하여 통일성을 높입니다. */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-`;
-
-const LoginButton = styled(Link)`
-  padding: 8px 16px;
-  border-radius: 8px;
-  background-color: #5d4037; /* Moca: Dark Brown */
-  color: #ffffff;
-  text-decoration: none;
-  font-weight: bold;
-  transition: background-color 0.2s;
-  &:hover {
-    background-color: #4e342e;
-  }
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    sans-serif;
 `;
