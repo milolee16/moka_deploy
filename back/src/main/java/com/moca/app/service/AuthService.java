@@ -33,6 +33,39 @@ public class AuthService {
     }
 
     /**
+     * 사용자 회원가입 처리
+     * @param userId 사용자 ID
+     * @param password 비밀번호
+     * @param userName 사용자 이름
+     * @return JWT 토큰 (회원가입 성공 시), null (실패 시)
+     */
+    public String register(String userId, String password, String userName) {
+        // 중복 체크
+        if (existsByUserId(userId)) {
+            throw new RuntimeException("이미 존재하는 사용자 ID입니다.");
+        }
+
+        // 새 사용자 생성
+        AppUser newUser = AppUser.builder()
+                .userId(userId)
+                .userPassword(password)
+                .userName(userName)
+                .userRole("user") // 기본 역할을 user로 설정
+                .build();
+
+        try {
+            // DB에 저장
+            appUserRepository.save(newUser);
+
+            // 회원가입 성공 시 JWT 토큰 생성하여 자동 로그인
+            return jwtTokenProvider.createToken(newUser);
+
+        } catch (Exception e) {
+            throw new RuntimeException("회원가입 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    /**
      * 사용자 ID 중복 체크
      * @param userId 사용자 ID
      * @return 존재하면 true, 없으면 false

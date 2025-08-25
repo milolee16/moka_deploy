@@ -15,6 +15,8 @@ const SideMenu = ({ isOpen, onClose }) => {
       <Overlay isOpen={isOpen} onClick={onClose} />
       <MenuContainer isOpen={isOpen}>
         <CloseButton onClick={onClose}>&times;</CloseButton>
+
+        {/* 로그인된 사용자 정보 표시 */}
         {user && (
           <UserInfo>
             <p>
@@ -23,7 +25,18 @@ const SideMenu = ({ isOpen, onClose }) => {
             <p>({user.role})</p>
           </UserInfo>
         )}
+
         <MenuList>
+          {/* 로그인하지 않은 사용자에게는 로그인 메뉴 표시 */}
+          {!user && (
+            <li>
+              <LoginButton to="/login" onClick={onClose}>
+                로그인
+              </LoginButton>
+            </li>
+          )}
+
+          {/* 공통 메뉴들 (로그인 여부와 관계없이 표시) */}
           <li>
             <MenuLink to="/home" onClick={onClose}>
               홈
@@ -39,11 +52,17 @@ const SideMenu = ({ isOpen, onClose }) => {
               내 주변 찾기
             </MenuLink>
           </li>
-          <li>
-            <MenuLink to="/ocr" onClick={onClose}>
-              면허증 등록
-            </MenuLink>
-          </li>
+
+          {/* 로그인된 사용자만 볼 수 있는 메뉴들 */}
+          {user && (
+            <li>
+              <MenuLink to="/ocr" onClick={onClose}>
+                면허증 등록
+              </MenuLink>
+            </li>
+          )}
+
+          {/* 관리자만 볼 수 있는 메뉴 */}
           {user?.role === 'admin' && (
             <li>
               <MenuLink to="/admin" onClick={onClose}>
@@ -52,7 +71,9 @@ const SideMenu = ({ isOpen, onClose }) => {
             </li>
           )}
         </MenuList>
-        <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
+
+        {/* 로그인된 사용자에게만 로그아웃 버튼 표시 */}
+        {user && <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>}
       </MenuContainer>
     </>
   );
@@ -122,7 +143,7 @@ const menuItemStyles = css`
   font-weight: 500;
   border-radius: 8px;
   text-align: left;
-  width: 100%;
+  /* width: 100%; */
   display: block;
   text-decoration: none;
   background: none;
@@ -136,6 +157,24 @@ const menuItemStyles = css`
 
 const MenuLink = styled(Link)`
   ${menuItemStyles}
+`;
+
+const LoginButton = styled(Link)`
+  ${menuItemStyles}
+  background: linear-gradient(135deg, #5d4037 0%, #795548 100%);
+  color: #ffffff !important;
+  font-weight: 600;
+  margin: 8px 12px 8px 0;
+  border-radius: 12px;
+  padding: 16px 12px;
+  box-shadow: 0 4px 12px rgba(93, 64, 55, 0.3);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #4a2c20 0%, #5d4037 100%);
+    box-shadow: 0 6px 16px rgba(93, 64, 55, 0.4);
+    transform: translateY(-1px);
+  }
 `;
 
 const LogoutButton = styled.button`
