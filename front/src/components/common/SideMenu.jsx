@@ -11,71 +11,71 @@ const SideMenu = ({ isOpen, onClose }) => {
   };
 
   return (
-    <>
-      <Overlay isOpen={isOpen} onClick={onClose} />
-      <MenuContainer isOpen={isOpen}>
-        <CloseButton onClick={onClose}>&times;</CloseButton>
+      <>
+        <Overlay isOpen={isOpen} onClick={onClose} />
+        <MenuContainer isOpen={isOpen}>
+          <CloseButton onClick={onClose}>&times;</CloseButton>
 
-        {/* 로그인된 사용자 정보 표시 */}
-        {user && (
-          <UserInfo>
-            <p>
-              <strong>{user.username}</strong>님, 환영합니다.
-            </p>
-            <p>({user.role})</p>
-          </UserInfo>
-        )}
-
-        <MenuList>
-          {/* 로그인하지 않은 사용자에게는 로그인 메뉴 표시 */}
-          {!user && (
-            <li>
-              <LoginButton to="/login" onClick={onClose}>
-                로그인
-              </LoginButton>
-            </li>
-          )}
-
-          {/* 공통 메뉴들 (로그인 여부와 관계없이 표시) */}
-          <li>
-            <MenuLink to="/home" onClick={onClose}>
-              홈
-            </MenuLink>
-          </li>
-          <li>
-            <MenuLink to="/reserve" onClick={onClose}>
-              예약하기
-            </MenuLink>
-          </li>
-          <li>
-            <MenuLink to="/map" onClick={onClose}>
-              내 주변 찾기
-            </MenuLink>
-          </li>
-
-          {/* 로그인된 사용자만 볼 수 있는 메뉴들 */}
+          {/* 로그인된 사용자 정보 표시 */}
           {user && (
-            <li>
-              <MenuLink to="/ocr" onClick={onClose}>
-                면허증 등록
-              </MenuLink>
-            </li>
+              <UserInfo>
+                <p>
+                  <strong>{user.username}</strong>님, 환영합니다.
+                </p>
+                <p>({user.role})</p>
+              </UserInfo>
           )}
 
-          {/* 관리자만 볼 수 있는 메뉴 */}
-          {user?.role === 'admin' && (
+          <MenuList>
+            {/* 로그인하지 않은 사용자에게는 로그인 메뉴 표시 */}
+            {!user && (
+                <li>
+                  <LoginButton to="/login" onClick={onClose}>
+                    로그인
+                  </LoginButton>
+                </li>
+            )}
+
+            {/* 공통 메뉴들 (로그인 여부와 관계없이 표시) */}
             <li>
-              <MenuLink to="/admin" onClick={onClose}>
-                관리자 페이지
+              <MenuLink to="/home" onClick={onClose}>
+                홈
               </MenuLink>
             </li>
-          )}
-        </MenuList>
+            <li>
+              <MenuLink to="/reserve" onClick={onClose}>
+                예약하기
+              </MenuLink>
+            </li>
+            <li>
+              <MenuLink to="/map" onClick={onClose}>
+                내 주변 찾기
+              </MenuLink>
+            </li>
 
-        {/* 로그인된 사용자에게만 로그아웃 버튼 표시 */}
-        {user && <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>}
-      </MenuContainer>
-    </>
+            {/* 로그인된 사용자만 볼 수 있는 메뉴들 */}
+            {user && (
+                <li>
+                  <MenuLink to="/ocr" onClick={onClose}>
+                    면허증 등록
+                  </MenuLink>
+                </li>
+            )}
+
+            {/* 관리자만 볼 수 있는 메뉴 */}
+            {user?.role === 'admin' && (
+                <li>
+                  <MenuLink to="/admin" onClick={onClose}>
+                    관리자 페이지
+                  </MenuLink>
+                </li>
+            )}
+          </MenuList>
+
+          {/* 로그인된 사용자에게만 로그아웃 버튼 표시 */}
+          {user && <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>}
+        </MenuContainer>
+      </>
   );
 };
 

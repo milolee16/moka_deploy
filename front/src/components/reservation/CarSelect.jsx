@@ -2,10 +2,10 @@ import { useMemo } from "react";
 import styled from "styled-components";
 import { HiOutlineChevronRight } from "react-icons/hi";
 import { useNavigate, useLocation } from "react-router-dom";
-import lamborghiniHuracanSrc from "../assets/images/cars/lamborghini-huracan.png";
-import astonMartinDB12Src from "../assets/images/cars/aston-martin-db12.png";
-import fordMustangMachESrc from "../assets/images/cars/ford-mustang-mach-e.png";
-import ferrari12CilindriSrc from "../assets/images/cars/ferrari-12-cilindri.png";
+import lamborghiniHuracanSrc from "../../assets/images/cars/lamborghini-huracan.png";
+import astonMartinDB12Src from "../../assets/images/cars/aston-martin-db12.png";
+import fordMustangMachESrc from "../../assets/images/cars/ford-mustang-mach-e.png";
+import ferrari12CilindriSrc from "../../assets/images/cars/ferrari-12-cilindri.png";
 
 const LUXURY_CARS = [
     {

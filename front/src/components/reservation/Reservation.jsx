@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import Modal from "./Modal";
+import Modal from "../Modal.jsx";
 
 
 /** ================= Component ================= */
