@@ -1,6 +1,5 @@
 package com.moca.app.login;
 
-import com.moca.app.login.User; // User 클래스 import
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -17,21 +16,51 @@ public class JwtTokenProvider {
 
     private long tokenValidTime = 30 * 60 * 1000L; // 토큰 유효시간 30분
 
-    // JWT 토큰 생성 메서드를 User 객체를 받도록 수정
+    // 기존 카카오 로그인용 User 객체를 받는 메서드
     public String createToken(User user) {
-        Claims claims = Jwts.claims().setSubject(user.getId().toString()); // JWT payload 에 저장되는 정보단위, 보통 user를 식별하는 값을 넣음
-
-        // 👇 토큰에 담고 싶은 추가 정보(이름, 역할 등)를 claim으로 추가
+        Claims claims = Jwts.claims().setSubject(user.getId().toString());
         claims.put("username", user.getNickname());
-        claims.put("role", "user"); // 역할(role)은 필요에 따라 동적으로 부여 (예: user.getRole())
+        claims.put("role", "user");
 
         Date now = new Date();
         return Jwts.builder()
-                .setClaims(claims) // 정보 저장
-                .setIssuedAt(now) // 토큰 발행 시간 정보
-                .setExpiration(new Date(now.getTime() + tokenValidTime)) // set Expire Time
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + tokenValidTime))
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
-}
 
+    // 새로운 일반 로그인용 AppUser 객체를 받는 메서드
+    public String createToken(AppUser appUser) {
+        Claims claims = Jwts.claims().setSubject(appUser.getUserId());
+        claims.put("username", appUser.getUserName());
+        claims.put("role", appUser.getUserRole());
+
+        Date now = new Date();
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + tokenValidTime))
+                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .compact();
+    }
+
+    // JWT 토큰에서 사용자 정보를 추출하는 메서드
+    public Claims getClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    // JWT 토큰의 유효성 검증 메서드
+    public boolean validateToken(String token) {
+        try {
+            getClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+}
