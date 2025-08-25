@@ -7,7 +7,7 @@ import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
 import Welcome from "./components/Welcome.jsx";
 import Index from "./components/Index.jsx";
 import Reservation from "./components/reservation/Reservation.jsx";
-import Layout from './components/Layout.jsx';
+import Layout from "./components/Layout.jsx";
 import MapPage from "./components/reservation/Map.jsx";
 import CarSelect from "./components/reservation/CarSelect.jsx";
 import InsuranceSelect from "./components/reservation/InsuranceSelect.jsx";
@@ -17,8 +17,8 @@ import PaymentResult from "./components/reservation/PaymentResult.jsx";
 import AdminPage from "./pages/AdminPage";
 import OcrPage from "./pages/OcrPage";
 import LoginPage from "./pages/LoginPage.jsx";
-import KakaoCallback from './components/common/KakaoCallback.jsx'; // KakaoCallback.jsx의 실제 경로로 수정해주세요.
-
+import SignupPage from "./pages/SignupPage.jsx"; // 추가
+import KakaoCallback from "./components/common/KakaoCallback.jsx";
 
 function App() {
   return (
@@ -44,8 +44,15 @@ function App() {
         </Route>
 
         {/* Routes without the common Layout */}
-        <Route path="/login" element={<LoginPage redirectPath="/auth/kakao/callback" />} />
-        <Route path="/loginTest" element={<LoginPage redirectPath="/auth/kakao/callback/test" />} />
+        <Route
+          path="/login"
+          element={<LoginPage redirectPath="/auth/kakao/callback" />}
+        />
+        <Route
+          path="/loginTest"
+          element={<LoginPage redirectPath="/auth/kakao/callback/test" />}
+        />
+        <Route path="/signup" element={<SignupPage />} />
         {/* KakaoCallback 컴포넌트가 두 개의 다른 콜백 경로를 모두 처리 */}
         <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
         <Route path="/auth/kakao/callback/test" element={<KakaoCallback />} />
