@@ -35,8 +35,8 @@ public class SecurityConfig {
 
                 // 5. 요청 경로별 접근 권한 설정
                 .authorizeHttpRequests(authorize -> authorize
-                        // 카카오 로그인 API 경로는 누구나 접근 가능하도록 허용
-                        .requestMatchers("/api/auth/kakao/login").permitAll()
+                        // 인증 관련 API 경로는 누구나 접근 가능하도록 허용
+                        .requestMatchers("/api/auth/**").permitAll()
                         // 다른 모든 요청은 일단 허용 (나중에 필요에 따라 인증 요구하도록 수정)
                         .anyRequest().permitAll()
                 );

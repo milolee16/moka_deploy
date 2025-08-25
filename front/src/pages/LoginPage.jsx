@@ -2,18 +2,28 @@ import { useState } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
-// 1. 카카오 로그인 버튼 컴포넌트를 import 합니다.
 import KakaoLoginButton from '../components/KakaoLoginButton.jsx';
 
-// 2. App.jsx로부터 redirectPath를 props로 받도록 수정합니다.
 const LoginPage = ({ redirectPath }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const { login, loading } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(username, password);
+
+    // 입력값 검증
+    if (!username.trim()) {
+      alert("아이디를 입력해주세요.");
+      return;
+    }
+    if (!password.trim()) {
+      alert("비밀번호를 입력해주세요.");
+      return;
+    }
+
+    // 로그인 시도
+    await login(username.trim(), password);
   };
 
   return (
@@ -22,21 +32,24 @@ const LoginPage = ({ redirectPath }) => {
           <h2>로그인</h2>
           <Input
               type="text"
-              placeholder="아이디 (admin 또는 user)"
+              placeholder="아이디를 입력하세요"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              disabled={loading}
               required
           />
           <Input
               type="password"
-              placeholder="비밀번호 (password)"
+              placeholder="비밀번호를 입력하세요"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
               required
           />
-          <Button type="submit">로그인</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "로그인 중..." : "로그인"}
+          </Button>
 
-          {/* 3. '또는' 구분선과 카카오 로그인 버튼을 추가합니다. */}
           <OrSeparator>또는</OrSeparator>
           <KakaoLoginButton redirectPath={redirectPath} />
 
@@ -48,7 +61,6 @@ const LoginPage = ({ redirectPath }) => {
 
 export default LoginPage;
 
-// --- styled-components 코드는 그대로 유지 ---
 const LoginContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -77,6 +89,11 @@ const Input = styled.input`
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
+
+  &:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+  }
 `;
 
 const Button = styled.button`
@@ -88,8 +105,14 @@ const Button = styled.button`
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.2s;
-  &:hover {
+
+  &:hover:not(:disabled) {
     background-color: #4e342e;
+  }
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
   }
 `;
 
@@ -105,7 +128,6 @@ const HomeLink = styled(Link)`
   }
 `;
 
-// 4. '또는' 구분선 스타일을 추가합니다.
 const OrSeparator = styled.div`
   display: flex;
   align-items: center;
