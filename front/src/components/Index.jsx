@@ -14,7 +14,7 @@ const Index = () => {
       </BigCard>
 
       <TwoCol>
-        <SmallCard role="button" onClick={() => navigate('/reservations')}> {/* 예약내역이 마이페이지의 주 기능이므로 링크는 유지합니다. */}
+        <SmallCard role="button" onClick={() => navigate('/mypage')}>
           <CardIcon>📝</CardIcon>
           <CardTitle>마이페이지</CardTitle>
         </SmallCard>
@@ -31,7 +31,7 @@ const Index = () => {
           <span>공지사항</span>
         </PanelButton>
         <PanelButton onClick={() => navigate('/payments-licenses')}>
-          <span role="img" aria-label="결제·면허">
+          <span role="img" aria-label="결제수단">
             💳
           </span>
           <span>결제·면허</span>

@@ -171,14 +171,25 @@ const CardTitle = styled.h3`
 `;
 
 const List = styled.ul`
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-  li {
-    font-size: 14px;
-    color: #795548; /* Moca: Medium Brown */
-    list-style: disc;
-    margin-left: 18px;
-    line-height: 1.35;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+`;
+
+const ListItem = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #795548; /* Moca: Medium Brown */
+  line-height: 1.35;
+
+  svg {
+    color: #a47551; /* Moca: Primary Brown */
+    flex-shrink: 0; /* 아이콘이 찌그러지지 않도록 */
   }
 `;
 

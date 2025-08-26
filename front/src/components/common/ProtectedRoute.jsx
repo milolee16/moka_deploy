@@ -2,7 +2,12 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
 const ProtectedRoute = ({ adminOnly = false }) => {
-  const { user } = useAuth();
+  const { user, authLoading } = useAuth();
+
+  if (authLoading) {
+    // Don't render anything until the auth state is determined
+    return null; 
+  }
 
   if (!user) {
     // 1. 로그인하지 않은 사용자는 로그인 페이지로 리디렉션

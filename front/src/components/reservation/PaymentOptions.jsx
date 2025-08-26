@@ -19,6 +19,10 @@ const PaymentOptions = () => {
     const [paymentUrl, setPaymentUrl] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const API_BASE_URL = import.meta.env.MODE === 'development'
+        ? 'http://192.168.2.23:8080'  // 👈 모바일 테스트용 IP
+        : 'http://localhost:8080';
+
     const handlePaymentSelect = async (method) => {
         if (!method.supported) {
             alert("추후 지원될 예정입니다.");
@@ -28,25 +32,28 @@ const PaymentOptions = () => {
         if (method.id === 'kakaopay') {
             setLoading(true);
             try {
-                const amount = 50000;
-
-                const response = await axios.post('http://localhost:8080/api/kakaopay/ready', {
+                const response = await axios.post(`${API_BASE_URL}/api/kakaopay/ready`, {
                     partner_order_id: `MOCA-ORDER-${new Date().getTime()}`,
                     partner_user_id: 'MOCA-USER-01',
                     item_name: 'MOCA',
                     quantity: 1,
-                    total_amount: amount,
+                    total_amount: 50000,
                     tax_free_amount: 0,
                 });
 
-                // ✅ 이 부분을 수정했습니다.
-                // 모바일 환경에서는 모바일 버전 URL을 사용합니다.
-                const url = response.data.next_redirect_mobile_url;
+                const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
-                if (url) {
-                    setPaymentUrl(url);
+                if (isMobile) {
+                    // 모바일에서는 전체 페이지를 리디렉션합니다.
+                    window.location.href = response.data.next_redirect_mobile_url;
                 } else {
-                    alert("결제 페이지로 이동하는 데 실패했습니다. 다시 시도해주세요.");
+                    // PC에서는 iframe에 PC용 URL을 사용합니다.
+                    const url = response.data.next_redirect_pc_url;
+                    if (url) {
+                        setPaymentUrl(url);
+                    } else {
+                        alert("결제 페이지로 이동하는 데 실패했습니다. 다시 시도해주세요.");
+                    }
                 }
             } catch (error) {
                 console.error("카카오페이 결제 준비 중 오류 발생:", error);

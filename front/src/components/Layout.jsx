@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { HiOutlineBell, HiOutlineMenu } from 'react-icons/hi';
 import SideMenu from './common/SideMenu';
@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Layout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -35,6 +36,7 @@ const Layout = () => {
   }, [isNotificationOpen]);
 
   const hasNewNotifications = true;
+  const noPadding = location.pathname === '/notices' || location.pathname === '/mypage';
 
   return (
     <>
@@ -66,7 +68,7 @@ const Layout = () => {
       </Header>
       {/* 사이드메뉴는 항상 렌더링 */}
       <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-      <Main>
+      <Main $noPadding={noPadding}>
         {/* 페이지별 컨텐츠가 여기에 렌더링됩니다 */}
         <Outlet />
       </Main>
@@ -134,7 +136,7 @@ const NotificationBadge = styled.span`
 `;
 
 const Main = styled.main`
-  padding: 16px;
+  padding: ${({ $noPadding }) => ($noPadding ? '0' : '16px')};
   display: grid;
   gap: 16px;
   box-sizing: border-box;

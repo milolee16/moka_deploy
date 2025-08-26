@@ -51,7 +51,7 @@ public class KakaoPayController {
     @GetMapping("/cancel")
     public String paymentCancel() {
         log.warn("Payment Canceled.");
-        return "redirect:http://localhost:3000/payment/result/cancel";
+        return "redirect:http://192.168.2.23:3000/payment/result/cancel";
     }
 
     /**
