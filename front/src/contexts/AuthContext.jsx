@@ -6,7 +6,8 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // for API calls
+  const [authLoading, setAuthLoading] = useState(true); // for initial auth check
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,6 +16,7 @@ export const AuthProvider = ({ children }) => {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    setAuthLoading(false); // Finished checking
   }, []);
 
   // 일반 로그인 함수 (백엔드 API 호출)
@@ -180,14 +182,15 @@ export const AuthProvider = ({ children }) => {
     }, 0);
   };
 
-  const value = {
+    const value = {
     user,
     login,
     register,
     checkUserId,
     logout,
     loginWithToken,
-    loading
+    loading,
+    authLoading
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

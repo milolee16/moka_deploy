@@ -52,14 +52,26 @@ const SideMenu = ({ isOpen, onClose }) => {
                 내 주변 찾기
               </MenuLink>
             </li>
+            <li>
+              <MenuLink to="/notices" onClick={onClose}>
+                공지사항
+              </MenuLink>
+            </li>
 
             {/* 로그인된 사용자만 볼 수 있는 메뉴들 */}
             {user && (
+              <>
+                <li>
+                  <MenuLink to="/mypage" onClick={onClose}>
+                    마이페이지
+                  </MenuLink>
+                </li>
                 <li>
                   <MenuLink to="/ocr" onClick={onClose}>
                     면허증 등록
                   </MenuLink>
                 </li>
+              </>
             )}
 
             {/* 관리자만 볼 수 있는 메뉴 */}

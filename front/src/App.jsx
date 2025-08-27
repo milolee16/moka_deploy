@@ -19,6 +19,9 @@ import OcrPage from "./pages/OcrPage";
 import LoginPage from "./pages/LoginPage.jsx";
 import SignupPage from "./pages/SignupPage.jsx"; // 추가
 import KakaoCallback from "./components/common/KakaoCallback.jsx";
+import NoticesPage from "./components/notices/Notices.jsx";
+import MyPage from "./pages/MyPage.jsx";
+import NoticeWritePage from './components/notices/NoticeWritePage.jsx';
 
 function App() {
   return (
@@ -36,6 +39,13 @@ function App() {
           <Route path="/payment-options" element={<PaymentOptions />} />
           <Route path="/ocr" element={<OcrPage />} />
           <Route path="/payment/result/:status" element={<PaymentResult />} />
+          <Route path="/notices" element={<NoticesPage />} />
+          <Route path="/notices/write" element={<NoticeWritePage/>} />
+
+          {/* Protected Route for My Page */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/mypage" element={<MyPage />} />
+          </Route>
 
           {/* Protected Route for Admin Page */}
           <Route element={<ProtectedRoute adminOnly={true} />}>

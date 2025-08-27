@@ -24,7 +24,7 @@ const LUXURY_CARS = [
     },
     {
         id: "ford-mustang-mach-e",
-        name: "포드 머스탱 마하=E",
+        name: "포드 머스탱 마하-E",
         price: 2200000,
         priceText: "₩2,200,000 /일",
         img: fordMustangMachESrc,
