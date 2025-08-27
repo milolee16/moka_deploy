@@ -1,29 +1,54 @@
 // src/pages/Map.jsx
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Map, MapMarker, useKakaoLoader } from "react-kakao-maps-sdk";
+import { Map, MapMarker, CustomOverlayMap , useKakaoLoader } from "react-kakao-maps-sdk";
+import ReactSelect from "react-select"; // ✅ 추가
 
-/** 5성급 호텔 샘플 (서울 중심부) */
-const HOTEL_5STAR = [
-    { id: "four-seasons", name: "포시즌스 호텔 서울", lat: 37.57350, lng: 126.97390 },
-    { id: "lotte-seoul",  name: "롯데호텔 서울 (소공동)", lat: 37.56469, lng: 126.98199 },
-    { id: "plaza",        name: "더 플라자 호텔",         lat: 37.56588, lng: 126.97695 },
-    { id: "westin",       name: "웨스틴조선 서울",         lat: 37.56405, lng: 126.98168 },
-    { id: "josun-palace", name: "조선 팰리스 서울 강남",   lat: 37.50867, lng: 127.05836 },
-];
+const PIN_URL =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(`
+<svg width="28" height="36" viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="14" cy="34" rx="6.5" ry="2" fill="rgba(0,0,0,0.18)"/>
+  <path d="M14 0C7.372 0 2 5.372 2 12c0 8.25 9.08 17.57 11.5 20 .27.27.71.27.98 0C16.92 29.57 26 20.25 26 12 26 5.372 20.628 0 14 0z" fill="#a47551"/>
+  <circle cx="14" cy="12" r="5" fill="#fff"/>
+</svg>
+`);
 
 const MapPage = () => {
     const navigate = useNavigate();
+    const [locations, setLocations] = useState([]);
+    const [dataLoading, setDataLoading] = useState(true);
+    const [dataError, setDataError] = useState(null);
 
-    // 1) 라이브러리 제공 로더 사용 (키는 .env의 VITE_KAKAO_MAP_APP_KEY)
-    // 'libraries' 옵션을 명시적으로 빈 배열로 설정하여 옵션 불일치 에러 방지
-    const [loading, error] = useKakaoLoader({
+    const { loading, error} = useKakaoLoader({
         appkey: import.meta.env.VITE_KAKAO_MAP_APP_KEY,
-        libraries: [], // 명시적으로 빈 배열로 설정
+        libraries: [],
     });
 
-    // 2) Reservation에서 받은 시간 안전하게 가져오기
+    useEffect(() => {
+        const fetchLocations = async () => {
+            try {
+                setDataLoading(true);
+                const response = await fetch('/api/locations?stars=5');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch locations');
+                }
+                const data = await response.json();
+                const processedData = data.map(loc => ({
+                    ...loc,
+                    id: loc.name.toLowerCase().replace(/\s+/g, '-'),
+                }));
+                setLocations(processedData);
+            } catch (e) {
+                setDataError(e);
+            } finally {
+                setDataLoading(false);
+            }
+        };
+        fetchLocations();
+    }, []);
+
     const { state } = useLocation();
     const { start, end } = useMemo(() => {
         const toDate = (v) => (v instanceof Date ? v : v ? new Date(v) : null);
@@ -32,24 +57,31 @@ const MapPage = () => {
         if (!s || !e || isNaN(+s) || isNaN(+e) || e <= s) {
             const now = new Date();
             now.setSeconds(0, 0);
-            const end = new Date(now.getTime() + (4 * 60 + 30) * 60 * 1000); // Default to 4h 30m later
+            const end = new Date(now.getTime() + (4 * 60 + 30) * 60 * 1000);
             return { start: now, end };
         }
         return { start: s, end: e };
     }, [state]);
 
-    // 3) 선택된 장소 (대여=반납 동일)
-    const [placeId, setPlaceId] = useState(HOTEL_5STAR[0].id);
-
-    // 4) 지도 중심(처음엔 호텔들 평균 위치로)
-    const [center, setCenter] = useState(() => {
-        const lat = HOTEL_5STAR.reduce((a, b) => a + b.lat, 0) / HOTEL_5STAR.length;
-        const lng = HOTEL_5STAR.reduce((a, b) => a + b.lng, 0) / HOTEL_5STAR.length;
-        return { lat, lng };
-    });
+    const [placeId, setPlaceId] = useState(null);
+    const [center, setCenter] = useState({ lat: 37.5665, lng: 126.9780 });
     const mapRef = useRef(null);
 
-    // 5) 시간 레이블 포맷팅
+    useEffect(() => {
+        if (locations.length > 0) {
+            const defaultHotelName = '포시즌스 호텔 서울';
+            const defaultHotel = locations.find(loc => loc.name === defaultHotelName);
+
+            if (defaultHotel) {
+                setPlaceId(defaultHotel.id);
+                setCenter({ lat: defaultHotel.lat, lng: defaultHotel.lng });
+            } else {
+                setPlaceId(locations[0].id);
+                setCenter({ lat: locations[0].lat, lng: locations[0].lng });
+            }
+        }
+    }, [locations]);
+
     const timeLabel = useMemo(() => {
         const fmt = (d) => {
             const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -59,7 +91,6 @@ const MapPage = () => {
             const today = new Date(); today.setHours(0,0,0,0);
             const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
             const dayOnly = new Date(d); dayOnly.setHours(0,0,0,0);
-
             const timePart = `${hh}:${mi}`;
             if (dayOnly.getTime() === today.getTime()) return `오늘 ${timePart}`;
             if (dayOnly.getTime() === tomorrow.getTime()) return `내일 ${timePart}`;
@@ -68,88 +99,110 @@ const MapPage = () => {
         return `${fmt(start)} ~ ${fmt(end)}`;
     }, [start, end]);
 
-    // 6) 결제 버튼 핸들러
-    const handleSelectCar = () => {
-        const locationName = HOTEL_5STAR.find((h) => h.id === placeId)?.name;
-        navigate("/cars", {
-            state: { start, end, locationName },
-        });
-    };
+    // ✅ react-select용 옵션
+    const selectOptions = useMemo(
+        () => locations.map(h => ({ value: h.id, label: h.name })),
+        [locations]
+    );
 
-    // 7) 마커 클릭 핸들러
-    const onMarkerClick = (h) => {
-        setPlaceId(h.id);
-        setCenter({ lat: h.lat, lng: h.lng }); // 중심 이동
-        // 필요하면 인포윈도우도 추가 가능
-    };
+    // 이용시간을 react-select 컨트롤로 표시하기 위한 값
+    const timeValue = useMemo(
+        () => ({ value: "time", label: timeLabel }),
+        [timeLabel]
+    );
 
-    // 8) 장소 선택 드롭다운 변경 핸들러
-    const handlePlaceSelect = (e) => {
-        const next = HOTEL_5STAR.find((h) => h.id === e.target.value);
-        if (!next) return; // 못 찾으면 그냥 리턴
+
+    // ✅ react-select 변경 핸들러
+    const handlePlaceChange = (opt) => {
+        const next = locations.find((h) => h.id === opt?.value);
+        if (!next) return;
         setPlaceId(next.id);
-        setCenter({ lat: next.lat, lng: next.lng }); // 중심 이동
+        setCenter({ lat: next.lat, lng: next.lng });
     };
+
+    const handleSelectCar = () => {
+        const locationName = locations.find((h) => h.id === placeId)?.name;
+        navigate("/cars", { state: { start, end, locationName } });
+    };
+
+    const isLoading = loading || dataLoading;
+    const anyError = error || dataError;
 
     return (
         <Page>
             <MapWrap>
-                {/* 로딩/에러 처리 */}
-                {error && (
+                {anyError && (
                     <MapLoading>
                         지도를 불러오지 못했어요.
-                        <small style={{ marginTop: 8, color: '#868e96' }}>({error.message})</small>
+                        <small style={{ marginTop: 8, color: '#868e96' }}>({anyError.message})</small>
                     </MapLoading>
                 )}
-
-                {/* Map 컴포넌트 사용: div+수동생성 X */}
-                {!loading && !error && (
+                {!isLoading && !anyError && (
                     <Map
                         center={center}
                         level={5}
                         style={{ width: "100%", height: "100%" }}
                         onCreate={(map) => (mapRef.current = map)}
                     >
-                        {HOTEL_5STAR.map((h) => (
-                            <MapMarker
-                                key={h.id}
-                                position={{ lat: h.lat, lng: h.lng }}
-                                onClick={() => onMarkerClick(h)}
-                            >
-                                {/* 선택된 호텔만 라벨 표시 */}
-                                {placeId === h.id && (
-                                    <div style={{ padding: "6px 10px", color: "#000", background: "#fff", borderRadius: 8 }}>
-                                        {h.name}
-                                    </div>
-                                )}
-                            </MapMarker>
-                        ))}
+                        {placeId && (
+                            <>
+                                <MapMarker
+                                    position={center}
+                                    image={{
+                                        src: PIN_URL,
+                                        size: { width: 28, height: 36 },
+                                        options: { offset: { x: 14, y: 36 } },
+                                    }}
+                                />
+                                <CustomOverlayMap position={center} yAnchor={2.23} zIndex={3}>
+                                    <MarkerLabel>
+                                        {locations.find((h) => h.id === placeId)?.name}
+                                    </MarkerLabel>
+                                </CustomOverlayMap>
+                            </>
+                        )}
                     </Map>
                 )}
-
-                {(loading && !error) && <MapLoading>지도를 불러오는 중…</MapLoading>}
+                {(isLoading && !anyError) && <MapLoading>지도를 불러오는 중…</MapLoading>}
             </MapWrap>
 
             <BottomSheet>
                 <Row>
                     <Label>대여 · 반납</Label>
-                    <Select
-                        value={placeId}
-                        onChange={handlePlaceSelect}
-                    >
-                        {HOTEL_5STAR.map((h) => (
-                            <option key={h.id} value={h.id}>{h.name}</option>
-                        ))}
-                    </Select>
+
+                    {/* ✅ 네이티브 select → react-select 교체 */}
+                    <ReactSelect
+                        classNamePrefix="moca-select"
+                        isDisabled={isLoading || anyError}
+                        options={selectOptions}
+                        value={selectOptions.find(o => o.value === placeId) || null}
+                        onChange={handlePlaceChange}
+                        placeholder="호텔을 선택하세요"
+                        styles={selectStyles}
+                        menuPlacement="auto"
+                        menuPortalTarget={document.body} // 모바일 오버플로우 이슈 완화
+                    />
                 </Row>
 
                 <Row>
                     <Label>이용시간</Label>
-                    <TimePill>{timeLabel}</TimePill>
+                    <ReactSelect
+                        classNamePrefix="moca-select"
+                        value={timeValue}
+                        options={[timeValue]}
+                        isDisabled
+                        isSearchable={false}
+                        isClearable={false}
+                        menuIsOpen={false}   // 펼치기 금지
+                        styles={{
+                            ...selectStyles,
+                            indicatorsContainer: () => ({ display: "none" }), // 아이콘 숨김
+                        }}
+                    />
                 </Row>
 
                 <Actions>
-                    <ActionButton onClick={handleSelectCar}>이 위치에서 차량선택</ActionButton>
+                    <ActionButton onClick={handleSelectCar} disabled={!placeId}>이 위치에서 차량선택</ActionButton>
                 </Actions>
             </BottomSheet>
         </Page>
@@ -167,7 +220,6 @@ const Page = styled.main`
 const MapWrap = styled.section`
     position: relative; width: 100%; height: 50vh; overflow: hidden;
     border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,.05); background: #f1f3f5;
-    /* Removed flexbox centering styles for the placeholder */
 `;
 const MapLoading = styled.div`
     position: absolute; inset: 0; display: grid; place-items: center;
@@ -180,31 +232,97 @@ const BottomSheet = styled.section`
 const Row = styled.div`
     display: grid; grid-template-columns: 90px 1fr; gap: 12px; align-items: center;
 `;
-const Label = styled.div`font-size: 14px; color: #795548; /* Moca: Medium Brown */`;
-const Select = styled.select`
-    height: 44px; border-radius: 12px; border: 1px solid #e7e0d9; /* Moca: Beige Border */
-    background: #fdfbfa; padding: 0 12px; font-size: 14px; color: #5d4037; outline: none;
-    &:focus{ border-color:#a47551; background:#fff; } /* Moca: Primary Brown */
-`;
+const Label = styled.div`font-size: 14px; color: #795548;`;
 const TimePill = styled.div`
     height: 44px; border-radius: 12px; display: grid; align-items: center;
-    padding: 0 12px; background: #f5f1ed; font-size: 14px; color: #5d4037; /* Moca: Light Brown BG, Dark Brown Text */
+    padding: 0 12px; background: #f5f1ed; font-size: 14px; color: #5d4037;
 `;
 const Actions = styled.div`
-    /* 버튼을 전체 너비로 만들기 위해 grid 레이아웃 제거 */
     margin-top: 4px;
 `;
 const ActionButton = styled.button`
-    width: 100%;
-    height: 52px;
-    border-radius: 999px; /* Pill shape */
-    border: none;
-    background: #a47551; /* Moca: Primary */
-    color: #fff;
-    font-size: 16px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: background-color 0.2s, box-shadow 0.2s;
-    box-shadow: 0 10px 24px rgba(164, 117, 81, .35); /* Moca: Shadow */
+    width: 100%; height: 52px; border-radius: 999px; border: none;
+    background: #a47551; color: #fff; font-size: 16px; font-weight: 800;
+    cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 10px 24px rgba(164, 117, 81, .35);
     &:active{ transform: scale(.99); }
 `;
+
+const MarkerLabel = styled.div`
+    background: #fff;
+    border: 1px solid #a47551;
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #5d4037;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    white-space: nowrap;
+`;
+
+/* ✅ react-select 스타일 커스터마이즈 */
+const selectStyles = {
+    control: (base, state) => ({
+        ...base,
+        borderRadius: 999,
+        borderColor: state.isFocused ? "#a47551" : "#e7e0d9",
+        boxShadow: state.isFocused ? "0 0 0 3px rgba(164,117,81,0.12)" : "0 2px 6px rgba(0,0,0,0.04)",
+        minHeight: 44,
+        paddingLeft: 4,
+        paddingRight: 4,
+        backgroundColor: "#fdfbfa",
+        ":hover": { borderColor: "#a47551", backgroundColor: "#fff" },
+    }),
+    valueContainer: (base) => ({
+        ...base,
+        padding: "0 8px",
+    }),
+    singleValue: (base) => ({
+        ...base,
+        color: "#5d4037",
+        fontSize: 14,
+        fontWeight: 500,
+    }),
+    placeholder: (base) => ({
+        ...base,
+        color: "#8d6e63",
+        fontSize: 14,
+    }),
+    input: (base) => ({
+        ...base,
+        color: "#5d4037",
+        fontSize: 14,
+    }),
+    indicatorsContainer: (base) => ({
+        ...base,
+        "> div": { color: "#a47551" },
+    }),
+    menu: (base) => ({
+        ...base,
+        borderRadius: 16,          // 펼쳐진 메뉴 둥글게
+        overflow: "hidden",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+        marginTop: 8,
+    }),
+    menuList: (base) => ({
+        ...base,
+        padding: 6,
+        backgroundColor: "#fff",
+    }),
+    option: (base, state) => ({
+        ...base,
+        borderRadius: 10,
+        padding: "10px 12px",
+        fontSize: 14,
+        color: "#5d4037",
+        backgroundColor: state.isFocused
+            ? "#f5f1ed"
+            : state.isSelected
+                ? "#e7e0d9"
+                : "#fff",
+        ":active": {
+            backgroundColor: "#e7e0d9",
+        },
+        cursor: "pointer",
+    }),
+};

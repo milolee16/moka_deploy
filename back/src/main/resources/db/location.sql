@@ -1,5 +1,5 @@
 
-DROP TABLE LOCATION IF EXISTS;
+DROP TABLE LOCATION;
 
 CREATE TABLE LOCATION (
     location_name VARCHAR2(100) PRIMARY KEY,
@@ -52,3 +52,5 @@ INSERT INTO LOCATION (location_name, location_address, location_region, location
     ('그랜드 머큐어 앰배서더 호텔 앤 레지던스 서울 용산', '서울특별시 용산구 청파로20길 95', '서울', 'https://map.kakao.com/link/search/그랜드머큐어앰배서더용산', 5, 37.5299, 126.9638);
 INSERT INTO LOCATION (location_name, location_address, location_region, location_map_url, stars, lat, lng) VALUES
     ('비스타 워커힐 서울', '서울특별시 광진구 워커힐로 177', '서울', 'https://map.kakao.com/link/search/비스타워커힐서울', 5, 37.5550, 127.1101);
+
+select * from LOCATION;
