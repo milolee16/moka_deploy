@@ -1,6 +1,8 @@
+// AdminDashboard.jsx 파일 수정 버전 (기본 통계 완전 제거)
+
 import { Routes, Route, NavLink } from 'react-router-dom';
 import styled from 'styled-components';
-import Statistics from './Statistics.jsx';
+import RentalAdminDashboard from './RentalAdminDashboard.jsx';
 
 // 아직 만들지 않은 페이지를 위한 임시 컴포넌트
 const Placeholder = ({ title }) => (
@@ -17,16 +19,22 @@ function AdminDashboard() {
                 <SidebarTitle>관리자 메뉴</SidebarTitle>
                 <NavigationContainer>
                     <StyledNavLink to="/admin" end>
-                        통계
+                        대시보드
                     </StyledNavLink>
-                    <StyledNavLink to="/admin/reservations">예약 관리</StyledNavLink>
-                    <StyledNavLink to="/admin/users">사용자 관리</StyledNavLink>
-                    <StyledNavLink to="/admin/vehicles">차량 관리</StyledNavLink>
+                    <StyledNavLink to="/admin/reservations">
+                        예약 관리
+                    </StyledNavLink>
+                    <StyledNavLink to="/admin/users">
+                        사용자 관리
+                    </StyledNavLink>
+                    <StyledNavLink to="/admin/vehicles">
+                        차량 관리
+                    </StyledNavLink>
                 </NavigationContainer>
             </Sidebar>
             <Content>
                 <Routes>
-                    <Route index element={<Statistics />} />
+                    <Route index element={<RentalAdminDashboard />} />
                     <Route
                         path="reservations"
                         element={<Placeholder title="예약 관리" />}
@@ -41,6 +49,7 @@ function AdminDashboard() {
 
 export default AdminDashboard;
 
+// 기존 styled-components 그대로 사용...
 const DashboardContainer = styled.div`
     display: flex;
     gap: 16px;
@@ -107,7 +116,7 @@ const NavigationContainer = styled.nav`
         overflow-x: auto;
         scrollbar-width: none;
         -ms-overflow-style: none;
-        padding-bottom: 4px;
+        padding-bottom: 2px;
 
         &::-webkit-scrollbar {
             display: none;
@@ -121,71 +130,52 @@ const NavigationContainer = styled.nav`
 `;
 
 const StyledNavLink = styled(NavLink)`
-    padding: 10px 14px;
+    padding: 8px 12px;
     border-radius: 8px;
     text-decoration: none;
     color: #795548;
     font-weight: 500;
-    transition: background-color 0.2s, color 0.2s;
-    white-space: nowrap;
     font-size: 0.9rem;
-
-    @media (max-width: 768px) {
-        font-size: 0.85rem;
-        padding: 8px 12px;
-        min-width: fit-content;
-    }
-
-    @media (min-width: 769px) {
-        padding: 12px 16px;
-        font-size: 0.95rem;
-    }
+    white-space: nowrap;
+    transition: all 0.2s ease;
 
     &:hover {
         background-color: #f5f1ed;
+        color: #5d4037;
     }
 
     &.active {
         background-color: #5d4037;
-        color: white;
-        font-weight: bold;
+        color: #ffffff;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+
+    @media (min-width: 769px) {
+        padding: 12px 16px;
+        font-size: 1rem;
     }
 `;
 
 const Content = styled.main`
-    flex: 1;
+    flex-grow: 1;
     min-width: 0;
-    width: 350px;
 `;
 
 const PlaceholderContainer = styled.div`
-  background: #ffffff;
-  padding: 24px;
-  border-radius: 12px;
-  text-align: center;
-  border: 1px solid #e7e0d9;
-  color: #757575;
-  
-  @media (max-width: 768px) {
-    padding: 20px 16px;
-  }
+    background: #ffffff;
+    padding: 40px 20px;
+    border-radius: 12px;
+    text-align: center;
+    color: #795548;
+    border: 2px dashed #e7e0d9;
 
-  h2 {
-    color: #5d4037;
-    font-size: 1.3rem;
-    margin-bottom: 8px;
-    
-    @media (max-width: 768px) {
-      font-size: 1.2rem;
+    h2 {
+        margin-top: 0;
+        color: #5d4037;
     }
-  }
-  
-  p {
-    margin: 0;
-    font-size: 0.95rem;
-    
-    @media (max-width: 768px) {
-      font-size: 0.9rem;
-    }
-  }
 `;
