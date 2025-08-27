@@ -1,16 +1,27 @@
+// src/components/reservation/Checkout.jsx
 import { useMemo } from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import { HiOutlineChevronLeft } from "react-icons/hi";
 
+// 금액 포맷 헬퍼
+const formatCurrencyKRW = (n) => {
+    try {
+        return Number(n || 0).toLocaleString("ko-KR");
+    } catch {
+        return `${n}`;
+    }
+};
+
 const Checkout = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // 이전 단계에서 받아온 모든 state
     const info = useMemo(() => location.state || {}, [location.state]);
     const { car, insurance } = info;
 
-    // 이전 페이지에서 정보를 받아오지 못했을 경우를 대비한 방어 코드
+    // 필수 정보가 없으면 가드
     if (!car || !insurance) {
         return (
             <Wrap>
@@ -20,13 +31,36 @@ const Checkout = () => {
         );
     }
 
-    const rentFee = car.price;
-    const insuranceFee = insurance.price;
-    const totalFee = rentFee + insuranceFee;
+    // ✔ 렌탈요금은 시간기반 가격을 우선 사용
+    const rentFee = useMemo(() => {
+        const n = info?.payment?.basePrice ?? info?.price ?? 0;
+        return Number.isFinite(n) ? n : 0;
+    }, [info]);
+
+    // ✔ 보험요금
+    const insuranceFee = useMemo(() => {
+        const n = insurance?.price ?? 0;
+        return Number.isFinite(n) ? n : 0;
+    }, [insurance]);
+
+    // ✔ 총액은 전달된 totalPrice가 있으면 쓰고, 없으면 합산
+    const totalFee = useMemo(() => {
+        const n = info?.payment?.totalPrice ?? rentFee + insuranceFee;
+        return Number.isFinite(n) ? n : 0;
+    }, [info, rentFee, insuranceFee]);
 
     const handlePay = () => {
-        // 결제 수단 선택 페이지로 모든 정보를 가지고 이동합니다.
-        navigate("/payment-options", { state: info });
+        // 결제 수단 선택 페이지로 모든 정보를 가지고 이동(+ payment 요약 보장)
+        navigate("/payment-options", {
+            state: {
+                ...info,
+                payment: {
+                    basePrice: rentFee,
+                    insurancePrice: insuranceFee,
+                    totalPrice: totalFee,
+                },
+            },
+        });
     };
 
     return (
@@ -37,6 +71,7 @@ const Checkout = () => {
                 </BackButton>
                 <Title>예약 및 결제하기</Title>
             </Header>
+
             <Container>
                 <SectionTitle>예약내역</SectionTitle>
                 <InfoBox>
@@ -49,30 +84,33 @@ const Checkout = () => {
                         <Value>{insurance.title}</Value>
                     </InfoItem>
                 </InfoBox>
+
                 <SectionTitle>결제금액</SectionTitle>
                 <FeeBox>
                     <FeeItem>
                         <span>요금 합계</span>
-                        <Value>{totalFee.toLocaleString()}원</Value>
+                        <Value>{formatCurrencyKRW(totalFee)}원</Value>
                     </FeeItem>
                     <Divider />
                     <FeeItem>
                         <span>대여 요금</span>
-                        <span>{rentFee.toLocaleString()}원</span>
+                        <span>{formatCurrencyKRW(rentFee)}원</span>
                     </FeeItem>
                     <FeeItem>
                         <span>면책상품 요금</span>
-                        <span>{insuranceFee.toLocaleString()}원</span>
+                        <span>{formatCurrencyKRW(insuranceFee)}원</span>
                     </FeeItem>
                 </FeeBox>
+
                 <TotalAmountBox>
                     <span>총 결제금액</span>
-                    <TotalAmount>{totalFee.toLocaleString()}원</TotalAmount>
+                    <TotalAmount>{formatCurrencyKRW(totalFee)}원</TotalAmount>
                 </TotalAmountBox>
             </Container>
+
             <PayBar>
                 <PayButton type="button" onClick={handlePay}>
-                    총 {totalFee.toLocaleString()}원 결제하기
+                    총 {formatCurrencyKRW(totalFee)}원 결제하기
                 </PayButton>
             </PayBar>
         </Wrap>
@@ -83,51 +121,51 @@ export default Checkout;
 
 /* ===== styles ===== */
 const Wrap = styled.div`
-  padding: 16px 16px 96px;
+    padding: 16px 16px 96px;
 `;
 
 const Header = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
 `;
 
 const BackButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #5d4037;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #5d4037;
 `;
 
 const Title = styled.h2`
-  font-size: 20px;
-  font-weight: 800;
-  color: #5d4037;
-  margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: #5d4037;
+    margin: 0;
 `;
 
 const Container = styled.div`
-  max-width: 400px;
-  margin: 0 auto;
+    max-width: 400px;
+    margin: 0 auto;
 `;
 
 const SectionTitle = styled.h3`
-  font-size: 16px;
-  font-weight: 700;
-  color: #795548;
-  margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #795548;
+    margin-bottom: 12px;
 `;
 
 const InfoBox = styled.div`
-  background: #fff;
-  border-radius: 16px;
-  padding: 12px 20px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-  margin-bottom: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 12px 20px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 `;
 
 const InfoItem = styled.div`
@@ -183,9 +221,11 @@ const TotalAmount = styled.span`
 
 const PayBar = styled.div`
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   padding: 12px 16px 22px;
-  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 30%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #fff 30%);
 `;
 
 const PayButton = styled.button`
@@ -197,6 +237,6 @@ const PayButton = styled.button`
   font-size: 16px;
   color: #fff;
   background: #a47551;
-  box-shadow: 0 10px 24px rgba(164, 117, 81, .35);
+  box-shadow: 0 10px 24px rgba(164, 117, 81, 0.35);
   cursor: pointer;
 `;

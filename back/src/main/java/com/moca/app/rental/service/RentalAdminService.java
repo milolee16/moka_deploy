@@ -11,6 +11,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Duration;
 import java.time.YearMonth;
 import java.util.*;
 
@@ -250,5 +252,24 @@ public class RentalAdminService {
         result.put("months", months);
         result.put("revenues", revenues);
         return result;
+    }
+
+    public long calculateRentalPrice(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        if (startDateTime == null || endDateTime == null || endDateTime.isBefore(startDateTime)) {
+            throw new IllegalArgumentException("Invalid start or end date/time.");
+        }
+
+        Duration duration = Duration.between(startDateTime, endDateTime);
+        long totalMinutes = duration.toMinutes();
+
+        // 10분당 50,000원
+        long pricePerTenMinutes = 50000;
+        long price = (totalMinutes / 10) * pricePerTenMinutes;
+
+        // If there's a partial 10-minute block, charge for the full block
+        if (totalMinutes % 10 != 0) {
+            price += pricePerTenMinutes;
+        }
+        return price;
     }
 }
