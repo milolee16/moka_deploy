@@ -1,8 +1,17 @@
-import { useMemo, useState, useEffect } from "react";
+import {useMemo, useState, useEffect} from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import Modal from "../Modal.jsx";
 
+/** ================= helpers (추가) ================= */
+// ⭐ 돈 표시용(3자리 콤마) 헬퍼
+function formatCurrencyKRW(n) {
+    try {
+        return n.toLocaleString("ko-KR");
+    } catch {
+        return `${n}`;
+    }
+}
 
 /** ================= Component ================= */
 const Reservation = () => {
@@ -18,9 +27,8 @@ const Reservation = () => {
             const yyyy = d.getFullYear();
             const mm = String(d.getMonth() + 1).padStart(2, "0");
             const dd = String(d.getDate()).padStart(2, "0");
-            const label =
-                i === 0 ? `오늘 (${mm}/${dd})` : i === 1 ? `내일 (${mm}/${dd})` : `${mm}/${dd}`;
-            arr.push({ value: `${yyyy}-${mm}-${dd}`, label });
+            const label = i === 0 ? `오늘 (${mm}/${dd})` : i === 1 ? `내일 (${mm}/${dd})` : `${mm}/${dd}`;
+            arr.push({value: `${yyyy}-${mm}-${dd}`, label});
         }
         return arr;
     }, []);
@@ -108,86 +116,114 @@ const Reservation = () => {
 
     const [isModalOpen, setModalOpen] = useState(false);
 
+    // ⭐ 추가: 총 이용 시간 diff 계산 (minutes 합계 포함)
     const diff = useMemo(() => {
         const ms = end - start;
-        if (isNaN(ms) || ms <= 0) return { days: 0, hours: 0, minutes: 0, valid: false };
+        if (isNaN(ms) || ms <= 0) return {days: 0, hours: 0, minutes: 0, valid: false, totalMin: 0};
         const totalMin = Math.floor(ms / (60 * 1000));
         const days = Math.floor(totalMin / (60 * 24));
         const hours = Math.floor((totalMin - days * 24 * 60) / 60);
         const minutes = totalMin % 60;
-        return { days, hours, minutes, valid: true };
+        return {days, hours, minutes, valid: true, totalMin};
     }, [start, end]);
+
+    // ⭐ 여기서 “10분당 5만원”으로 요금 계산!
+    // - 10분 단위 과금: 보수적으로 올림(Math.ceil) 적용 (혹시라도 분이 딱 안 맞는 상황 대비)
+    const UNITS_PER_MIN = 1 / 10; // 1분 = 0.1유닛
+    const PRICE_PER_UNIT = 50000; // 유닛(=10분)당 5만원
+    const price = useMemo(() => {
+        if (!diff.valid) return 0;
+        const units = Math.ceil((diff.totalMin || 0) * UNITS_PER_MIN);
+        return units * PRICE_PER_UNIT;
+    }, [diff]);
 
     const handleOpenModal = () => {
         if (!diff.valid) return;
         setModalOpen(true);
     };
 
+    // ⭐ 다음 페이지로 이동 시, 계산된 price를 함께 전달!
     const handleConfirmAndNavigate = () => {
-        navigate("/map", { state: { start, end } });
+        navigate("/map", {
+            state: {
+                start,
+                end,
+                // 가격 및 요약 정보 전달(다음 페이지에서 그대로 사용 가능)
+                price, // 총 요금
+                billing: {
+                    unitMinutes: 10,
+                    unitPrice: PRICE_PER_UNIT,
+                    totalMinutes: diff.totalMin,
+                    chargedUnits: Math.ceil((diff.totalMin || 0) * UNITS_PER_MIN),
+                },
+            },
+        });
     };
 
     return (
         <>
             <BoxCard>
-            <SectionTitle>이용시간</SectionTitle>
+                <SectionTitle>이용시간</SectionTitle>
 
-            <FieldRow>
-                <FieldLabel>대여시각</FieldLabel>
-                <SelectGroup>
-                    <Select value={startDate} onChange={(e) => setStartDate(e.target.value)}>
-                        {dateOptions.map((d) => (
-                            <option key={d.value} value={d.value}>
-                                {d.label}
-                            </option>
-                        ))}
-                    </Select>
-                    <Select value={startTime} onChange={(e) => setStartTime(e.target.value)} disabled={startTimeOptions.length === 0}>
-                        {startTimeOptions.length > 0
-                            ? startTimeOptions.map((t) => (
+                <FieldRow>
+                    <FieldLabel>대여시각</FieldLabel>
+                    <SelectGroup>
+                        <Select value={startDate} onChange={(e) => setStartDate(e.target.value)}>
+                            {dateOptions.map((d) => (
+                                <option key={d.value} value={d.value}>
+                                    {d.label}
+                                </option>
+                            ))}
+                        </Select>
+                        <Select
+                            value={startTime}
+                            onChange={(e) => setStartTime(e.target.value)}
+                            disabled={startTimeOptions.length === 0}
+                        >
+                            {startTimeOptions.length > 0 ? (
+                                startTimeOptions.map((t) => (
+                                    <option key={t} value={t}>
+                                        {t}
+                                    </option>
+                                ))
+                            ) : (
+                                <option>선택 불가</option>
+                            )}
+                        </Select>
+                    </SelectGroup>
+                </FieldRow>
+
+                <Divider/>
+
+                <FieldRow>
+                    <FieldLabel>반납시각</FieldLabel>
+                    <SelectGroup>
+                        <Select value={endDate} onChange={(e) => setEndDate(e.target.value)}>
+                            {dateOptions.map((d) => (
+                                <option key={d.value} value={d.value}>
+                                    {d.label}
+                                </option>
+                            ))}
+                        </Select>
+                        <Select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
+                            {allTimeOptions.map((t) => (
                                 <option key={t} value={t}>
                                     {t}
                                 </option>
-                              ))
-                            : <option>선택 불가</option>
-                        }
-                    </Select>
-                </SelectGroup>
-            </FieldRow>
+                            ))}
+                        </Select>
+                    </SelectGroup>
+                </FieldRow>
 
-            <Divider />
-
-            <FieldRow>
-                <FieldLabel>반납시각</FieldLabel>
-                <SelectGroup>
-                    <Select value={endDate} onChange={(e) => setEndDate(e.target.value)}>
-                        {dateOptions.map((d) => (
-                            <option key={d.value} value={d.value}>
-                                {d.label}
-                            </option>
-                        ))}
-                    </Select>
-                    <Select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
-                        {allTimeOptions.map((t) => (
-                            <option key={t} value={t}>
-                                {t}
-                            </option>
-                        ))}
-                    </Select>
-                </SelectGroup>
-            </FieldRow>
-
-            <Summary>
-                총{" "}
-                <strong>
-                    {diff.days}일 {diff.hours}시간 {diff.minutes}분
-                </strong>{" "}
-                이용
-            </Summary>
+                <Summary>
+                    총 <strong>{diff.days}일 {diff.hours}시간 {diff.minutes}분</strong> 이용
+                    {/* ⭐ 요금 미리보기(선택사항): 아래 한 줄을 원하면 주석 해제 */}
+                    {/* <div style={{ marginTop: 6 }}>예상 요금: <strong>{formatCurrencyKRW(price)}원</strong></div> */}
+                </Summary>
 
                 <ConfirmButton disabled={!diff.valid} onClick={handleOpenModal}>
-                확인
-            </ConfirmButton>
+                    확인
+                </ConfirmButton>
             </BoxCard>
 
             <Modal isOpen={isModalOpen} onClose={() => setModalOpen(false)}>
@@ -221,11 +257,13 @@ function toDateStr(d) {
     const dd = String(d.getDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
 }
+
 function toTimeStr(d) {
     const hh = String(d.getHours()).padStart(2, "0");
     const mm = String(d.getMinutes()).padStart(2, "0");
     return `${hh}:${mm}`;
 }
+
 function toDateObj(dateStr, timeStr) {
     try {
         const [y, m, d] = dateStr.split("-").map(Number);
@@ -235,6 +273,7 @@ function toDateObj(dateStr, timeStr) {
         return new Date(NaN);
     }
 }
+
 function formatKorean(d) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -262,94 +301,98 @@ function formatKorean(d) {
 
 /** ================= styles (Index.jsx 톤 재사용) ================= */
 const BoxCard = styled.section`
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  display: grid;
-  gap: 16px;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: grid;
+    gap: 16px;
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
-  color: #5d4037; /* Moca: Dark Brown */
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: #5d4037; /* Moca: Dark Brown */
 `;
 
 const FieldRow = styled.div`
-  display: grid;
-  grid-template-columns: 90px 1fr;
-  gap: 12px;
-  align-items: center;
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 12px;
+    align-items: center;
 `;
 
 const FieldLabel = styled.div`
-  font-size: 14px;
-  color: #795548; /* Moca: Medium Brown */
+    font-size: 14px;
+    color: #795548; /* Moca: Medium Brown */
 `;
 
 const SelectGroup = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
 `;
 
 const Select = styled.select`
-  width: 100%;
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid #e7e0d9; /* Moca: Beige Border */
-  padding: 0 12px;
-  background: #fdfbfa; /* Moca: Light Beige BG */
-  font-size: 14px;
-  color: #5d4037; /* Moca: Dark Brown */
-  outline: none;
-  &:focus {
-    border-color: #a47551; /* Moca: Primary Brown */
-    background: #fff;
-  }
+    width: 100%;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid #e7e0d9; /* Moca: Beige Border */
+    padding: 0 12px;
+    background: #fdfbfa; /* Moca: Light Beige BG */
+    font-size: 14px;
+    color: #5d4037; /* Moca: Dark Brown */
+    outline: none;
+
+    &:focus {
+        border-color: #a47551; /* Moca: Primary Brown */
+        background: #fff;
+    }
 `;
 
 const Divider = styled.hr`
-  border: none;
-  border-top: 1px dashed #e7e0d9; /* Moca: Beige Border */
-  margin: 8px 0;
+    border: none;
+    border-top: 1px dashed #e7e0d9; /* Moca: Beige Border */
+    margin: 8px 0;
 `;
 
 const Summary = styled.div`
-  font-size: 15px;
-  color: #795548; /* Moca: Medium Brown */
-  padding: 10px 12px;
-  background: #f5f1ed; /* Moca: Light Brown BG */
-  border-radius: 12px;
-  text-align: center;
-  strong {
-    font-weight: 700;
-    color: #5d4037; /* Moca: Dark Brown */
-  }
+    font-size: 15px;
+    color: #795548; /* Moca: Medium Brown */
+    padding: 10px 12px;
+    background: #f5f1ed; /* Moca: Light Brown BG */
+    border-radius: 12px;
+    text-align: center;
+
+    strong {
+        font-weight: 700;
+        color: #5d4037; /* Moca: Dark Brown */
+    }
 `;
 
 const ConfirmButton = styled.button`
-  margin-top: 4px;
-  height: 52px;
-  border: none;
-  border-radius: 999px; /* Pill shape */
-  color: #fff;
-  font-size: 16px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: background-color 0.2s, box-shadow 0.2s;
-  background: #a47551; /* Moca: Primary */
-  box-shadow: 0 10px 24px rgba(164, 117, 81, .35); /* Moca: Shadow */
-  &:active {
-    transform: scale(0.99);
-  }
-  &:disabled {
-    background: #d7ccc8; /* Moca: Disabled */
-    cursor: not-allowed;
-    box-shadow: none;
-  }
+    margin-top: 4px;
+    height: 52px;
+    border: none;
+    border-radius: 999px; /* Pill shape */
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    background: #a47551; /* Moca: Primary */
+    box-shadow: 0 10px 24px rgba(164, 117, 81, .35); /* Moca: Shadow */
+
+    &:active {
+        transform: scale(0.99);
+    }
+
+    &:disabled {
+        background: #d7ccc8; /* Moca: Disabled */
+        cursor: not-allowed;
+        box-shadow: none;
+    }
 `;
 
 /** ================= Modal Styles ================= */

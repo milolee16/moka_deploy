@@ -1,9 +1,9 @@
 // src/pages/Map.jsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import styled from "styled-components";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Map, MapMarker, CustomOverlayMap , useKakaoLoader } from "react-kakao-maps-sdk";
-import ReactSelect from "react-select"; // ✅ 추가
+import {useLocation, useNavigate} from "react-router-dom";
+import {Map, MapMarker, CustomOverlayMap, useKakaoLoader} from "react-kakao-maps-sdk";
+import ReactSelect from "react-select"; // ✅ react-select
 
 const PIN_URL =
     'data:image/svg+xml;utf8,' +
@@ -16,28 +16,52 @@ const PIN_URL =
 `);
 
 const MapPage = () => {
-    const navigate = useNavigate();
     const [locations, setLocations] = useState([]);
     const [dataLoading, setDataLoading] = useState(true);
     const [dataError, setDataError] = useState(null);
 
-    const { loading, error} = useKakaoLoader({
+    const {loading, error} = useKakaoLoader({
         appkey: import.meta.env.VITE_KAKAO_MAP_APP_KEY,
         libraries: [],
     });
 
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // ✅ Reservation에서 넘어온 모든 데이터는 info로 관리 (start, end, price, billing, etc.)
+    const info = location.state || {};
+
+    // ✅ start/end를 info에서 가져오되, 없거나 잘못되면 4시간30분 기본값 세팅
+    const {start, end} = useMemo(() => {
+        const toDate = (v) => (v instanceof Date ? v : v ? new Date(v) : null);
+        let s = toDate(info.start);
+        let e = toDate(info.end);
+        if (!s || !e || isNaN(+s) || isNaN(+e) || e <= s) {
+            const now = new Date();
+            now.setSeconds(0, 0);
+            const fallbackEnd = new Date(now.getTime() + (4 * 60 + 30) * 60 * 1000);
+            return {start: now, end: fallbackEnd};
+        }
+        return {start: s, end: e};
+    }, [info.start, info.end]);
+
+    const [placeId, setPlaceId] = useState(null);
+    const [center, setCenter] = useState({lat: 37.5665, lng: 126.9780});
+    const mapRef = useRef(null);
+
+    // 5성급 호텔 목록 불러오기
     useEffect(() => {
         const fetchLocations = async () => {
             try {
                 setDataLoading(true);
-                const response = await fetch('/api/locations?stars=5');
+                const response = await fetch("/api/locations?stars=5");
                 if (!response.ok) {
-                    throw new Error('Failed to fetch locations');
+                    throw new Error("Failed to fetch locations");
                 }
                 const data = await response.json();
-                const processedData = data.map(loc => ({
+                const processedData = data.map((loc) => ({
                     ...loc,
-                    id: loc.name.toLowerCase().replace(/\s+/g, '-'),
+                    id: loc.name.toLowerCase().replace(/\s+/g, "-"),
                 }));
                 setLocations(processedData);
             } catch (e) {
@@ -49,48 +73,35 @@ const MapPage = () => {
         fetchLocations();
     }, []);
 
-    const { state } = useLocation();
-    const { start, end } = useMemo(() => {
-        const toDate = (v) => (v instanceof Date ? v : v ? new Date(v) : null);
-        let s = toDate(state?.start);
-        let e = toDate(state?.end);
-        if (!s || !e || isNaN(+s) || isNaN(+e) || e <= s) {
-            const now = new Date();
-            now.setSeconds(0, 0);
-            const end = new Date(now.getTime() + (4 * 60 + 30) * 60 * 1000);
-            return { start: now, end };
-        }
-        return { start: s, end: e };
-    }, [state]);
-
-    const [placeId, setPlaceId] = useState(null);
-    const [center, setCenter] = useState({ lat: 37.5665, lng: 126.9780 });
-    const mapRef = useRef(null);
-
+    // 기본 호텔(포시즌스) 또는 첫번째 호텔로 초기 중심 잡기
     useEffect(() => {
         if (locations.length > 0) {
-            const defaultHotelName = '포시즌스 호텔 서울';
-            const defaultHotel = locations.find(loc => loc.name === defaultHotelName);
+            const defaultHotelName = "포시즌스 호텔 서울";
+            const defaultHotel = locations.find((loc) => loc.name === defaultHotelName);
 
             if (defaultHotel) {
                 setPlaceId(defaultHotel.id);
-                setCenter({ lat: defaultHotel.lat, lng: defaultHotel.lng });
+                setCenter({lat: defaultHotel.lat, lng: defaultHotel.lng});
             } else {
                 setPlaceId(locations[0].id);
-                setCenter({ lat: locations[0].lat, lng: locations[0].lng });
+                setCenter({lat: locations[0].lat, lng: locations[0].lng});
             }
         }
     }, [locations]);
 
+    // 이용시간 라벨
     const timeLabel = useMemo(() => {
         const fmt = (d) => {
             const mm = String(d.getMonth() + 1).padStart(2, "0");
             const dd = String(d.getDate()).padStart(2, "0");
             const hh = String(d.getHours()).padStart(2, "0");
             const mi = String(d.getMinutes()).padStart(2, "0");
-            const today = new Date(); today.setHours(0,0,0,0);
-            const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
-            const dayOnly = new Date(d); dayOnly.setHours(0,0,0,0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+            const dayOnly = new Date(d);
+            dayOnly.setHours(0, 0, 0, 0);
             const timePart = `${hh}:${mi}`;
             if (dayOnly.getTime() === today.getTime()) return `오늘 ${timePart}`;
             if (dayOnly.getTime() === tomorrow.getTime()) return `내일 ${timePart}`;
@@ -99,30 +110,30 @@ const MapPage = () => {
         return `${fmt(start)} ~ ${fmt(end)}`;
     }, [start, end]);
 
-    // ✅ react-select용 옵션
+    // ✅ react-select 옵션/값
     const selectOptions = useMemo(
-        () => locations.map(h => ({ value: h.id, label: h.name })),
+        () => locations.map((h) => ({value: h.id, label: h.name})),
         [locations]
     );
-
-    // 이용시간을 react-select 컨트롤로 표시하기 위한 값
-    const timeValue = useMemo(
-        () => ({ value: "time", label: timeLabel }),
-        [timeLabel]
-    );
-
+    const timeValue = useMemo(() => ({value: "time", label: timeLabel}), [timeLabel]);
 
     // ✅ react-select 변경 핸들러
     const handlePlaceChange = (opt) => {
         const next = locations.find((h) => h.id === opt?.value);
         if (!next) return;
         setPlaceId(next.id);
-        setCenter({ lat: next.lat, lng: next.lng });
+        setCenter({lat: next.lat, lng: next.lng});
     };
 
+    // ✅ 차량선택으로 이동: 경로를 /car-select 로 통일 & info 릴레이 + locationName 추가
     const handleSelectCar = () => {
         const locationName = locations.find((h) => h.id === placeId)?.name;
-        navigate("/cars", { state: { start, end, locationName } });
+        navigate("/cars", {
+            state: {
+                ...info, // start, end, price, billing 등 그대로 전달
+                locationName,
+            },
+        });
     };
 
     const isLoading = loading || dataLoading;
@@ -134,14 +145,15 @@ const MapPage = () => {
                 {anyError && (
                     <MapLoading>
                         지도를 불러오지 못했어요.
-                        <small style={{ marginTop: 8, color: '#868e96' }}>({anyError.message})</small>
+                        <small style={{marginTop: 8, color: "#868e96"}}>({anyError.message})</small>
                     </MapLoading>
                 )}
+
                 {!isLoading && !anyError && (
                     <Map
                         center={center}
                         level={5}
-                        style={{ width: "100%", height: "100%" }}
+                        style={{width: "100%", height: "100%"}}
                         onCreate={(map) => (mapRef.current = map)}
                     >
                         {placeId && (
@@ -150,37 +162,34 @@ const MapPage = () => {
                                     position={center}
                                     image={{
                                         src: PIN_URL,
-                                        size: { width: 28, height: 36 },
-                                        options: { offset: { x: 14, y: 36 } },
+                                        size: {width: 28, height: 36},
+                                        options: {offset: {x: 14, y: 36}},
                                     }}
                                 />
                                 <CustomOverlayMap position={center} yAnchor={2.23} zIndex={3}>
-                                    <MarkerLabel>
-                                        {locations.find((h) => h.id === placeId)?.name}
-                                    </MarkerLabel>
+                                    <MarkerLabel>{locations.find((h) => h.id === placeId)?.name}</MarkerLabel>
                                 </CustomOverlayMap>
                             </>
                         )}
                     </Map>
                 )}
-                {(isLoading && !anyError) && <MapLoading>지도를 불러오는 중…</MapLoading>}
+
+                {isLoading && !anyError && <MapLoading>지도를 불러오는 중…</MapLoading>}
             </MapWrap>
 
             <BottomSheet>
                 <Row>
                     <Label>대여 · 반납</Label>
-
-                    {/* ✅ 네이티브 select → react-select 교체 */}
                     <ReactSelect
                         classNamePrefix="moca-select"
                         isDisabled={isLoading || anyError}
                         options={selectOptions}
-                        value={selectOptions.find(o => o.value === placeId) || null}
+                        value={selectOptions.find((o) => o.value === placeId) || null}
                         onChange={handlePlaceChange}
                         placeholder="호텔을 선택하세요"
                         styles={selectStyles}
                         menuPlacement="auto"
-                        menuPortalTarget={document.body} // 모바일 오버플로우 이슈 완화
+                        menuPortalTarget={typeof document !== "undefined" ? document.body : null}
                     />
                 </Row>
 
@@ -193,16 +202,18 @@ const MapPage = () => {
                         isDisabled
                         isSearchable={false}
                         isClearable={false}
-                        menuIsOpen={false}   // 펼치기 금지
+                        menuIsOpen={false} // 펼치기 금지
                         styles={{
                             ...selectStyles,
-                            indicatorsContainer: () => ({ display: "none" }), // 아이콘 숨김
+                            indicatorsContainer: () => ({display: "none"}), // 아이콘 숨김
                         }}
                     />
                 </Row>
 
                 <Actions>
-                    <ActionButton onClick={handleSelectCar} disabled={!placeId}>이 위치에서 차량선택</ActionButton>
+                    <ActionButton onClick={handleSelectCar} disabled={!placeId}>
+                        이 위치에서 차량선택
+                    </ActionButton>
                 </Actions>
             </BottomSheet>
         </Page>
@@ -213,39 +224,70 @@ export default MapPage;
 
 /* ============== styles ============== */
 const Page = styled.main`
-    width: 100%; max-width: 560px; margin: 0 auto;
-    display: grid; grid-template-rows: 50vh 1fr; gap: 12px;
-    padding: 12px 16px 16px; box-sizing: border-box;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-rows: 50vh 1fr;
+    gap: 12px;
+    padding: 12px 16px 16px;
+    box-sizing: border-box;
 `;
 const MapWrap = styled.section`
-    position: relative; width: 100%; height: 50vh; overflow: hidden;
-    border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,.05); background: #f1f3f5;
+    position: relative;
+    width: 100%;
+    height: 50vh;
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background: #f1f3f5;
 `;
 const MapLoading = styled.div`
-    position: absolute; inset: 0; display: grid; place-items: center;
-    font-size: 14px; color: #495057;
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    color: #495057;
 `;
 const BottomSheet = styled.section`
-    background: #fff; border-radius: 20px; padding: 16px; display: grid; gap: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,.05); min-height: 28vh;
+    background: #fff;
+    border-radius: 20px;
+    padding: 16px;
+    display: grid;
+    gap: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    min-height: 28vh;
 `;
 const Row = styled.div`
-    display: grid; grid-template-columns: 90px 1fr; gap: 12px; align-items: center;
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 12px;
+    align-items: center;
 `;
-const Label = styled.div`font-size: 14px; color: #795548;`;
-const TimePill = styled.div`
-    height: 44px; border-radius: 12px; display: grid; align-items: center;
-    padding: 0 12px; background: #f5f1ed; font-size: 14px; color: #5d4037;
+const Label = styled.div`
+    font-size: 14px;
+    color: #795548;
 `;
 const Actions = styled.div`
     margin-top: 4px;
 `;
 const ActionButton = styled.button`
-    width: 100%; height: 52px; border-radius: 999px; border: none;
-    background: #a47551; color: #fff; font-size: 16px; font-weight: 800;
-    cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s;
-    box-shadow: 0 10px 24px rgba(164, 117, 81, .35);
-    &:active{ transform: scale(.99); }
+    width: 100%;
+    height: 52px;
+    border-radius: 999px;
+    border: none;
+    background: #a47551;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 10px 24px rgba(164, 117, 81, 0.35);
+
+    &:active {
+        transform: scale(0.99);
+    }
 `;
 
 const MarkerLabel = styled.div`
@@ -256,7 +298,7 @@ const MarkerLabel = styled.div`
     font-size: 13px;
     font-weight: 700;
     color: #5d4037;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     white-space: nowrap;
 `;
 
@@ -271,7 +313,7 @@ const selectStyles = {
         paddingLeft: 4,
         paddingRight: 4,
         backgroundColor: "#fdfbfa",
-        ":hover": { borderColor: "#a47551", backgroundColor: "#fff" },
+        ":hover": {borderColor: "#a47551", backgroundColor: "#fff"},
     }),
     valueContainer: (base) => ({
         ...base,
@@ -295,11 +337,11 @@ const selectStyles = {
     }),
     indicatorsContainer: (base) => ({
         ...base,
-        "> div": { color: "#a47551" },
+        "> div": {color: "#a47551"},
     }),
     menu: (base) => ({
         ...base,
-        borderRadius: 16,          // 펼쳐진 메뉴 둥글게
+        borderRadius: 16,
         overflow: "hidden",
         boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
         marginTop: 8,
@@ -315,11 +357,7 @@ const selectStyles = {
         padding: "10px 12px",
         fontSize: 14,
         color: "#5d4037",
-        backgroundColor: state.isFocused
-            ? "#f5f1ed"
-            : state.isSelected
-                ? "#e7e0d9"
-                : "#fff",
+        backgroundColor: state.isFocused ? "#f5f1ed" : state.isSelected ? "#e7e0d9" : "#fff",
         ":active": {
             backgroundColor: "#e7e0d9",
         },

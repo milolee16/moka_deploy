@@ -38,7 +38,7 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment-options" element={<PaymentOptions />} />
           <Route path="/ocr" element={<OcrPage />} />
-          <Route path="/payment/result/:status" element={<PaymentResult />} />
+          <Route path="/payment-result/:status" element={<PaymentResult />} />
           <Route path="/notices" element={<NoticesPage />} />
           <Route path="/notices/write" element={<NoticeWritePage/>} />
 
