@@ -268,17 +268,18 @@ export default RentalAdminDashboard;
 /* ============ Styled Components ============ */
 
 const DashboardContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  min-height: 100vh;
-  background-color: #f7f5f3;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    width: 78vw;
+    min-height: 100vh;
+    background-color: #f7f5f3;
 
-  @media (min-width: 769px) {
-    gap: 24px;
-    padding: 24px;
-  }
+    @media (min-width: 769px) {
+        gap: 24px;
+        padding: 24px;
+    }
 `;
 
 const PageTitle = styled.h1`
