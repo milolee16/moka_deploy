@@ -1,5 +1,8 @@
 package com.moca.app.config;
 
+import com.moca.app.login.JwtTokenProvider;
+import com.moca.app.login.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -7,6 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -15,7 +19,10 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtTokenProvider jwtTokenProvider; // Inject JwtTokenProvider
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -37,9 +44,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         // 인증 관련 API 경로는 누구나 접근 가능하도록 허용
                         .requestMatchers("/api/auth/**").permitAll()
+                        // 예약 관련 API는 인증 필요
+                        .requestMatchers("/api/reservations/**").authenticated() // Protect reservation endpoints
                         // 다른 모든 요청은 일단 허용 (나중에 필요에 따라 인증 요구하도록 수정)
                         .anyRequest().permitAll()
-                );
+                )
+                // 6. JWT 필터 추가
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // Add JWT filter
 
         return http.build();
     }

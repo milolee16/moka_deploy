@@ -31,11 +31,29 @@ const Checkout = () => {
         );
     }
 
-    // ✔ 렌탈요금은 시간기반 가격을 우선 사용
+    // ✔ 렌탈요금은 (10분당 요금 * 대여시간)으로 계산
     const rentFee = useMemo(() => {
+        // 이전 단계에서 전달된 startDate, endDate가 있다고 가정합니다.
+        const startDate = info.startDate ? new Date(info.startDate) : null;
+        const endDate = info.endDate ? new Date(info.endDate) : null;
+        
+        // DB 정보를 바탕으로, car 객체에 rentPricePer10min 필드가 있다고 가정합니다.
+        const pricePer10min = car?.rentPricePer10min ?? 0;
+
+        if (startDate && endDate && pricePer10min > 0) {
+            // 대여시간 (분 단위)
+            const durationInMinutes = (endDate.getTime() - startDate.getTime()) / (1000 * 60);
+            
+            // 10분 단위로 올림
+            const intervals = Math.ceil(durationInMinutes / 10);
+            
+            return intervals * pricePer10min;
+        }
+
+        // 이전 로직 (필수 정보가 없을 경우 대비)
         const n = info?.payment?.basePrice ?? info?.price ?? 0;
         return Number.isFinite(n) ? n : 0;
-    }, [info]);
+    }, [info, car]);
 
     // ✔ 보험요금
     const insuranceFee = useMemo(() => {

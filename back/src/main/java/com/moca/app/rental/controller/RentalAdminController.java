@@ -1,5 +1,6 @@
 package com.moca.app.rental.controller;
 
+import com.moca.app.rental.dto.CarDto;
 import com.moca.app.rental.service.RentalAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/rental/admin")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:3000")
 public class RentalAdminController {
 
     private final RentalAdminService rentalAdminService;
@@ -87,5 +88,10 @@ public class RentalAdminController {
                 "revenue", rentalAdminService.getRevenueStats()
         );
         return ResponseEntity.ok(allStats);
+    }
+
+    @GetMapping("/cars")
+    public ResponseEntity<java.util.List<CarDto>> getAllCars() {
+        return ResponseEntity.ok(rentalAdminService.getAllCars());
     }
 }

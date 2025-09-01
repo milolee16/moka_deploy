@@ -73,7 +73,10 @@ const PaymentOptions = () => {
                 const nextPcUrl = res?.data?.next_redirect_pc_url;
                 const nextMobileUrl = res?.data?.next_redirect_mobile_url;
                 const redirectUrl = isMobile ? (nextMobileUrl || nextPcUrl) : (nextPcUrl || nextMobileUrl);
-                if (redirectUrl) window.location.assign(redirectUrl);
+                if (redirectUrl) {
+                    sessionStorage.setItem('reservationInfo', JSON.stringify(info)); // 예약 정보 저장
+                    window.location.assign(redirectUrl);
+                }
                 else alert("결제 페이지로 이동하는 데 실패했습니다. 다시 시도해주세요.");
             } catch (e) {
                 console.error("카카오페이 결제 준비 중 오류:", e);

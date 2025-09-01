@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import {
   FiUser,
   FiChevronRight,
@@ -12,34 +13,60 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 
-// Mock Data
-const mockReservations = [
-  {
-    id: 1,
-    carModel: 'Lamborghini Huracan',
-    startDate: '2025.09.10',
-    endDate: '2025.09.12',
-    status: '예정',
-  },
-  {
-    id: 2,
-    carModel: 'Ford Mustang Mach-E',
-    startDate: '2025.07.22',
-    endDate: '2025.07.25',
-    status: '완료',
-  },
-];
+// API base URL (same as in PaymentOptions.jsx)
+const API_BASE_URL =
+    import.meta.env.MODE === "development" ? "http://192.168.2.23:8080" : "http://localhost:8080";
+
+// Helper function for date/time formatting
+const formatReservationDateTime = (date, time) => {
+  if (!date || !time) return '';
+  // Assuming date is 'YYYY-MM-DD' and time is 'HH:MM:SS' or 'HH:MM'
+  const dateTime = new Date(`${date}T${time}`);
+  const year = dateTime.getFullYear();
+  const month = String(dateTime.getMonth() + 1).padStart(2, '0');
+  const day = String(dateTime.getDate()).padStart(2, '0');
+  const hours = String(dateTime.getHours()).padStart(2, '0');
+  const minutes = String(dateTime.getMinutes()).padStart(2, '0');
+  return `${year}.${month}.${day} ${hours}:${minutes}`;
+};
 
 const MyPage = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth(); // Assuming logout function is provided by AuthContext
+  const { user, logout } = useAuth();
+
+  const [reservations, setReservations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchReservations = async () => {
+      if (!user?.userId) { // Ensure user ID is available
+        setLoading(false);
+        return;
+      }
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/reservations/my-reservations`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`, // Assuming token is available in user object
+          },
+        });
+        setReservations(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err);
+        setLoading(false);
+        console.error("Failed to fetch reservations:", err);
+      }
+    };
+
+    fetchReservations();
+  }, [user]); // Re-fetch when user changes
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  // Fallback for user when not logged in (though ProtectedRoute should handle this)
   const displayName = user?.username || '게스트';
   const profileInitial = user?.role === 'admin' ? 'A' : displayName[0];
 
@@ -62,15 +89,22 @@ const MyPage = () => {
 
       <Section>
         <SectionTitle>나의 예약 내역</SectionTitle>
-        {mockReservations.map((res) => (
-          <ReservationCard key={res.id}>
-            <CarModel>{res.carModel}</CarModel>
-            <ReservationInfo>
-              {res.startDate} ~ {res.endDate}
-            </ReservationInfo>
-            <StatusBadge status={res.status}>{res.status}</StatusBadge>
-          </ReservationCard>
-        ))}
+        {loading && <p>예약 내역을 불러오는 중...</p>}
+        {error && <p>예약 내역을 불러오는데 실패했습니다: {error.message}</p>}
+        {!loading && !error && reservations.length === 0 && (
+          <p>예약 내역이 없습니다.</p>
+        )}
+        {!loading && !error && reservations.length > 0 && (
+          reservations.map((res) => (
+            <ReservationCard key={res.id}>
+              <CarModel>{res.car?.carName || '차량 정보 없음'}</CarModel>
+              <ReservationInfo>
+                {formatReservationDateTime(res.date, res.time)} ~ {formatReservationDateTime(res.returnDate, res.returnTime)}
+              </ReservationInfo>
+              <StatusBadge status={res.status}>{res.status}</StatusBadge>
+            </ReservationCard>
+          ))
+        )}
         <ViewMoreButton>예약 내역 더보기</ViewMoreButton>
       </Section>
 

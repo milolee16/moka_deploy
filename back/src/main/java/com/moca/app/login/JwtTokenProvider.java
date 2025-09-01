@@ -4,9 +4,16 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User; // Spring Security User
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenProvider {
@@ -16,10 +23,10 @@ public class JwtTokenProvider {
 
     private long tokenValidTime = 30 * 60 * 1000L; // 토큰 유효시간 30분
 
-    // 기존 카카오 로그인용 User 객체를 받는 메서드
-    public String createToken(User user) {
-        Claims claims = Jwts.claims().setSubject(user.getId().toString());
-        claims.put("username", user.getNickname());
+    // 기존 카카오 로그인용 KakaoUser 객체를 받는 메서드
+    public String createToken(KakaoUser kakaoUser) {
+        Claims claims = Jwts.claims().setSubject(kakaoUser.getId().toString());
+        claims.put("username", kakaoUser.getNickname());
         claims.put("role", "user");
 
         Date now = new Date();
@@ -62,5 +69,23 @@ public class JwtTokenProvider {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    // JWT 토큰에서 인증 정보 조회
+    public Authentication getAuthentication(String token) {
+        Claims claims = getClaims(token); // Use existing getClaims method
+
+        // Extract roles/authorities from claims (assuming "role" claim exists)
+        // If role is a single string:
+        String role = claims.get("role", String.class);
+        List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+
+        // Use the subject (userId) as the principal name
+        String userId = claims.getSubject(); // Get subject (userId) from claims
+
+        // Create Spring Security UserDetails object
+        User principal = new User(userId, "", authorities); // Use userId as principal name
+
+        return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 }
