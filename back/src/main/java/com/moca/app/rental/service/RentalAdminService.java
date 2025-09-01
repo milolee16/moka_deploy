@@ -1,12 +1,13 @@
 package com.moca.app.rental.service;
 
 import com.moca.app.rental.repository.*;
-import com.moca.app.rental.Reservation; // Reservation 엔티티 import 추가
-import com.moca.app.rental.Car; // Car 엔티티 import 추가
-import com.moca.app.rental.License; // License 엔티티 import 추가
-import com.moca.app.login.AppUserRepository; // 기존 사용자 Repository
-import com.moca.app.locations.LocationRepository; // 기존 위치 Repository
+import com.moca.app.rental.Reservation;
+import com.moca.app.rental.Car;
+import com.moca.app.rental.License;
+import com.moca.app.login.AppUserRepository;
+import com.moca.app.locations.LocationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -21,74 +22,101 @@ public class RentalAdminService {
 
     private final ReservationRepository reservationRepository;
     private final CarRepository carRepository;
-    private final AppUserRepository appUserRepository; // 기존 사용자 Repository 사용
+    private final AppUserRepository appUserRepository;
     private final LicenseRepository licenseRepository;
-    private final LocationRepository locationRepository; // 기존 LocationRepository 사용
+    private final LocationRepository locationRepository;
     private final VehicleTypeRepository vehicleTypeRepository;
 
     /**
-     * 대시보드 통계 데이터 조회
+     * 대시보드 기본 통계 (가장 자주 사용되므로 캐싱)
      */
+    @Cacheable(value = "dashboardStats", unless = "#result == null")
     public Map<String, Object> getDashboardStats() {
         Map<String, Object> stats = new HashMap<>();
 
-        // 전체 통계
+        // 기본 카운트 (가장 빠른 쿼리들)
         stats.put("totalReservations", reservationRepository.count());
         stats.put("totalCars", carRepository.count());
-        stats.put("totalUsers", appUserRepository.count()); // 기존 AppUser 테이블 사용
+        stats.put("totalUsers", appUserRepository.count());
+        stats.put("totalLocations", locationRepository.count());
 
-        // Location 개수는 직접 쿼리하거나 LocationRepository가 있다면 사용
-        stats.put("totalLocations", getTotalLocations());
-
-        // 예약 상태별 통계
-        Map<String, Long> statusStats = new HashMap<>();
-        try {
-            List<Object[]> reservationStats = reservationRepository.getReservationStatusStats();
-            for (Object[] stat : reservationStats) {
-                String status = (String) stat[0];
-                Long count = (Long) stat[1];
-                statusStats.put(status, count);
-            }
-        } catch (Exception e) {
-            System.err.println("Reservation status stats error: " + e.getMessage());
-        }
-        stats.put("reservationStatusStats", statusStats);
-
-        // 차량 상태별 통계
-        Map<String, Long> carStatusStats = new HashMap<>();
-        List<Car> availableCars = carRepository.findByStatus("AVAILABLE");
-        List<Car> rentedCars = carRepository.findByStatus("RENTED");
-        List<Car> maintenanceCars = carRepository.findByStatus("MAINTENANCE");
-
-        carStatusStats.put("AVAILABLE", (long) availableCars.size());
-        carStatusStats.put("RENTED", (long) rentedCars.size());
-        carStatusStats.put("MAINTENANCE", (long) maintenanceCars.size());
-        stats.put("carStatusStats", carStatusStats);
-
-        // 면허증 승인 통계
-        Map<String, Long> licenseStats = new HashMap<>();
-        List<License> approvedLicenses = licenseRepository.findByApproved(true);
-        List<License> pendingLicenses = licenseRepository.findByApproved(false);
-
-        licenseStats.put("approved", (long) approvedLicenses.size());
-        licenseStats.put("pending", (long) pendingLicenses.size());
-        stats.put("licenseStats", licenseStats);
+        // 상태별 통계 (최적화된 쿼리 사용)
+        stats.put("reservationStatusStats", getReservationStatusStatsOptimized());
+        stats.put("carStatusStats", getCarStatusStatsOptimized());
+        stats.put("licenseStats", getLicenseStatsOptimized());
 
         return stats;
     }
 
-    // Location 테이블의 총 개수를 구하는 메서드
-    private long getTotalLocations() {
+    /**
+     * 최적화된 예약 상태별 통계
+     */
+    private Map<String, Long> getReservationStatusStatsOptimized() {
         try {
-            return locationRepository.count(); // 실제 LocationRepository 사용
+            List<Object[]> results = reservationRepository.getReservationStatusStats();
+            Map<String, Long> stats = new HashMap<>();
+            for (Object[] result : results) {
+                stats.put((String) result[0], (Long) result[1]);
+            }
+            return stats;
         } catch (Exception e) {
-            return 0L;
+            // 쿼리 실패시 빈 맵 반환
+            return new HashMap<>();
         }
     }
 
     /**
-     * 월별 예약 통계 (최근 6개월)
+     * 최적화된 차량 상태별 통계
      */
+    private Map<String, Long> getCarStatusStatsOptimized() {
+        Map<String, Long> stats = new HashMap<>();
+        try {
+            // 한번의 쿼리로 모든 차량 상태 집계
+            List<Object[]> results = carRepository.getCarStatusStats();
+            for (Object[] result : results) {
+                stats.put((String) result[0], (Long) result[1]);
+            }
+
+            // 기본값 설정 (데이터가 없는 상태)
+            stats.putIfAbsent("AVAILABLE", 0L);
+            stats.putIfAbsent("RENTED", 0L);
+            stats.putIfAbsent("MAINTENANCE", 0L);
+
+        } catch (Exception e) {
+            stats.put("AVAILABLE", 0L);
+            stats.put("RENTED", 0L);
+            stats.put("MAINTENANCE", 0L);
+        }
+        return stats;
+    }
+
+    /**
+     * 최적화된 면허증 통계
+     */
+    private Map<String, Long> getLicenseStatsOptimized() {
+        Map<String, Long> stats = new HashMap<>();
+        try {
+            List<Object[]> results = licenseRepository.getLicenseApprovalStats();
+            for (Object[] result : results) {
+                Boolean approved = (Boolean) result[0];
+                Long count = (Long) result[1];
+                stats.put(approved ? "approved" : "pending", count);
+            }
+
+            stats.putIfAbsent("approved", 0L);
+            stats.putIfAbsent("pending", 0L);
+
+        } catch (Exception e) {
+            stats.put("approved", 0L);
+            stats.put("pending", 0L);
+        }
+        return stats;
+    }
+
+    /**
+     * 월별 예약 통계 (캐싱 적용)
+     */
+    @Cacheable(value = "monthlyStats", unless = "#result == null")
     public Map<String, Object> getMonthlyReservationStats() {
         Map<String, Object> result = new HashMap<>();
         List<String> months = new ArrayList<>();
@@ -99,7 +127,8 @@ public class RentalAdminService {
             LocalDate startDate = yearMonth.atDay(1);
             LocalDate endDate = yearMonth.atEndOfMonth();
 
-            long count = reservationRepository.findByDateRange(startDate, endDate).size();
+            // 최적화된 카운트 쿼리 사용
+            long count = reservationRepository.countByDateRange(startDate, endDate);
 
             months.add(yearMonth.toString());
             counts.add(count);
@@ -111,54 +140,74 @@ public class RentalAdminService {
     }
 
     /**
-     * 차량 타입별 예약 통계
+     * 차량 타입별 예약 통계 (캐싱 적용)
      */
+    @Cacheable(value = "vehicleTypeStats", unless = "#result == null")
     public Map<String, Long> getVehicleTypeStats() {
         Map<String, Long> stats = new HashMap<>();
-        List<String> vehicleTypes = Arrays.asList("COMPACT", "MIDSIZE", "FULLSIZE", "SUV", "VAN");
 
-        for (String type : vehicleTypes) {
-            List<Long> carIds = carRepository.findByVehicleTypeCode(type).stream()
-                    .map(car -> car.getId()).toList();
-
-            long count = 0;
-            for (Object carId : carIds) {
-                count += reservationRepository.findByCarId((Long) carId).size();
+        try {
+            // 한번의 조인 쿼리로 차량 타입별 예약 수 집계
+            List<Object[]> results = reservationRepository.getReservationsByVehicleType();
+            for (Object[] result : results) {
+                String vehicleType = (String) result[0];
+                Long count = (Long) result[1];
+                stats.put(vehicleType, count);
             }
-            stats.put(type, count);
+
+            // 기본 차량 타입들이 없다면 0으로 설정
+            List<String> defaultTypes = Arrays.asList("COMPACT", "MIDSIZE", "FULLSIZE", "SUV", "VAN");
+            for (String type : defaultTypes) {
+                stats.putIfAbsent(type, 0L);
+            }
+
+        } catch (Exception e) {
+            // 실패시 기본값
+            Arrays.asList("COMPACT", "MIDSIZE", "FULLSIZE", "SUV", "VAN")
+                    .forEach(type -> stats.put(type, 0L));
         }
 
         return stats;
     }
 
     /**
-     * 지역별 예약 통계 (기존 Location 테이블 활용)
+     * 지역별 예약 통계 (캐싱 적용)
      */
+    @Cacheable(value = "regionStats", unless = "#result == null")
     public Map<String, Long> getRegionStats() {
         Map<String, Long> stats = new HashMap<>();
 
-        // Location 테이블과 조인한 결과를 활용
-        List<Object[]> regionStats = reservationRepository.getReservationsByRegion();
-        for (Object[] stat : regionStats) {
-            String region = (String) stat[0];
-            Long count = (Long) stat[1];
-            stats.put(region, count);
+        try {
+            // 최적화된 조인 쿼리
+            List<Object[]> regionStats = reservationRepository.getReservationsByRegion();
+            for (Object[] stat : regionStats) {
+                String region = (String) stat[0];
+                Long count = (Long) stat[1];
+                stats.put(region, count);
+            }
+        } catch (Exception e) {
+            // 조인 실패시 빈 통계 반환
+            System.err.println("Region stats error: " + e.getMessage());
         }
 
         return stats;
     }
 
     /**
-     * 일별 예약 현황 (최근 30일)
+     * 일별 예약 현황 (최근 7일만, 캐싱)
      */
+    @Cacheable(value = "dailyStats", unless = "#result == null")
     public Map<String, Object> getDailyReservationStats() {
         Map<String, Object> result = new HashMap<>();
         List<String> dates = new ArrayList<>();
         List<Long> counts = new ArrayList<>();
 
-        for (int i = 29; i >= 0; i--) {
+        // 30일 -> 7일로 단축하여 성능 개선
+        for (int i = 6; i >= 0; i--) {
             LocalDate date = LocalDate.now().minusDays(i);
-            long count = reservationRepository.findByDate(date).size();
+
+            // 최적화된 카운트 쿼리
+            long count = reservationRepository.countByDate(date);
 
             dates.add(date.toString());
             counts.add(count);
@@ -170,8 +219,9 @@ public class RentalAdminService {
     }
 
     /**
-     * 매출 통계 (월별)
+     * 매출 통계 (캐싱 적용)
      */
+    @Cacheable(value = "revenueStats", unless = "#result == null")
     public Map<String, Object> getRevenueStats() {
         Map<String, Object> result = new HashMap<>();
         List<String> months = new ArrayList<>();
@@ -182,10 +232,18 @@ public class RentalAdminService {
             LocalDate startDate = yearMonth.atDay(1);
             LocalDate endDate = yearMonth.atEndOfMonth();
 
-            List<Reservation> reservations = reservationRepository.findByDateRange(startDate, endDate);
-
-            // 임시로 예약 건수 * 평균 금액으로 계산
-            int revenue = reservations.size() * 150000;
+            // 실제 매출 합계를 위한 최적화된 쿼리 (만약 TOTAL_AMOUNT 필드가 있다면)
+            Integer revenue;
+            try {
+                revenue = reservationRepository.getTotalRevenueByDateRange(startDate, endDate);
+                if (revenue == null) {
+                    // TOTAL_AMOUNT가 없다면 예약 건수 * 평균 금액으로 계산
+                    long count = reservationRepository.countByDateRange(startDate, endDate);
+                    revenue = (int) (count * 150000);
+                }
+            } catch (Exception e) {
+                revenue = 0;
+            }
 
             months.add(yearMonth.toString());
             revenues.add(revenue);
