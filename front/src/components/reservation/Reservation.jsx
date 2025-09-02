@@ -146,8 +146,8 @@ const Reservation = () => {
     const handleConfirmAndNavigate = () => {
         navigate("/map", {
             state: {
-                start,
-                end,
+                startDate: start,
+                endDate: end,
                 // 가격 및 요약 정보 전달(다음 페이지에서 그대로 사용 가능)
                 price, // 총 요금
                 billing: {

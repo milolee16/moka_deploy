@@ -1,5 +1,6 @@
 package com.moca.app.rental.service;
 
+import com.moca.app.rental.dto.CarDto;
 import com.moca.app.rental.repository.*;
 import com.moca.app.rental.Reservation;
 import com.moca.app.rental.Car;
@@ -127,8 +128,14 @@ public class RentalAdminService {
             LocalDate startDate = yearMonth.atDay(1);
             LocalDate endDate = yearMonth.atEndOfMonth();
 
-            // 최적화된 카운트 쿼리 사용
-            long count = reservationRepository.countByDateRange(startDate, endDate);
+            long count;
+            try {
+                // 최적화된 카운트 쿼리 사용 (있으면)
+                count = reservationRepository.countByDateRange(startDate, endDate);
+            } catch (Exception ex) {
+                // 폴백: 목록 조회 후 사이즈
+                count = reservationRepository.findByDateBetween(startDate, endDate).size();
+            }
 
             months.add(yearMonth.toString());
             counts.add(count);
@@ -225,28 +232,35 @@ public class RentalAdminService {
     public Map<String, Object> getRevenueStats() {
         Map<String, Object> result = new HashMap<>();
         List<String> months = new ArrayList<>();
-        List<Integer> revenues = new ArrayList<>();
+        List<Long> revenues = new ArrayList<>();
 
         for (int i = 5; i >= 0; i--) {
             YearMonth yearMonth = YearMonth.now().minusMonths(i);
             LocalDate startDate = yearMonth.atDay(1);
             LocalDate endDate = yearMonth.atEndOfMonth();
 
-            // 실제 매출 합계를 위한 최적화된 쿼리 (만약 TOTAL_AMOUNT 필드가 있다면)
-            Integer revenue;
+            long monthlyRevenue = 0L;
+
+            // 1) 레포지토리에서 총액 쿼리 지원 시 최우선 사용
             try {
-                revenue = reservationRepository.getTotalRevenueByDateRange(startDate, endDate);
-                if (revenue == null) {
-                    // TOTAL_AMOUNT가 없다면 예약 건수 * 평균 금액으로 계산
-                    long count = reservationRepository.countByDateRange(startDate, endDate);
-                    revenue = (int) (count * 150000);
+                Integer queried = reservationRepository.getTotalRevenueByDateRange(startDate, endDate);
+                if (queried != null) {
+                    monthlyRevenue = queried.longValue();
+                } else {
+                    // 2) 폴백: 실제 예약을 순회하며 금액 계산(HEAD 로직)
+                    monthlyRevenue = calcRevenueByIteratingReservations(startDate, endDate);
                 }
-            } catch (Exception e) {
-                revenue = 0;
+            } catch (Exception ex) {
+                // 3) 예외 시에도 안전한 폴백
+                try {
+                    monthlyRevenue = calcRevenueByIteratingReservations(startDate, endDate);
+                } catch (Exception inner) {
+                    monthlyRevenue = 0L; // 최종 폴백
+                }
             }
 
             months.add(yearMonth.toString());
-            revenues.add(revenue);
+            revenues.add(monthlyRevenue);
         }
 
         result.put("months", months);
@@ -254,16 +268,48 @@ public class RentalAdminService {
         return result;
     }
 
-    public long calculateRentalPrice(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+    /** HEAD 로직을 보존한 폴백 계산 */
+    private long calcRevenueByIteratingReservations(LocalDate startDate, LocalDate endDate) {
+        List<Reservation> reservations = reservationRepository.findByDateBetween(startDate, endDate);
+        long monthlyRevenue = 0L;
+
+        for (Reservation reservation : reservations) {
+            if (reservation.getReturnDate() != null && reservation.getReturnTime() != null) {
+                LocalDateTime rentalStart = LocalDateTime.of(reservation.getDate(), reservation.getTime());
+                LocalDateTime rentalEnd = LocalDateTime.of(reservation.getReturnDate(), reservation.getReturnTime());
+
+                try {
+                    monthlyRevenue += calculateRentalPrice(reservation.getCarId(), rentalStart, rentalEnd);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Could not calculate revenue for reservation "
+                            + reservation.getId() + ": " + e.getMessage());
+                }
+            }
+        }
+        return monthlyRevenue;
+    }
+
+    /**
+     * @param carId         a car id
+     * @param startDateTime rental start time
+     * @param endDateTime   rental end time
+     * @return total price
+     */
+    public long calculateRentalPrice(Long carId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         if (startDateTime == null || endDateTime == null || endDateTime.isBefore(startDateTime)) {
             throw new IllegalArgumentException("Invalid start or end date/time.");
+        }
+
+        Integer pricePerTenMinutes = getPricePer10Min(carId);
+        if (pricePerTenMinutes == null) {
+            throw new IllegalArgumentException("Could not find price for car with id: " + carId);
         }
 
         Duration duration = Duration.between(startDateTime, endDateTime);
         long totalMinutes = duration.toMinutes();
 
-        // 10분당 50,000원
-        long pricePerTenMinutes = 50000;
+        if (totalMinutes < 0) return 0;
+
         long price = (totalMinutes / 10) * pricePerTenMinutes;
 
         // If there's a partial 10-minute block, charge for the full block
@@ -271,5 +317,22 @@ public class RentalAdminService {
             price += pricePerTenMinutes;
         }
         return price;
+    }
+
+    /**
+     * 자동차 ID를 이용해 10분당 렌트 비용을 조회합니다.
+     * @param carId 조회할 자동차의 ID
+     * @return 10분당 렌트 비용. 정보가 없으면 null을 반환합니다.
+     */
+    public Integer getPricePer10Min(Long carId) {
+        Car car = carRepository.findById(carId).orElse(null);
+        return (car != null) ? car.getRentPricePer10min() : null;
+    }
+
+    public List<CarDto> getAllCars() {
+        return carRepository.findAvailableCars()
+                .stream()
+                .map(CarDto::new)
+                .collect(java.util.stream.Collectors.toList());
     }
 }
