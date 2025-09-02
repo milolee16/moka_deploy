@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useState } from 'react';
-import KakaoLoginImage from '../assets/images/login/kakao_login_medium_wide.png'; // Import the local image
+import KakaoLoginImage from '../../public/images/login/kakao_login_medium_wide.png'; // Import the local image
 
 const KakaoLoginButton = ({ redirectPath = "/auth/kakao/callback" }) => {
     const [isLoading, setIsLoading] = useState(false);

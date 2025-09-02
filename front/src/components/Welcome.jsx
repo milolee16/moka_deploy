@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import heroImageSrc from "../assets/images/cars/aston-martin-db12.png";
+import heroImageSrc from "../../public/images/cars/aston-martin-db12.png";
 
 const Welcome = () => {
     const navigate = useNavigate();

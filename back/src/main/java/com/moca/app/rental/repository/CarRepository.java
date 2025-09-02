@@ -13,4 +13,7 @@ public interface CarRepository extends JpaRepository<Car, Long> {
 
     @Query("SELECT c FROM Car c WHERE c.status = 'AVAILABLE'")
     List<Car> findAvailableCars();
+
+    @Query("SELECT c FROM Car c JOIN FETCH c.vehicleType")
+    List<Car> findAllWithVehicleType();
 }

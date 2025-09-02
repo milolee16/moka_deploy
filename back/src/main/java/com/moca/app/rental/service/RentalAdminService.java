@@ -1,5 +1,6 @@
 package com.moca.app.rental.service;
 
+import com.moca.app.rental.dto.CarDto;
 import com.moca.app.rental.repository.*;
 import com.moca.app.rental.Reservation; // Reservation 엔티티 import 추가
 import com.moca.app.rental.Car; // Car 엔티티 import 추가
@@ -99,7 +100,7 @@ public class RentalAdminService {
             LocalDate startDate = yearMonth.atDay(1);
             LocalDate endDate = yearMonth.atEndOfMonth();
 
-            long count = reservationRepository.findByDateRange(startDate, endDate).size();
+            long count = reservationRepository.findByDateBetween(startDate, endDate).size();
 
             months.add(yearMonth.toString());
             counts.add(count);
@@ -175,20 +176,34 @@ public class RentalAdminService {
     public Map<String, Object> getRevenueStats() {
         Map<String, Object> result = new HashMap<>();
         List<String> months = new ArrayList<>();
-        List<Integer> revenues = new ArrayList<>();
+        List<Long> revenues = new ArrayList<>(); // Use Long for potentially large revenues
 
         for (int i = 5; i >= 0; i--) {
             YearMonth yearMonth = YearMonth.now().minusMonths(i);
             LocalDate startDate = yearMonth.atDay(1);
             LocalDate endDate = yearMonth.atEndOfMonth();
 
-            List<Reservation> reservations = reservationRepository.findByDateRange(startDate, endDate);
+            List<Reservation> reservations = reservationRepository.findByDateBetween(startDate, endDate);
 
-            // 임시로 예약 건수 * 평균 금액으로 계산
-            int revenue = reservations.size() * 150000;
+            long monthlyRevenue = 0;
+            for (Reservation reservation : reservations) {
+                // A completed reservation should have a return date and time
+                if (reservation.getReturnDate() != null && reservation.getReturnTime() != null) {
+                    LocalDateTime rentalStart = LocalDateTime.of(reservation.getDate(), reservation.getTime());
+                    LocalDateTime rentalEnd = LocalDateTime.of(reservation.getReturnDate(), reservation.getReturnTime());
+
+                    // Calculate revenue for each reservation and add to monthly total
+                    try {
+                        monthlyRevenue += calculateRentalPrice(reservation.getCarId(), rentalStart, rentalEnd);
+                    } catch (IllegalArgumentException e) {
+                        // Log the error or handle cases where price cannot be calculated
+                        System.err.println("Could not calculate revenue for reservation " + reservation.getId() + ": " + e.getMessage());
+                    }
+                }
+            }
 
             months.add(yearMonth.toString());
-            revenues.add(revenue);
+            revenues.add(monthlyRevenue);
         }
 
         result.put("months", months);
@@ -196,16 +211,27 @@ public class RentalAdminService {
         return result;
     }
 
-    public long calculateRentalPrice(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+    /**
+     * @param carId         a car id
+     * @param startDateTime rental start time
+     * @param endDateTime   rental end time
+     * @return total price
+     */
+    public long calculateRentalPrice(Long carId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         if (startDateTime == null || endDateTime == null || endDateTime.isBefore(startDateTime)) {
             throw new IllegalArgumentException("Invalid start or end date/time.");
+        }
+
+        Integer pricePerTenMinutes = getPricePer10Min(carId);
+        if (pricePerTenMinutes == null) {
+            throw new IllegalArgumentException("Could not find price for car with id: " + carId);
         }
 
         Duration duration = Duration.between(startDateTime, endDateTime);
         long totalMinutes = duration.toMinutes();
 
-        // 10분당 50,000원
-        long pricePerTenMinutes = 50000;
+        if (totalMinutes < 0) return 0;
+
         long price = (totalMinutes / 10) * pricePerTenMinutes;
 
         // If there's a partial 10-minute block, charge for the full block
@@ -213,5 +239,27 @@ public class RentalAdminService {
             price += pricePerTenMinutes;
         }
         return price;
+    }
+
+    /**
+     * 자동차 ID를 이용해 10분당 렌트 비용을 조회합니다.
+     * @param carId 조회할 자동차의 ID
+     * @return 10분당 렌트 비용. 정보가 없으면 null을 반환합니다.
+     */
+    public Integer getPricePer10Min(Long carId) {
+        // ID로 자동차 정보를 찾습니다.
+        Car car = carRepository.findById(carId).orElse(null);
+
+        if (car != null) {
+            // Car 객체에서 10분당 가격 정보를 반환합니다.
+            return car.getRentPricePer10min();
+        } else {
+            // 해당 ID의 자동차가 없을 경우
+            return null;
+        }
+    }
+
+    public java.util.List<CarDto> getAllCars() {
+        return carRepository.findAvailableCars().stream().map(CarDto::new).collect(java.util.stream.Collectors.toList());
     }
 }

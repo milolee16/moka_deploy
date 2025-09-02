@@ -12,8 +12,8 @@ const SideMenu = ({ isOpen, onClose }) => {
 
   return (
       <>
-        <Overlay isOpen={isOpen} onClick={onClose} />
-        <MenuContainer isOpen={isOpen}>
+        <Overlay $isOpen={isOpen} onClick={onClose} />
+        <MenuContainer $isOpen={isOpen}>
           <CloseButton onClick={onClose}>&times;</CloseButton>
 
           {/* 로그인된 사용자 정보 표시 */}
@@ -101,14 +101,14 @@ const Overlay = styled.div`
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  display: ${({ isOpen }) => (isOpen ? 'block' : 'none')};
+  display: ${({ $isOpen }) => ($isOpen ? 'block' : 'none')};
   z-index: 999;
 `;
 
 const MenuContainer = styled.div`
   position: fixed;
   top: 0;
-  right: ${({ isOpen }) => (isOpen ? '0' : '-300px')};
+  right: ${({ $isOpen }) => ($isOpen ? '0' : '-300px')};
   width: 280px;
   height: 100%;
   background-color: #ffffff;
