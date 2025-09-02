@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-
 @RestController
 @RequestMapping("/locations")
 @RequiredArgsConstructor

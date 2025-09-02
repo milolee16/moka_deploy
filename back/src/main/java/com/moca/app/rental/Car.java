@@ -31,13 +31,6 @@ public class Car {
     @Column(name = "IMAGE_URL", length = 255)
     private String imageUrl;
 
-    @Column(name = "CAR_NAME", length = 100)
-    private String carName;
-
-    @Column(name = "RENT_PRICE_PER_10MIN")
-    private Integer rentPricePer10min;
-
-
     // 연관관계 매핑
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "VEHICLE_TYPE_CODE", insertable = false, updatable = false)

@@ -13,11 +13,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // 페이지 새로고침 시 localStorage를 확인하여 로그인 상태를 유지합니다.
     const storedUser = localStorage.getItem("user");
-    const storedToken = localStorage.getItem("accessToken"); // Get token
-    if (storedUser && storedToken) {
-      const parsedUser = JSON.parse(storedUser);
-      parsedUser.token = storedToken; // Add token to user object
-      setUser(parsedUser);
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
     setAuthLoading(false); // Finished checking
   }, []);
@@ -48,8 +45,7 @@ export const AuthProvider = ({ children }) => {
         const decodedUser = jwtDecode(token);
         const userData = {
           username: decodedUser.username,
-          role: decodedUser.role,
-          token: token, // Add token to userData
+          role: decodedUser.role
         };
 
         // 사용자 정보 저장 및 상태 업데이트
@@ -100,8 +96,7 @@ export const AuthProvider = ({ children }) => {
         const decodedUser = jwtDecode(token);
         const userData = {
           username: decodedUser.username,
-          role: decodedUser.role,
-          token: token, // Add token to userData
+          role: decodedUser.role
         };
 
         // 사용자 정보 저장 및 상태 업데이트
@@ -161,11 +156,7 @@ export const AuthProvider = ({ children }) => {
       const decodedUser = jwtDecode(token);
 
       // AuthContext의 user 상태를 업데이트하고, localStorage에도 저장
-      const userData = {
-        username: decodedUser.username,
-        role: decodedUser.role,
-        token: token, // Add token to userData
-      };
+      const userData = { username: decodedUser.username, role: decodedUser.role };
       localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
 

@@ -1,9 +1,10 @@
 package com.moca.app.service;
 
 import com.moca.app.login.KakaoUserInfo;
-import com.moca.app.login.KakaoUser;
+import com.moca.app.login.User;
+// import com.moca.app.login.UserRepository; // DB 사용 안하므로 주석 처리
 import com.moca.app.login.JwtTokenProvider;
-import com.moca.app.login.KakaoUserRepository;
+import com.moca.app.login.UserRepository;
 import org.springframework.transaction.annotation.Transactional; // ⬅️ 이 부분을 확인하세요!
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +23,7 @@ import java.util.Map;
 public class KakaoUserService {
 
     // DB와 상호작용하는 코드를 모두 활성화합니다.
-    private final KakaoUserRepository kakaoUserRepository;
+    private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RestTemplate restTemplate;
 
@@ -41,14 +42,14 @@ public class KakaoUserService {
         KakaoUserInfo userInfo = getUserInfo(accessToken);
 
         // DB에서 사용자를 찾거나, 없으면 새로 만들어서 저장합니다.
-        KakaoUser user = kakaoUserRepository.findByKakaoId(userInfo.getId())
+        User user = userRepository.findByKakaoId(userInfo.getId())
                 .orElseGet(() -> {
-                    KakaoUser newUser = KakaoUser.builder()
+                    User newUser = User.builder()
                             .kakaoId(userInfo.getId())
                             .nickname(userInfo.getNickname())
                             .email(userInfo.getKakaoAccount() != null ? userInfo.getKakaoAccount().getEmail() : null)
                             .build();
-                    return kakaoUserRepository.save(newUser); // DB에 저장하고 ID를 할당받습니다.
+                    return userRepository.save(newUser); // DB에 저장하고 ID를 할당받습니다.
                 });
 
         // ID가 할당된 user 객체로 토큰을 생성합니다.

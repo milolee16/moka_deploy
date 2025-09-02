@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "KAKAO_USER") // Changed table name for clarity
-public class KakaoUser {
+@Table(name = "member") // ◀️ 이 부분을 추가해서 테이블 이름을 'member'로 지정
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +23,7 @@ public class KakaoUser {
     private String email;
 
     @Builder
-    public KakaoUser(Long kakaoId, String nickname, String email) {
+    public User(Long kakaoId, String nickname, String email) {
         this.kakaoId = kakaoId;
         this.nickname = nickname;
         this.email = email;

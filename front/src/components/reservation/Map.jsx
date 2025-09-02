@@ -5,9 +5,6 @@ import {useLocation, useNavigate} from "react-router-dom";
 import {Map, MapMarker, CustomOverlayMap, useKakaoLoader} from "react-kakao-maps-sdk";
 import ReactSelect from "react-select"; // ✅ react-select
 
-const API_BASE_URL =
-    import.meta.env.MODE === "development" ? "http://192.168.2.23:8080" : "http://localhost:8080";
-
 const PIN_URL =
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(`
@@ -57,7 +54,7 @@ const MapPage = () => {
         const fetchLocations = async () => {
             try {
                 setDataLoading(true);
-                const response = await fetch(`${API_BASE_URL}/api/locations?stars=5`);
+                const response = await fetch("/api/locations?stars=5");
                 if (!response.ok) {
                     throw new Error("Failed to fetch locations");
                 }

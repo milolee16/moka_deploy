@@ -1,49 +1,26 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo } from "react";
 import styled from "styled-components";
 import { HiOutlineChevronRight } from "react-icons/hi";
 import { useNavigate, useLocation } from "react-router-dom";
+import lamborghiniHuracanSrc from "../../assets/images/cars/lamborghini-huracan.png";
+import astonMartinDB12Src from "../../assets/images/cars/aston-martin-db12.png";
+import fordMustangMachESrc from "../../assets/images/cars/ford-mustang-mach-e.png";
+import ferrari12CilindriSrc from "../../assets/images/cars/ferrari-12-cilindri.png";
 
-const CarSelect = ({ locationName = "반얀트리 호텔" }) => {
+/** 고정가 제거된 기본 차량 리스트 */
+const LUXURY_CARS = [
+    { id: "lamborghini-huracan", name: "람보르기니 우라칸", img: lamborghiniHuracanSrc },
+    { id: "aston-martin-db12",   name: "애스턴 마틴 DB12",  img: astonMartinDB12Src },
+    { id: "ford-mustang-mach-e", name: "포드 머스탱 마하-E", img: fordMustangMachESrc },
+    { id: "ferrari-12-cilindri", name: "페라리 12 칠린드리", img: ferrari12CilindriSrc },
+];
+
+const CarSelect = ({
+                       locationName = "반얀트리 호텔",
+                       cars = LUXURY_CARS,
+                   }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [cars, setCars] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    const carImages = import.meta.glob("../assets/images/cars/*", { eager: true });
-
-    useEffect(() => {
-        const fetchCars = async () => {
-            try {
-                setLoading(true);
-                const response = await fetch("http://localhost:8080/api/rental/admin/cars");
-
-                if (!response.ok) {
-                    const errorBody = await response.text();
-                    console.error("Error response from server:", response.status, response.statusText, errorBody);
-                    throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                                const formattedData = data.map(car => {
-                    return {
-                        id: car.id,
-                        carName: car.carName,
-                        imageUrl: car.imageUrl,
-                        rentPricePer10min: car.rentPricePer10min
-                    };
-                });
-                setCars(formattedData);
-            } catch (error) {
-                console.error("Failed to fetch cars:", error);
-                setError(error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCars();
-    }, []);
 
     // 이전 페이지(Map.jsx)에서 넘겨준 모든 정보(날짜, 장소, price 등)
     const info = useMemo(() => location.state || {}, [location.state]);
@@ -54,14 +31,6 @@ const CarSelect = ({ locationName = "반얀트리 호텔" }) => {
             state: { ...info, car }, // 예약/장소/요금 + 선택 차량까지 묶어서 다음 페이지로
         });
     };
-
-    if (loading) {
-        return <Wrap>Loading...</Wrap>;
-    }
-
-    if (error) {
-        return <Wrap>Error: {error.message}</Wrap>;
-    }
 
     return (
         <Wrap>
@@ -80,14 +49,10 @@ const CarSelect = ({ locationName = "반얀트리 호텔" }) => {
                 {cars.map((car) => (
                     <Item key={car.id} onClick={() => handleSelectCar(car)}>
                         <Thumb>
-                            <img
-                                src={car.imageUrl}
-                                alt={car.carName}
-                            />
+                            <img src={car.img} alt={car.name} />
                         </Thumb>
                         <Meta>
-                            <CarName>{car.carName}</CarName> {/* VehicleType.name에서 온 표시용 이름 */}
-                            <CarPrice>10분당 {car.rentPricePer10min.toLocaleString()}원</CarPrice>
+                            <CarName>{car.name}</CarName>
                         </Meta>
                         <NextIcon>
                             <HiOutlineChevronRight size={22} />
@@ -181,10 +146,6 @@ const Meta = styled.div`
 const CarName = styled.div`
     font-size: 16px; font-weight: 700; color:#5d4037;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-`;
-
-const CarPrice = styled.div`
-    font-size: 14px; color: #795548;
 `;
 
 const NextIcon = styled.div`
