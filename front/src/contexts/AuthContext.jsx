@@ -1,28 +1,107 @@
-import { createContext, useState, useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import { createContext, useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false); // for API calls
-  const [authLoading, setAuthLoading] = useState(true); // for initial auth check
+  const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // 페이지 새로고침 시 localStorage를 확인하여 로그인 상태를 유지합니다.
-    const storedUser = localStorage.getItem("user");
-    const storedToken = localStorage.getItem("accessToken"); // Get token
-    if (storedUser && storedToken) {
-      const parsedUser = JSON.parse(storedUser);
-      parsedUser.token = storedToken; // Add token to user object
-      setUser(parsedUser);
+  // 토큰 유효성 검증 함수
+  const validateTokenWithServer = async (token) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.valid;
+      }
+      return false;
+    } catch (error) {
+      console.error('토큰 검증 중 오류:', error);
+      return false;
     }
-    setAuthLoading(false); // Finished checking
+  };
+
+  // 토큰 만료 시간 확인 함수
+  const isTokenExpired = (token) => {
+    try {
+      const decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      return decoded.exp < currentTime;
+    } catch (error) {
+      console.error('토큰 디코딩 오류:', error);
+      return true;
+    }
+  };
+
+  // 자동 로그아웃 함수
+  const autoLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('accessToken');
+    setUser(null);
+    console.log('토큰이 만료되어 자동 로그아웃되었습니다.');
+  };
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('accessToken');
+
+      if (storedUser && storedToken) {
+        // 1. 먼저 토큰 만료 시간 체크 (클라이언트 사이드)
+        if (isTokenExpired(storedToken)) {
+          autoLogout();
+          setAuthLoading(false);
+          return;
+        }
+
+        // 2. 서버에서 토큰 유효성 검증
+        const isValid = await validateTokenWithServer(storedToken);
+
+        if (isValid) {
+          // 토큰이 유효한 경우 로그인 상태 유지
+          const parsedUser = JSON.parse(storedUser);
+          parsedUser.token = storedToken;
+          setUser(parsedUser);
+        } else {
+          // 토큰이 무효한 경우 자동 로그아웃
+          autoLogout();
+        }
+      }
+
+      setAuthLoading(false);
+    };
+
+    checkAuthStatus();
   }, []);
 
-  // 일반 로그인 함수 (백엔드 API 호출)
+  // API 요청 시 토큰 만료 확인을 위한 axios 인터셉터 설정
+  useEffect(() => {
+    const handleTokenExpiration = () => {
+      const token = localStorage.getItem('accessToken');
+      if (token && isTokenExpired(token)) {
+        autoLogout();
+        alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+      }
+    };
+
+    // API 호출 전에 토큰 만료 확인
+    const interceptor = setInterval(handleTokenExpiration, 60000); // 1분마다 체크
+
+    return () => clearInterval(interceptor);
+  }, []);
+
+  // 일반 로그인 함수
   const login = async (username, password) => {
     setLoading(true);
     try {
@@ -33,40 +112,36 @@ export const AuthProvider = ({ children }) => {
         },
         body: JSON.stringify({
           userId: username,
-          password: password
-        })
+          password: password,
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
         const token = data.accessToken;
 
-        // JWT 토큰을 localStorage에 저장
-        localStorage.setItem("accessToken", token);
+        localStorage.setItem('accessToken', token);
 
-        // 토큰 디코딩하여 사용자 정보 추출
         const decodedUser = jwtDecode(token);
         const userData = {
           username: decodedUser.username,
           role: decodedUser.role,
-          token: token, // Add token to userData
+          token: token,
         };
 
-        // 사용자 정보 저장 및 상태 업데이트
-        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
 
-        // 로그인 성공 시 홈 페이지로 이동
-        navigate("/home");
+        navigate('/home');
         return true;
       } else {
         const errorData = await response.text();
-        alert(errorData || "아이디 또는 비밀번호가 일치하지 않습니다.");
+        alert(errorData || '아이디 또는 비밀번호가 일치하지 않습니다.');
         return false;
       }
     } catch (error) {
-      console.error("로그인 중 오류 발생:", error);
-      alert("로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      console.error('로그인 중 오류 발생:', error);
+      alert('로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       return false;
     } finally {
       setLoading(false);
@@ -85,113 +160,103 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({
           userId: userId,
           password: password,
-          userName: userName
-        })
+          userName: userName,
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
         const token = data.accessToken;
 
-        // JWT 토큰을 localStorage에 저장
-        localStorage.setItem("accessToken", token);
+        localStorage.setItem('accessToken', token);
 
-        // 토큰 디코딩하여 사용자 정보 추출
         const decodedUser = jwtDecode(token);
         const userData = {
           username: decodedUser.username,
           role: decodedUser.role,
-          token: token, // Add token to userData
+          token: token,
         };
 
-        // 사용자 정보 저장 및 상태 업데이트
-        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
 
-        // 회원가입 성공 시 홈 페이지로 이동
-        navigate("/home");
+        navigate('/home');
         alert(`${userData.username}님, 환영합니다! 회원가입이 완료되었습니다.`);
         return true;
       } else {
         const errorData = await response.text();
-        alert(errorData || "회원가입 중 오류가 발생했습니다.");
+        alert(errorData || '회원가입 중 오류가 발생했습니다.');
         return false;
       }
     } catch (error) {
-      console.error("회원가입 중 오류 발생:", error);
-      alert("회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      console.error('회원가입 중 오류 발생:', error);
+      alert('회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // ID 중복 체크 함수
   const checkUserId = async (userId) => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/check-userid', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: userId
-        })
-      });
+      const response = await fetch(
+        'http://localhost:8080/api/auth/check-userid',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: userId,
+          }),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        return data; // { exists: boolean, message: string }
+        return data;
       } else {
         throw new Error('ID 중복 체크 실패');
       }
     } catch (error) {
-      console.error("ID 중복 체크 중 오류 발생:", error);
+      console.error('ID 중복 체크 중 오류 발생:', error);
       throw error;
     }
   };
 
-  // 카카오 로그인 성공 후 호출될 함수
   const loginWithToken = (token) => {
     try {
-      // 토큰을 localStorage에 저장
-      localStorage.setItem("accessToken", token);
+      localStorage.setItem('accessToken', token);
 
-      // 토큰을 디코딩하여 사용자 정보를 추출
       const decodedUser = jwtDecode(token);
 
-      // AuthContext의 user 상태를 업데이트하고, localStorage에도 저장
       const userData = {
         username: decodedUser.username,
         role: decodedUser.role,
-        token: token, // Add token to userData
+        token: token,
       };
-      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
 
-      // 로그인 성공 후 홈 페이지로 이동
-      navigate("/home");
+      navigate('/home');
       alert(`${userData.username}님, 환영합니다!`);
-
     } catch (error) {
-      console.error("토큰 처리 중 오류 발생:", error);
-      alert("로그인 처리에 실패했습니다.");
+      console.error('토큰 처리 중 오류 발생:', error);
+      alert('로그인 처리에 실패했습니다.');
     }
   };
 
   const logout = () => {
-    // 메인 페이지로 이동
-    navigate("/");
+    navigate('/');
 
-    // 상태 변경 로직을 이벤트 루프의 다음 틱으로 보냄
     setTimeout(() => {
-      localStorage.removeItem("user");
-      localStorage.removeItem("accessToken");
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
       setUser(null);
     }, 0);
   };
 
-    const value = {
+  const value = {
     user,
     login,
     register,
@@ -199,7 +264,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     loginWithToken,
     loading,
-    authLoading
+    authLoading,
+    autoLogout, // 다른 컴포넌트에서도 사용할 수 있도록 export
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
