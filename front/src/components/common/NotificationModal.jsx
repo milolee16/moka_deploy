@@ -1,38 +1,69 @@
+// src/components/common/NotificationModal.jsx (업데이트)
+import React from 'react';
 import styled from 'styled-components';
-
-// API를 통해 받아올 실제 알림 데이터 예시
-const notifications = [
-  { id: 1, message: '예약이 성공적으로 완료되었습니다.', time: '10분 전', read: false },
-  { id: 2, message: '새로운 이벤트가 등록되었습니다: 썸머 페스티벌!', time: '1시간 전', read: false },
-  { id: 3, message: '차량 반납 시간이 1시간 남았습니다.', time: '어제', read: true },
-  { id: 4, message: '결제 정보가 업데이트되었습니다.', time: '2일 전', read: true },
-];
+import { useNotifications } from '../../hooks/useNotifications';
 
 const NotificationModal = ({ show }) => {
-  if (!show) {
-    return null;
-  }
+    const { notifications, loading, error, markAsRead, markAllAsRead } = useNotifications();
 
-  return (
-    <ModalContainer>
-      <ModalHeader>알림</ModalHeader>
-      <NotificationList>
-        {notifications.length > 0 ? (
-          notifications.map((item) => (
-            <NotificationItem key={item.id} read={item.read}>
-              <Message>{item.message}</Message>
-              <Time>{item.time}</Time>
-            </NotificationItem>
-          ))
-        ) : (
-          <NoNotifications>새로운 알림이 없습니다.</NoNotifications>
-        )}
-      </NotificationList>
-      <ModalFooter>
-        <button>모두 읽음 처리</button>
-      </ModalFooter>
-    </ModalContainer>
-  );
+    if (!show) {
+        return null;
+    }
+
+    const handleNotificationClick = (notification) => {
+        if (!notification.isRead) {
+            markAsRead(notification.id);
+        }
+    };
+
+    const handleMarkAllAsRead = () => {
+        markAllAsRead();
+    };
+
+    if (loading) {
+        return (
+            <ModalContainer>
+                <ModalHeader>알림</ModalHeader>
+                <LoadingContainer>알림을 불러오는 중...</LoadingContainer>
+            </ModalContainer>
+        );
+    }
+
+    if (error) {
+        return (
+            <ModalContainer>
+                <ModalHeader>알림</ModalHeader>
+                <ErrorContainer>알림을 불러오는데 실패했습니다.</ErrorContainer>
+            </ModalContainer>
+        );
+    }
+
+    return (
+        <ModalContainer>
+            <ModalHeader>알림</ModalHeader>
+            <NotificationList>
+                {notifications.length > 0 ? (
+                    notifications.map((notification) => (
+                        <NotificationItem
+                            key={notification.id}
+                            read={notification.isRead}
+                            onClick={() => handleNotificationClick(notification)}
+                        >
+                            <Message>{notification.message}</Message>
+                            <Time>{notification.timeAgo}</Time>
+                        </NotificationItem>
+                    ))
+                ) : (
+                    <NoNotifications>새로운 알림이 없습니다.</NoNotifications>
+                )}
+            </NotificationList>
+            {notifications.some(n => !n.isRead) && (
+                <ModalFooter>
+                    <button onClick={handleMarkAllAsRead}>모두 읽음 처리</button>
+                </ModalFooter>
+            )}
+        </ModalContainer>
+    );
 };
 
 export default NotificationModal;
@@ -112,4 +143,17 @@ const ModalFooter = styled.footer`
     cursor: pointer;
     padding: 4px 8px;
   }
+`;
+
+// 스타일은 기존과 동일하고, 추가로 필요한 스타일들:
+const LoadingContainer = styled.div`
+  padding: 40px 16px;
+  text-align: center;
+  color: #666;
+`;
+
+const ErrorContainer = styled.div`
+  padding: 40px 16px;
+  text-align: center;
+  color: #e74c3c;
 `;
