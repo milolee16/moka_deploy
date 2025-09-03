@@ -42,12 +42,14 @@ public class SecurityConfig {
 
                 // 5. 요청 경로별 접근 권한 설정
                 .authorizeHttpRequests(authorize -> authorize
-                        // 인증 관련 API 경로는 누구나 접근 가능하도록 허용
-                        .requestMatchers("/api/auth/**").permitAll()
-                        // 예약 관련 API는 인증 필요
-                        .requestMatchers("/api/reservations/**").authenticated() // Protect reservation endpoints
-                        // 다른 모든 요청은 일단 허용 (나중에 필요에 따라 인증 요구하도록 수정)
-                        .anyRequest().permitAll()
+                                // 인증 관련 API 경로는 누구나 접근 가능하도록 허용
+                                .requestMatchers("/api/auth/**").permitAll()
+                                // 다른 모든 요청은 일단 허용 (나중에 필요에 따라 인증 요구하도록 수정)
+//                              .requestMatchers("/api/notifications/**").authenticated() // 추가
+                                .requestMatchers("/api/notifications/**").permitAll() // 임시로 인증 없이 허용
+                                // 예약 관련 API는 인증 필요
+                                .requestMatchers("/api/reservations/**").authenticated() // Protect reservation endpoints
+                                .anyRequest().permitAll()
                 )
                 // 6. JWT 필터 추가
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // Add JWT filter
