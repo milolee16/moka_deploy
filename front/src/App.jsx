@@ -21,7 +21,9 @@ import SignupPage from "./pages/SignupPage.jsx"; // 추가
 import KakaoCallback from "./components/common/KakaoCallback.jsx";
 import NoticesPage from "./components/notices/Notices.jsx";
 import MyPage from "./pages/MyPage.jsx";
-import NoticeWritePage from './components/notices/NoticeWritePage.jsx';
+import NoticeWritePage from './components/notices/NoticeWritePage';
+import FAQPage from './pages/FAQPage';
+
 
 function App() {
   return (
@@ -41,6 +43,7 @@ function App() {
           <Route path="/payment-result/:status" element={<PaymentResult />} />
           <Route path="/notices" element={<NoticesPage />} />
           <Route path="/notices/write" element={<NoticeWritePage/>} />
+          <Route path="/faq" element={<FAQPage />} />
 
           {/* Protected Route for My Page */}
           <Route element={<ProtectedRoute />}>
