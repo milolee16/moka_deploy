@@ -15,7 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 // API base URL (same as in PaymentOptions.jsx)
 const API_BASE_URL =
-    import.meta.env.MODE === "development" ? "http://192.168.2.23:8080" : "http://localhost:8080";
+    import.meta.env.MODE === "development" ? "http://localhost:8080" : "http://localhost:8080";
 
 // Helper function for date/time formatting
 const formatReservationDateTime = (date, time) => {

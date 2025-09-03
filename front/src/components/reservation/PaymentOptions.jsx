@@ -45,7 +45,7 @@ const PaymentOptions = () => {
     const isMobile = useMemo(() => /Mobi|Android/i.test(navigator.userAgent), []);
 
     const API_BASE_URL =
-        import.meta.env.MODE === "development" ? "http://192.168.2.23:8080" : "http://localhost:8080";
+        import.meta.env.MODE === "development" ? "http://localhost:8080" : "http://localhost:8080";
 
     const handleSelect = async (m) => {
         setSelectedId(m.id);
