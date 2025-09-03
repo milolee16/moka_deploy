@@ -38,7 +38,7 @@ const Layout = () => {
     }, [isNotificationOpen]);
 
     const hasNewNotifications = unreadCount > 0; // 실제 데이터로 변경
-    const noPadding = location.pathname === '/notices' || location.pathname === '/mypage';
+    const noPadding = location.pathname === '/notices' || location.pathname === '/mypage' || location.pathname === '/faq';
 
     return (
         <>

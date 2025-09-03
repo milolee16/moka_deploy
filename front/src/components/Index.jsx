@@ -36,7 +36,7 @@ const Index = () => {
           </span>
           <span>결제·면허</span>
         </PanelButton>
-        <PanelButton onClick={() => navigate('/support')}>
+        <PanelButton onClick={() => navigate('/faq')}>
           <span role="img" aria-label="고객센터">
             ❓
           </span>
