@@ -15,7 +15,7 @@ function PaymentResult() {
 
     // API base URL (same as in PaymentOptions.jsx)
     const API_BASE_URL =
-        import.meta.env.MODE === "development" ? "http://192.168.2.23:8080" : "http://localhost:8080";
+        import.meta.env.MODE === "development" ? "http://localhost:8080" : "http://localhost:8080";
 
     // ✅ iframe으로 열렸다면 상위(top)로 탈출해서 중복 헤더 제거!
     useEffect(() => {
