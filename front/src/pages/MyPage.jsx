@@ -97,9 +97,8 @@ const MyPage = () => {
         {!loading && !error && reservations.length > 0 && (
           reservations.map((res) => (
             <ReservationCard key={res.id}>
-              <CarModel>{res.car?.carName || '차량 정보 없음'}</CarModel>
               <ReservationInfo>
-                {formatReservationDateTime(res.date, res.time)} ~ {formatReservationDateTime(res.returnDate, res.returnTime)}
+                {formatReservationDateTime(res.rentalDate, res.rentalTime)} ~ {formatReservationDateTime(res.returnDate, res.returnTime)}
               </ReservationInfo>
               <StatusBadge status={res.status}>{res.status}</StatusBadge>
             </ReservationCard>
@@ -229,7 +228,7 @@ const ReservationCard = styled.div`
   margin-bottom: 12px;
   display: grid;
   grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
+  align-items: center;
   gap: 4px 8px;
 `;
 
@@ -253,7 +252,6 @@ const StatusBadge = styled.span`
   font-size: 12px;
   font-weight: 700;
   grid-column: 2 / 3;
-  grid-row: 1 / 3;
   align-self: center;
   color: ${({ status }) => (status === '예정' ? '#4CAF50' : '#757575')};
   background-color: ${({ status }) => (status === '예정' ? '#E8F5E9' : '#F5F5F5')};

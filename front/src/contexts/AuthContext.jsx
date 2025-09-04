@@ -47,6 +47,7 @@ export const AuthProvider = ({ children }) => {
         // 토큰 디코딩하여 사용자 정보 추출
         const decodedUser = jwtDecode(token);
         const userData = {
+          userId: decodedUser.sub,
           username: decodedUser.username,
           role: decodedUser.role,
           token: token, // Add token to userData
@@ -99,6 +100,7 @@ export const AuthProvider = ({ children }) => {
         // 토큰 디코딩하여 사용자 정보 추출
         const decodedUser = jwtDecode(token);
         const userData = {
+          userId: decodedUser.sub,
           username: decodedUser.username,
           role: decodedUser.role,
           token: token, // Add token to userData
@@ -162,6 +164,7 @@ export const AuthProvider = ({ children }) => {
 
       // AuthContext의 user 상태를 업데이트하고, localStorage에도 저장
       const userData = {
+        userId: decodedUser.sub,
         username: decodedUser.username,
         role: decodedUser.role,
         token: token, // Add token to userData
