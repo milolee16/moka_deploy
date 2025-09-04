@@ -108,6 +108,7 @@ const MyPage = () => {
 
             return (
               <ReservationCard key={res.id}>
+                <CarModel>{res.car?.carName || '차량 정보 없음'}</CarModel>
                 <ReservationInfo>
                   {formatReservationDateTime(res.rentalDate, res.rentalTime)} ~ {formatReservationDateTime(res.returnDate, res.returnTime)}
                 </ReservationInfo>
@@ -240,7 +241,7 @@ const ReservationCard = styled.div`
   margin-bottom: 12px;
   display: grid;
   grid-template-columns: 1fr auto;
-  align-items: center;
+  grid-template-rows: auto auto;
   gap: 4px 8px;
 `;
 
@@ -264,6 +265,7 @@ const StatusBadge = styled.span`
   font-size: 12px;
   font-weight: 700;
   grid-column: 2 / 3;
+  grid-row: 1 / 3;
   align-self: center;
   color: ${({ status }) => {
     if (status === 'UPCOMING') return '#4CAF50';
