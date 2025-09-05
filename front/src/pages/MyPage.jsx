@@ -154,7 +154,7 @@ const MyPage = () => {
       </Section>
 
       <MenuSection>
-        <MenuItem onClick={() => navigate('/ocr')}>
+        <MenuItem onClick={() => navigate('/payments-licenses')}>
           <FiCreditCard size={20} />
           <span>운전면허증 정보</span>
           <FiChevronRight />

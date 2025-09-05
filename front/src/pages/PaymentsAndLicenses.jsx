@@ -2,7 +2,33 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getPaymentLicenseInfo } from '../services/paymentLicenseService';
+import { getPaymentLicenseInfo, deletePaymentMethod } from '../services/paymentLicenseService';
+
+// Helper function to format card number for display
+const formatCardNumber = (number) => {
+    if (!number) return '';
+    const cleaned = number.replace(/\D/g, ''); // Ensure only digits
+    if (cleaned.length === 16) {
+        return `${cleaned.substring(0, 4)}-****-****-${cleaned.substring(12, 16)}`;
+    }
+    return cleaned.match(/.{1,4}/g)?.join('-') || cleaned; // Fallback for non-16 digit numbers
+};
+
+// Helper function to format license number for display
+const formatLicenseNumber = (number) => {
+    if (!number) return '';
+    const cleaned = number.replace(/\D/g, '');
+    if (cleaned.length === 12) { // Assuming 12 digits for XX-XXXXXXXX-XX
+        return `${cleaned.substring(0, 2)}-${cleaned.substring(2, 10)}-${cleaned.substring(10, 12)}`;
+    }
+    return cleaned; // Return as is if not 10 or 12 digits
+};
+
+// Helper function to format resident registration number for display
+const formatResidentRegistrationNumber = (number) => {
+    if (!number || number.length !== 13) return number; // Ensure 13 digits
+    return `${number.substring(0, 6)}-${number.substring(6, 7)}******`; // Mask last 6 digits
+};
 
 const PaymentsAndLicenses = () => {
     const navigate = useNavigate();
@@ -11,16 +37,13 @@ const PaymentsAndLicenses = () => {
     const [license, setLicense] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (authLoading) {
-            return;
-        }
-
-        if (user?.username) {
-            getPaymentLicenseInfo(user.username)
-                .then(response => {
-                    setPayments(response.data.paymentMethods || []); // 데이터가 null일 경우 빈 배열로 처리
-                    setLicense(response.data.license); // license는 null일 수 있으므로 그대로 둠
+    const fetchInfo = () => {
+        if (user) {
+            setLoading(true);
+            getPaymentLicenseInfo()
+                .then(data => {
+                    setPayments(data.payments || []);
+                    setLicense(data.license);
                 })
                 .catch(error => {
                     console.error("Failed to fetch payment and license info:", error);
@@ -28,16 +51,33 @@ const PaymentsAndLicenses = () => {
                 .finally(() => {
                     setLoading(false);
                 });
-        } else {
-            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        if (!authLoading) {
+            fetchInfo();
         }
     }, [user, authLoading]);
+
+    const handleDeletePayment = async (paymentId) => {
+        if (window.confirm('정말로 이 결제 수단을 삭제하시겠습니까?')) {
+            try {
+                await deletePaymentMethod(paymentId);
+                alert('결제 수단이 삭제되었습니다.');
+                // Refetch the data to update the list
+                fetchInfo();
+            } catch (error) {
+                console.error("Failed to delete payment method:", error);
+                alert('결제 수단 삭제에 실패했습니다.');
+            }
+        }
+    };
 
     if (loading) {
         return <PageWrapper><div>Loading...</div></PageWrapper>;
     }
 
-    // 로딩이 끝났지만, 로그인 상태가 아닐 때
     if (!user) {
         return (
             <PageWrapper>
@@ -50,27 +90,28 @@ const PaymentsAndLicenses = () => {
         );
     }
 
-    // 로그인 상태일 때의 UI
     return (
         <PageWrapper>
             <Title>결제 및 면허 관리</Title>
 
             <Section>
                 <SectionTitle>결제 수단</SectionTitle>
-                {payments && payments.length > 0 ? ( // ✨ payments가 존재하는지 먼저 확인
+                {payments && payments.length > 0 ? (
                     payments.map(p => (
-                        <PaymentCard key={p?.paymentMethodId}>
+                        <PaymentCard key={p.paymentId}>
                             <CardContent>
                                 <CardIcon>💳</CardIcon>
                                 <CardInfo>
-                                    {/* ✨ p(결제 객체)나 내부 속성이 없을 경우를 대비 */}
-                                    <CardLabel>{p?.cardCompany}</CardLabel>
-                                    <CardSubLabel>{p?.cardNumber}</CardSubLabel>
+                                    <CardLabel>{p.cardCompany}</CardLabel>
+                                    <CardSubLabel>{formatCardNumber(p.cardNumber)}</CardSubLabel>
                                 </CardInfo>
                             </CardContent>
-                            {p?.isRepresentative && (
-                                <RepresentiveButton disabled>대표</RepresentiveButton>
-                            )}
+                            <ActionButtons>
+                                {p.isDefault && (
+                                    <RepresentiveButton disabled>대표</RepresentiveButton>
+                                )}
+                                <DeleteButton onClick={() => handleDeletePayment(p.paymentId)}>DELETE</DeleteButton>
+                            </ActionButtons>
                         </PaymentCard>
                     ))
                 ) : (
@@ -83,21 +124,23 @@ const PaymentsAndLicenses = () => {
 
             <Section>
                 <SectionTitle>운전면허 정보</SectionTitle>
-                {/* ✨ license 객체와 내부 속성이 존재하는지 한번에 확인 */}
                 {license?.licenseNumber ? (
                     <LicenseCard>
                         <CardContent>
                             <CardIcon>🪪</CardIcon>
                             <CardInfo>
-                                <CardLabel>면허 번호: {license.licenseNumber}</CardLabel>
-                                <CardSubLabel>만료일: {license.licenseExpiry}</CardSubLabel>
+                                <CardLabel>{license.name} ({formatLicenseNumber(license.licenseNumber)})</CardLabel>
+                                <CardSubLabel>주민등록번호: {formatResidentRegistrationNumber(license.residentRegistrationNumber)}</CardSubLabel>
+                                <CardSubLabel>발급일: {new Date(license.issueDate).toLocaleDateString()}</CardSubLabel>
+                                <CardSubLabel>갱신 시작일: {new Date(license.renewalStartDate).toLocaleDateString()}</CardSubLabel>
+                                <CardSubLabel>갱신 종료일: {new Date(license.renewalEndDate).toLocaleDateString()}</CardSubLabel>
                             </CardInfo>
                         </CardContent>
                     </LicenseCard>
                 ) : (
                     <EmptyCard>등록된 운전면허 정보가 없습니다.</EmptyCard>
                 )}
-                <StyledButton onClick={() => navigate('/ocr')}>
+                <StyledButton onClick={() => navigate('/ocr', { state: { isEdit: license?.licenseNumber ? true : false } }) }>
                     {license?.licenseNumber ? '면허 정보 수정' : '면허 정보 등록'}
                 </StyledButton>
             </Section>
@@ -106,6 +149,28 @@ const PaymentsAndLicenses = () => {
 };
 
 export default PaymentsAndLicenses;
+
+const ActionButtons = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+`;
+
+const DeleteButton = styled.button`
+    background: #FFEBEE;
+    color: #F44336;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background: #d32f2f;
+    }
+`;
 
 
 /* ============ styles (기존과 동일) ============ */
@@ -184,6 +249,7 @@ const CardLabel = styled.span`
 const CardSubLabel = styled.span`
     font-size: 14px;
     color: #a1887f;
+    vertical-align: middle;
 `;
 
 const StyledButton = styled.button`

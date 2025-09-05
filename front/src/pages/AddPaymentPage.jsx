@@ -8,31 +8,56 @@ const AddPaymentPage = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [cardCompany, setCardCompany] = useState('');
-    const [cardNumber, setCardNumber] = useState('');
+    const [cardNumber, setCardNumber] = useState(''); // Displayed formatted card number
+    const [rawCardNumber, setRawCardNumber] = useState(''); // Raw 16 digits for backend
     const [expiryDate, setExpiryDate] = useState('');
+    const [cvc, setCvc] = useState('');
     const [error, setError] = useState('');
+
+    const handleCardNumberChange = (e) => {
+        const input = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        const formattedInput = input.match(/.{1,4}/g)?.join('-') || '';
+        
+        if (input.length <= 16) {
+            setRawCardNumber(input); // Store raw digits for backend
+            setCardNumber(formattedInput); // Store formatted for display
+        }
+    };
+
+    const handleExpiryDateChange = (e) => {
+        const input = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        let formattedInput = input;
+
+        if (input.length > 2) {
+            formattedInput = input.substring(0, 2) + '/' + input.substring(2, 4);
+        }
+
+        if (input.length <= 4) {
+            setExpiryDate(formattedInput);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
-        if (!user || !user.username) {
+        if (!user) {
             setError('로그인이 필요합니다.');
             return;
         }
 
         const paymentData = {
-            userId: user.username, // userId 대신 username 사용
             cardCompany,
-            cardNumber,
-            cardExpiryDate: expiryDate,
-            isRepresentative: false // 기본값, 대표카드 설정은 별도 로직 필요
+            cardNumber: rawCardNumber, // Use raw 16 digits for backend
+            cardExpirationDate: expiryDate, // MM/YY format
+            isDefault: false,
+            cvc
         };
 
         try {
             await addPaymentMethod(paymentData);
             alert('카드가 성공적으로 등록되었습니다.');
-            navigate('/payments-licenses'); // 등록 후 이전 페이지로 이동
+            navigate('/payments-licenses');
         } catch (err) {
             console.error("Failed to add payment method:", err);
             setError('카드 등록에 실패했습니다. 다시 시도해주세요.');
@@ -60,9 +85,9 @@ const AddPaymentPage = () => {
                         id="card-number" 
                         type="text" 
                         value={cardNumber} 
-                        onChange={(e) => setCardNumber(e.target.value)} 
+                        onChange={handleCardNumberChange} 
                         placeholder="- 없이 숫자만 입력"
-                        maxLength="16"
+                        maxLength="19" // 16 digits + 3 hyphens
                         required
                     />
                 </InputGroup>
@@ -72,9 +97,21 @@ const AddPaymentPage = () => {
                         id="expiry-date" 
                         type="text" 
                         value={expiryDate} 
-                        onChange={(e) => setExpiryDate(e.target.value)} 
+                        onChange={handleExpiryDateChange} 
                         placeholder="MM/YY"
-                        maxLength="5"
+                        maxLength="5" // MM/YY
+                        required
+                    />
+                </InputGroup>
+                <InputGroup>
+                    <Label htmlFor="cvc">CVC</Label>
+                    <Input 
+                        id="cvc" 
+                        type="text" 
+                        value={cvc} 
+                        onChange={(e) => setCvc(e.target.value)} 
+                        placeholder="CVC 3자리"
+                        maxLength="3"
                         required
                     />
                 </InputGroup>
