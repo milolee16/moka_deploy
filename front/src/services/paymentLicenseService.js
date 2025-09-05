@@ -1,14 +1,33 @@
-import axios from 'axios';
+import apiClient from '../utils/apiClientWithRefresh';
 
-const API_URL = '/api/payments-licenses';
+const API_URL = '/api/my-page';
 
-// 사용자의 결제 및 면허 정보를 가져오는 함수
-export const getPaymentLicenseInfo = (userId) => {
-    // 실제로는 로그인된 사용자 정보를 사용해야 하므로 userId를 인자로 받지 않을 수 있습니다.
-    return axios.get(`${API_URL}/${userId}`);
+// Get both payments and license info
+export const getPaymentLicenseInfo = async () => {
+    // Two separate calls in parallel
+    const [paymentsResponse, licensesResponse] = await Promise.all([
+        apiClient.get(`${API_URL}/payments`),
+        apiClient.get(`${API_URL}/licenses`)
+    ]);
+
+    // Combine the results
+    return {
+        payments: paymentsResponse.data,
+        license: licensesResponse.data.length > 0 ? licensesResponse.data[0] : null // Assuming user has only one license
+    };
 };
 
-// 새 결제 수단을 등록하는 함수
+// Add a new payment method
 export const addPaymentMethod = (paymentData) => {
-    return axios.post(API_URL, paymentData);
+    return apiClient.post(`${API_URL}/payments`, paymentData);
+};
+
+// Add a new license
+export const addLicense = (licenseData) => {
+    return apiClient.post(`${API_URL}/licenses`, licenseData);
+};
+
+// Delete a payment method
+export const deletePaymentMethod = (paymentId) => {
+    return apiClient.delete(`${API_URL}/payments/${paymentId}`);
 };
