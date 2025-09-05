@@ -37,12 +37,12 @@ const Backdrop = styled.div`
 `;
 
 const Content = styled.div`
-    background: #fff;
+    background: #f7f5f3;
     padding: 24px;
     border-radius: 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     width: 90%;
-    max-width: 300px;
+    max-width: 400px;
     position: relative;
     display: flex;
     flex-direction: column;

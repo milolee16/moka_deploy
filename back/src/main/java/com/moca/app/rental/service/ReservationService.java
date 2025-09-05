@@ -68,4 +68,17 @@ public class ReservationService {
             return reservationRepository.findByUserId(userId);
         }
     }
+
+    @Transactional
+    public Reservation cancelReservation(Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("Reservation not found with ID: " + reservationId));
+
+        if (!"CONFIRMED".equals(reservation.getStatus()) && !"UPCOMING".equals(reservation.getStatus())) {
+            throw new IllegalStateException("Only CONFIRMED or UPCOMING reservations can be cancelled.");
+        }
+
+        reservation.setStatus("CANCELLED");
+        return reservationRepository.save(reservation);
+    }
 }
