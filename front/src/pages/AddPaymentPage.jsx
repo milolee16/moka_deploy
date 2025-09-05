@@ -8,10 +8,34 @@ const AddPaymentPage = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [cardCompany, setCardCompany] = useState('');
-    const [cardNumber, setCardNumber] = useState('');
+    const [cardNumber, setCardNumber] = useState(''); // Displayed formatted card number
+    const [rawCardNumber, setRawCardNumber] = useState(''); // Raw 16 digits for backend
     const [expiryDate, setExpiryDate] = useState('');
     const [cvc, setCvc] = useState('');
     const [error, setError] = useState('');
+
+    const handleCardNumberChange = (e) => {
+        const input = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        const formattedInput = input.match(/.{1,4}/g)?.join('-') || '';
+        
+        if (input.length <= 16) {
+            setRawCardNumber(input); // Store raw digits for backend
+            setCardNumber(formattedInput); // Store formatted for display
+        }
+    };
+
+    const handleExpiryDateChange = (e) => {
+        const input = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        let formattedInput = input;
+
+        if (input.length > 2) {
+            formattedInput = input.substring(0, 2) + '/' + input.substring(2, 4);
+        }
+
+        if (input.length <= 4) {
+            setExpiryDate(formattedInput);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -24,8 +48,8 @@ const AddPaymentPage = () => {
 
         const paymentData = {
             cardCompany,
-            cardNumber,
-            cardExpirationDate: expiryDate,
+            cardNumber: rawCardNumber, // Use raw 16 digits for backend
+            cardExpirationDate: expiryDate, // MM/YY format
             isDefault: false,
             cvc
         };
@@ -61,9 +85,9 @@ const AddPaymentPage = () => {
                         id="card-number" 
                         type="text" 
                         value={cardNumber} 
-                        onChange={(e) => setCardNumber(e.target.value)} 
+                        onChange={handleCardNumberChange} 
                         placeholder="- 없이 숫자만 입력"
-                        maxLength="16"
+                        maxLength="19" // 16 digits + 3 hyphens
                         required
                     />
                 </InputGroup>
@@ -73,9 +97,9 @@ const AddPaymentPage = () => {
                         id="expiry-date" 
                         type="text" 
                         value={expiryDate} 
-                        onChange={(e) => setExpiryDate(e.target.value)} 
+                        onChange={handleExpiryDateChange} 
                         placeholder="MM/YY"
-                        maxLength="5"
+                        maxLength="5" // MM/YY
                         required
                     />
                 </InputGroup>
