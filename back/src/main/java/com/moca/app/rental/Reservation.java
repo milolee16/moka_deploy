@@ -5,8 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Table(name = "RESERVATION")
@@ -58,4 +61,34 @@ public class Reservation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CAR_ID", insertable = false, updatable = false)
     private Car car;
+
+    /* =========================
+       계산 필드 (@Transient)
+       ========================= */
+
+    /** RENTAL_DATE + RENTAL_TIME 을 합친 값 (DB 컬럼 없음) */
+    @Transient
+    public LocalDateTime getRentalAt() {
+        return (date != null && time != null) ? LocalDateTime.of(date, time) : null;
+    }
+
+    /** RETURN_DATE + RETURN_TIME 을 합친 값 (DB 컬럼 없음) */
+    @Transient
+    public LocalDateTime getReturnAt() {
+        return (returnDate != null && returnTime != null) ? LocalDateTime.of(returnDate, returnTime) : null;
+    }
+
+    /** 표시용: "yyyy-MM-dd HH:mm:ss" */
+    @Transient
+    public String getRentalAtString() {
+        LocalDateTime dt = getRentalAt();
+        return dt != null ? dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null;
+    }
+
+    /** 표시용: "yyyy-MM-dd HH:mm:ss" */
+    @Transient
+    public String getReturnAtString() {
+        LocalDateTime dt = getReturnAt();
+        return dt != null ? dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null;
+    }
 }
