@@ -12,6 +12,7 @@ import {
   FiShield,
 } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
+import Modal from '../components/Modal';
 
 // API base URL (same as in PaymentOptions.jsx)
 const API_BASE_URL =
@@ -37,6 +38,7 @@ const MyPage = () => {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedReservation, setSelectedReservation] = useState(null);
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -65,6 +67,36 @@ const MyPage = () => {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const openModal = (reservation) => {
+    setSelectedReservation(reservation);
+  };
+
+  const closeModal = () => {
+    setSelectedReservation(null);
+  };
+
+  const handleCancelReservation = async (reservationId) => {
+    if (!window.confirm("정말로 예약을 취소하시겠습니까?")) return;
+
+    try {
+      await axios.put(`${API_BASE_URL}/api/reservations/${reservationId}/cancel`, {}, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      // Update local state
+      const updatedReservations = reservations.map(r => 
+        r.id === reservationId ? { ...r, status: 'CANCELLED', displayStatus: 'CANCELLED' } : r
+      );
+      setReservations(updatedReservations);
+      closeModal();
+    } catch (err) {
+      console.error("Failed to cancel reservation:", err);
+      alert("예약 취소에 실패했습니다.");
+    }
   };
 
   const displayName = user?.username || '게스트';
@@ -107,8 +139,9 @@ const MyPage = () => {
             }
 
             return (
-              <ReservationCard key={res.id}>
+              <ReservationCard key={res.id} onClick={() => openModal({ ...res, displayStatus })}>
                 <CarModel>{res.car?.carName || '차량 정보 없음'}</CarModel>
+                <LocationInfo>{res.locationName}</LocationInfo>
                 <ReservationInfo>
                   {formatReservationDateTime(res.rentalDate, res.rentalTime)} ~ {formatReservationDateTime(res.returnDate, res.returnTime)}
                 </ReservationInfo>
@@ -142,6 +175,53 @@ const MyPage = () => {
         <FiLogOut />
         <span>로그아웃</span>
       </LogoutButton>
+
+      {selectedReservation && (
+        <Modal isOpen={!!selectedReservation} onClose={closeModal}>
+          <ModalTitle>예약 상세 정보</ModalTitle>
+          <ModalContent>
+            <InfoRow>
+              <InfoLabel>차량</InfoLabel>
+              <InfoValue>{selectedReservation.car?.carName}</InfoValue>
+            </InfoRow>
+            <InfoRow>
+              <InfoLabel>대여/반납 장소</InfoLabel>
+              <InfoValue>{selectedReservation.locationName}</InfoValue>
+            </InfoRow>
+            <InfoRow>
+              <InfoLabel>대여 일시</InfoLabel>
+              <InfoValue>
+                {formatReservationDateTime(selectedReservation.rentalDate, selectedReservation.rentalTime)}
+              </InfoValue>
+            </InfoRow>
+            <InfoRow>
+              <InfoLabel>반납 일시</InfoLabel>
+              <InfoValue>
+                {formatReservationDateTime(selectedReservation.returnDate, selectedReservation.returnTime)}
+              </InfoValue>
+            </InfoRow>
+            <InfoRow>
+              <InfoLabel>상태</InfoLabel>
+              <InfoValue status={selectedReservation.displayStatus}>{selectedReservation.displayStatus}</InfoValue>
+            </InfoRow>
+            <InfoRow>
+              <InfoLabel>총 결제 금액</InfoLabel>
+              <InfoValue>{selectedReservation.totalAmount?.toLocaleString()}원</InfoValue>
+            </InfoRow>
+            {selectedReservation.memo && (
+              <InfoRow>
+                <InfoLabel>메모</InfoLabel>
+                <InfoValue>{selectedReservation.memo}</InfoValue>
+              </InfoRow>
+            )}
+          </ModalContent>
+          {selectedReservation.displayStatus === 'UPCOMING' && (
+            <CancelButton onClick={() => handleCancelReservation(selectedReservation.id)}>
+              예약 취소
+            </CancelButton>
+          )}
+        </Modal>
+      )}
     </PageLayout>
   );
 };
@@ -241,13 +321,20 @@ const ReservationCard = styled.div`
   margin-bottom: 12px;
   display: grid;
   grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto; // Adjust for the new row
   gap: 4px 8px;
 `;
 
 const CarModel = styled.p`
   font-weight: 600;
   color: #5d4037;
+  margin: 0;
+  grid-column: 1 / 2;
+`;
+
+const LocationInfo = styled.p`
+  font-size: 14px;
+  color: #795548; // A slightly different color for distinction
   margin: 0;
   grid-column: 1 / 2;
 `;
@@ -265,7 +352,7 @@ const StatusBadge = styled.span`
   font-size: 12px;
   font-weight: 700;
   grid-column: 2 / 3;
-  grid-row: 1 / 3;
+  grid-row: 1 / 4; // Span all three rows
   align-self: center;
   color: ${({ status }) => {
     if (status === 'UPCOMING') return '#4CAF50';
@@ -361,4 +448,66 @@ const ProfileInitial = styled.div`
   justify-content: center;
   font-size: 20px;
   font-weight: 700;
+`;
+
+const ModalTitle = styled.h2`
+  font-size: 20px;
+  font-weight: 700;
+  color: #3e2723;
+  margin: 0 0 16px;
+  text-align: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0ebe5;
+`;
+
+const ModalContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 8px;
+`;
+
+const InfoRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f7f5f3;
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const InfoLabel = styled.span`
+  font-weight: 600;
+  color: #795548;
+`;
+
+const InfoValue = styled.span`
+  color: ${({ status }) => {
+    if (status === 'UPCOMING') return '#4CAF50';
+    if (status === 'CANCELLED') return '#F44336';
+    return '#5d4037';
+  }};
+  text-align: right;
+  font-weight: 500;
+`;
+
+const CancelButton = styled.button`
+  background-color: #F44336;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #D32F2F;
+  }
 `;
