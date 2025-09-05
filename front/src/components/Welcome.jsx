@@ -1,9 +1,37 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import heroImageSrc from "../../public/images/cars/aston-martin-db12.png";
+import {useEffect} from "react";
+import axios from "axios";
 
 const Welcome = () => {
     const navigate = useNavigate();
+
+    useEffect( () => {
+        const fetchData = async () => {
+            try {
+                const res = await axios.get("http://localhost:5000/test");
+                console.log(res.data);
+            } catch (err) {
+                console.error("Flask 연결 오류:", err);
+            }
+
+
+        };
+        const fetchData2 = async () => {
+            try {
+                const res = await axios.post("http://localhost:5000/get_response");
+                console.log(res.data);
+            } catch (err) {
+                console.error("ai타고옴?", err);
+            }
+
+
+        };
+
+        fetchData2();
+        }, []);
+
 
     return (
         <Page>
