@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './OcrPage.css';
 import Modal from '../components/Modal'; // 모달 컴포넌트 임포트
+import { addLicense } from '../services/paymentLicenseService'; // addLicense 임포트
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const OCR_TYPE = {
   IDCARD: 1,
@@ -66,6 +68,18 @@ function OcrPage() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isEdit = location.state?.isEdit || false;
+
+  const formatDate = (dateStr) => {
+    if (!dateStr || dateStr.length !== 8) return null;
+    const year = dateStr.substring(0, 4);
+    const month = dateStr.substring(4, 6);
+    const day = dateStr.substring(6, 8);
+    return `${year}-${month}-${day}`;
+  };
+
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value.replace(/\D/g, '') }));
@@ -76,14 +90,29 @@ function OcrPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = () => {
-    console.log('최종 수정된 데이터:', formData);
-    setIsModalOpen(true); // alert 대신 모달 열기
+  const handleFormSubmit = async () => {
+    const licenseData = {
+        name: formData.resUserName,
+        licenseNumber: formData.resLicenseNo,
+        residentRegistrationNumber: formData.resUserIdentity,
+        issueDate: formatDate(formData.resIssueDate),
+        renewalStartDate: formatDate(formData.commStartDate),
+        renewalEndDate: formatDate(formData.commEndDate),
+    };
+
+    try {
+        await addLicense(licenseData);
+        console.log('최종 수정된 데이터:', licenseData);
+        setIsModalOpen(true);
+    } catch (error) {
+        console.error("Failed to add license:", error);
+        setError("면허증 등록에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setView(VIEW_MODE.START); // 모달 닫으면 처음으로
+    navigate('/payments-licenses'); // Redirect to payments and licenses page
   };
 
   const cleanupCamera = useCallback(() => {
@@ -291,8 +320,8 @@ function OcrPage() {
 
         <Modal isOpen={isModalOpen} onClose={closeModal}>
           <div className="success-modal-content">
-            <h3>등록 완료</h3>
-            <p>운전면허증 등록이 완료되었습니다.</p>
+            <h3>{isEdit ? '수정 완료' : '등록 완료'}</h3>
+            <p>{isEdit ? '면허정보가 수정되었습니다.' : '운전면허증 등록이 완료되었습니다.'}</p>
             <button onClick={closeModal} className="button button-blue">확인</button>
           </div>
         </Modal>
