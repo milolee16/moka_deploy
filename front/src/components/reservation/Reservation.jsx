@@ -1,39 +1,9 @@
 import {useMemo, useState, useEffect} from "react";
-import {useNavigate} from "react-router-dom";
 
-// ================= SVG Icons (react-icons/fi 대체) =================
-const FiPlus = ({ size = 18, color = "#795548" }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-    >
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
-);
-
-const FiMinus = ({ size = 18, color = "#795548" }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-    >
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
-);
+// ================= Icon Images (Base64 Encoded) =================
+const plusIcon = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM3OTU1NDgiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSIxMiIgeTE9IjUiIHgyPSIxMiIgeTI9IjE5Ij48L2xpbmU+PGxpbmUgeDE9IjUiIHkxPSIxMiIgeDI9IjE5IiB5Mj0iMTIiPjwvbGluZT48L3N2Zz4=";
+const minusIcon = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM3OTU1NDgiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSI1IiB5MT0iMTIiIHgyPSIxOSIgeTI9IjEyIj48L2xpbmU+PC9zdmc+";
+const minusIconDisabled = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNkN2NjYzkiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSI1IiB5MT0iMTIiIHgyPSIxOSIgeTI9IjEyIj48L2xpbmU+PC9zdmc+";
 
 
 // ================= Modal Component (Modal.jsx 대체) =================
@@ -62,7 +32,13 @@ function formatCurrencyKRW(n) {
 
 /** ================= Component ================= */
 const Reservation = () => {
-    const navigate = useNavigate();
+    // In a real react-router-dom app, you would use `useNavigate()`.
+    // For this environment, we'll simulate navigation with a log.
+    const navigate = (path, options) => {
+        console.log("Navigating to:", path, "with state:", options?.state);
+        // Using a simple alert for demonstration as real navigation is not possible here.
+        alert(`Reservation confirmed!\nDetails sent to the next step.`);
+    };
 
     // 오늘 ~ 14일치 날짜 옵션
     const dateOptions = useMemo(() => {
@@ -182,6 +158,7 @@ const Reservation = () => {
 
     // ⭐ 다음 페이지로 이동 시, 계산된 price와 passengerCount를 함께 전달!
     const handleConfirmAndNavigate = () => {
+        setModalOpen(false); // Close modal before navigating
         navigate("/map", {
             state: {
                 startDate: start,
@@ -201,6 +178,16 @@ const Reservation = () => {
     return (
         <>
             <style>{`
+                /* General Body Style for Context */
+                .app-container {
+                    font-family: 'Pretendard', sans-serif;
+                    background-color: #F8F5F2; /* Moca-themed light background */
+                    padding: 20px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 100vh;
+                }
                 .box-card {
                     background: #ffffff;
                     border-radius: 20px;
@@ -208,6 +195,8 @@ const Reservation = () => {
                     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
                     display: grid;
                     gap: 16px;
+                    width: 100%;
+                    max-width: 420px;
                 }
                 .section-title {
                     font-size: 16px;
@@ -240,10 +229,16 @@ const Reservation = () => {
                     font-size: 14px;
                     color: #5d4037; /* Moca: Dark Brown */
                     outline: none;
+                    -webkit-appearance: none;
+                    appearance: none;
+                    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23795548%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+                    background-repeat: no-repeat;
+                    background-position: right 12px center;
+                    background-size: 8px 8px;
                 }
                 .select-form:focus {
                     border-color: #a47551; /* Moca: Primary Brown */
-                    background: #fff;
+                    background-color: #fff;
                 }
                 .divider {
                     border: none;
@@ -271,12 +266,13 @@ const Reservation = () => {
                     font-size: 16px;
                     font-weight: 800;
                     cursor: pointer;
-                    transition: background-color 0.2s, box-shadow 0.2s;
+                    transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
                     background: #a47551; /* Moca: Primary */
                     box-shadow: 0 10px 24px rgba(164, 117, 81, .35); /* Moca: Shadow */
                 }
                 .confirm-button:active {
-                    transform: scale(0.99);
+                    transform: scale(0.98);
+                    box-shadow: 0 4px 10px rgba(164, 117, 81, .25);
                 }
                 .confirm-button:disabled {
                     background: #d7ccc8; /* Moca: Disabled */
@@ -292,18 +288,18 @@ const Reservation = () => {
                 .stepper-button {
                     width: 38px;
                     height: 38px;
-                    border-radius: 50%; /* 원형 버튼 */
-                    border: 1px solid #e7e0d9; /* Moca: Beige Border */
-                    background: #fff; /* 흰색 배경 */
-                    color: #795548; /* Moca: Medium Brown 아이콘 색상 */
+                    border-radius: 50%;
+                    border: 1px solid #e7e0d9;
+                    background: #fff;
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
+                    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+                    padding: 0;
                 }
                 .stepper-button:hover:not(:disabled) {
-                    background: #f5f1ed; /* Moca: Light Brown BG on hover */
+                    background: #f5f1ed;
                     border-color: #d7ccc8;
                 }
                 .stepper-button:active:not(:disabled) {
@@ -311,16 +307,18 @@ const Reservation = () => {
                 }
                 .stepper-button:disabled {
                     background: #f5f1ed;
-                    color: #d7ccc8; /* Moca: Disabled 색상 */
                     cursor: not-allowed;
                     border-color: #f5f1ed;
                 }
                 .stepper-button:focus-visible {
                     outline: none;
-                    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.4); /* Moca: 포커스 효과 */
+                    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.4);
                 }
-                .stepper-button > svg {
-                    pointer-events: none;
+                /* --- 아이콘 이미지 스타일 --- */
+                .stepper-button img {
+                    width: 16px;
+                    height: 16px;
+                    pointer-events: none; /* 이미지 클릭 방지 */
                 }
                 .passenger-value-box {
                     min-width: 40px;
@@ -341,17 +339,19 @@ const Reservation = () => {
                     justify-content: center;
                     align-items: center;
                     z-index: 1000;
+                    animation: fadeIn 0.3s ease;
                 }
                 .modal-content {
                     background: white;
                     padding: 24px;
                     border-radius: 20px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
                     display: flex;
                     flex-direction: column;
                     gap: 20px;
                     width: 90%;
                     max-width: 400px;
+                    animation: slideUp 0.4s ease;
                 }
                 .modal-title {
                     font-size: 18px;
@@ -374,100 +374,105 @@ const Reservation = () => {
                 }
                 .info-value {
                     color: #5d4037;
+                    font-weight: 500;
                 }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
             `}</style>
-            <section className="box-card">
-                <h2 className="section-title">이용시간</h2>
+            <div className="app-container">
+                <section className="box-card">
+                    <h2 className="section-title">이용시간</h2>
 
-                <div className="field-row">
-                    <div className="field-label">대여시각</div>
-                    <div className="select-group">
-                        <select className="select-form" value={startDate} onChange={(e) => setStartDate(e.target.value)}>
-                            {dateOptions.map((d) => (
-                                <option key={d.value} value={d.value}>
-                                    {d.label}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            className="select-form"
-                            value={startTime}
-                            onChange={(e) => setStartTime(e.target.value)}
-                            disabled={startTimeOptions.length === 0}
-                        >
-                            {startTimeOptions.length > 0 ? (
-                                startTimeOptions.map((t) => (
+                    <div className="field-row">
+                        <div className="field-label">대여시각</div>
+                        <div className="select-group">
+                            <select className="select-form" value={startDate} onChange={(e) => setStartDate(e.target.value)}>
+                                {dateOptions.map((d) => (
+                                    <option key={d.value} value={d.value}>
+                                        {d.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <select
+                                className="select-form"
+                                value={startTime}
+                                onChange={(e) => setStartTime(e.target.value)}
+                                disabled={startTimeOptions.length === 0}
+                            >
+                                {startTimeOptions.length > 0 ? (
+                                    startTimeOptions.map((t) => (
+                                        <option key={t} value={t}>
+                                            {t}
+                                        </option>
+                                    ))
+                                ) : (
+                                    <option>선택 불가</option>
+                                )}
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr className="divider"/>
+
+                    <div className="field-row">
+                        <div className="field-label">반납시각</div>
+                        <div className="select-group">
+                            <select className="select-form" value={endDate} onChange={(e) => setEndDate(e.target.value)}>
+                                {dateOptions.map((d) => (
+                                    <option key={d.value} value={d.value}>
+                                        {d.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <select className="select-form" value={endTime} onChange={(e) => setEndTime(e.target.value)}>
+                                {allTimeOptions.map((t) => (
                                     <option key={t} value={t}>
                                         {t}
                                     </option>
-                                ))
-                            ) : (
-                                <option>선택 불가</option>
-                            )}
-                        </select>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-                </div>
 
-                <hr className="divider"/>
+                    <hr className="divider"/>
 
-                <div className="field-row">
-                    <div className="field-label">반납시각</div>
-                    <div className="select-group">
-                        <select className="select-form" value={endDate} onChange={(e) => setEndDate(e.target.value)}>
-                            {dateOptions.map((d) => (
-                                <option key={d.value} value={d.value}>
-                                    {d.label}
-                                </option>
-                            ))}
-                        </select>
-                        <select className="select-form" value={endTime} onChange={(e) => setEndTime(e.target.value)}>
-                            {allTimeOptions.map((t) => (
-                                <option key={t} value={t}>
-                                    {t}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="summary">
+                        총 <strong>{diff.days > 0 && `${diff.days}일 `}{diff.hours}시간 {diff.minutes}분</strong> 이용
                     </div>
-                </div>
 
-                <hr className="divider"/>
+                    <div className="field-row">
+                        <div className="field-label">탑승 인원</div>
+                        <div className="stepper-group" aria-label="탑승 인원 선택">
+                            <button
+                                type="button"
+                                className="stepper-button"
+                                aria-label="인원 감소"
+                                onClick={() => setPassengerCount(p => Math.max(1, p - 1))}
+                                disabled={passengerCount <= 1}
+                            >
+                                <img src={passengerCount <= 1 ? minusIconDisabled : minusIcon} alt="Decrease count" />
+                            </button>
 
-                <div className="summary">
-                    총 <strong>{diff.days}일 {diff.hours}시간 {diff.minutes}분</strong> 이용
-                </div>
+                            <span className="passenger-value-box" aria-live="polite">
+                                {passengerCount}
+                            </span>
 
-                <div className="field-row">
-                    <div className="field-label">탑승 인원</div>
-                    <div className="stepper-group" aria-label="탑승 인원 선택">
-                        <button
-                            type="button"
-                            className="stepper-button"
-                            aria-label="인원 감소"
-                            onClick={() => setPassengerCount(p => p - 1)}
-                            disabled={passengerCount <= 1}
-                        >
-                            <FiMinus size={18} color={passengerCount <= 1 ? "#d7ccc8" : "#795548"} />
-                        </button>
-
-                        <span className="passenger-value-box" aria-live="polite">
-                            {passengerCount}
-                        </span>
-
-                        <button
-                            type="button"
-                            className="stepper-button"
-                            aria-label="인원 증가"
-                            onClick={() => setPassengerCount(p => p + 1)}
-                        >
-                            <FiPlus size={18} color="#795548" />
-                        </button>
+                            <button
+                                type="button"
+                                className="stepper-button"
+                                aria-label="인원 증가"
+                                onClick={() => setPassengerCount(p => p + 1)}
+                            >
+                                <img src={plusIcon} alt="Increase count" />
+                            </button>
+                        </div>
                     </div>
-                </div>
 
-                <button className="confirm-button" disabled={!diff.valid} onClick={handleOpenModal}>
-                    확인
-                </button>
-            </section>
+                    <button className="confirm-button" disabled={!diff.valid} onClick={handleOpenModal}>
+                        예약 확인하기
+                    </button>
+                </section>
+            </div>
 
             <Modal isOpen={isModalOpen} onClose={() => setModalOpen(false)}>
                 <h2 className="modal-title">예약 내용을 확인해주세요</h2>
@@ -484,6 +489,8 @@ const Reservation = () => {
                     </span>
                     <span className="info-label">탑승 인원</span>
                     <span className="info-value">{passengerCount}명</span>
+                    <span className="info-label">예상 요금</span>
+                    <span className="info-value"><strong>{formatCurrencyKRW(price)}원</strong></span>
                 </div>
                 <button className="confirm-button" onClick={handleConfirmAndNavigate}>
                     지도에서 찾기
@@ -545,3 +552,4 @@ function formatKorean(d) {
     const mi = String(d.getMinutes()).padStart(2, "0");
     return `${dayLabel} ${hh}:${mi}`;
 }
+
