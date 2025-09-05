@@ -67,6 +67,18 @@ public class ReservationController {
         return ResponseEntity.ok(body);
     }
 
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelReservation(@PathVariable Long id) {
+        try {
+            Reservation cancelled = reservationService.cancelReservation(id);
+            return ResponseEntity.ok(ReservationResponseDto.from(cancelled));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
     /** SecurityContext에서 내부 userId 안전 추출 */
     private String extractUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
