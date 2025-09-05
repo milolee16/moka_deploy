@@ -35,8 +35,8 @@ def test():
 
 @app.route("/get_response", methods=["POST"])
 def get_response():
-#     user_message = request.form["message"]
-    user_message = "이건 테스트야 반응해봐"
+    data = request.get_json()
+    user_message = data.get("message", "")
     try:
         # 사용자님의 프롬프트를 가져옵니다.
         # 마지막 질문 부분만 사용자의 입력 메시지로 동적으로 변경합니다.
