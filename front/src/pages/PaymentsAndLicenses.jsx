@@ -4,6 +4,32 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPaymentLicenseInfo, deletePaymentMethod } from '../services/paymentLicenseService';
 
+// Helper function to format card number for display
+const formatCardNumber = (number) => {
+    if (!number) return '';
+    const cleaned = number.replace(/\D/g, ''); // Ensure only digits
+    if (cleaned.length === 16) {
+        return `${cleaned.substring(0, 4)}-****-****-${cleaned.substring(12, 16)}`;
+    }
+    return cleaned.match(/.{1,4}/g)?.join('-') || cleaned; // Fallback for non-16 digit numbers
+};
+
+// Helper function to format license number for display
+const formatLicenseNumber = (number) => {
+    if (!number) return '';
+    const cleaned = number.replace(/\D/g, '');
+    if (cleaned.length === 12) { // Assuming 12 digits for XX-XXXXXXXX-XX
+        return `${cleaned.substring(0, 2)}-${cleaned.substring(2, 10)}-${cleaned.substring(10, 12)}`;
+    }
+    return cleaned; // Return as is if not 10 or 12 digits
+};
+
+// Helper function to format resident registration number for display
+const formatResidentRegistrationNumber = (number) => {
+    if (!number || number.length !== 13) return number; // Ensure 13 digits
+    return `${number.substring(0, 6)}-${number.substring(6, 7)}******`; // Mask last 6 digits
+};
+
 const PaymentsAndLicenses = () => {
     const navigate = useNavigate();
     const { user, authLoading } = useAuth();
@@ -77,7 +103,7 @@ const PaymentsAndLicenses = () => {
                                 <CardIcon>💳</CardIcon>
                                 <CardInfo>
                                     <CardLabel>{p.cardCompany}</CardLabel>
-                                    <CardSubLabel>{p.cardNumber}</CardSubLabel>
+                                    <CardSubLabel>{formatCardNumber(p.cardNumber)}</CardSubLabel>
                                 </CardInfo>
                             </CardContent>
                             <ActionButtons>
@@ -103,8 +129,8 @@ const PaymentsAndLicenses = () => {
                         <CardContent>
                             <CardIcon>🪪</CardIcon>
                             <CardInfo>
-                                <CardLabel>{license.name} ({license.licenseNumber})</CardLabel>
-                                <CardSubLabel>주민번호: {license.residentRegistrationNumber}</CardSubLabel>
+                                <CardLabel>{license.name} ({formatLicenseNumber(license.licenseNumber)})</CardLabel>
+                                <CardSubLabel>주민등록번호: {formatResidentRegistrationNumber(license.residentRegistrationNumber)}</CardSubLabel>
                                 <CardSubLabel>발급일: {new Date(license.issueDate).toLocaleDateString()}</CardSubLabel>
                                 <CardSubLabel>갱신 시작일: {new Date(license.renewalStartDate).toLocaleDateString()}</CardSubLabel>
                                 <CardSubLabel>갱신 종료일: {new Date(license.renewalEndDate).toLocaleDateString()}</CardSubLabel>
@@ -223,6 +249,7 @@ const CardLabel = styled.span`
 const CardSubLabel = styled.span`
     font-size: 14px;
     color: #a1887f;
+    vertical-align: middle;
 `;
 
 const StyledButton = styled.button`
