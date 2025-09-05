@@ -95,15 +95,27 @@ const MyPage = () => {
           <p>예약 내역이 없습니다.</p>
         )}
         {!loading && !error && reservations.length > 0 && (
-          reservations.map((res) => (
-            <ReservationCard key={res.id}>
-              <CarModel>{res.car?.carName || '차량 정보 없음'}</CarModel>
-              <ReservationInfo>
-                {formatReservationDateTime(res.date, res.time)} ~ {formatReservationDateTime(res.returnDate, res.returnTime)}
-              </ReservationInfo>
-              <StatusBadge status={res.status}>{res.status}</StatusBadge>
-            </ReservationCard>
-          ))
+          reservations.map((res) => {
+            const { status, rentalDate, rentalTime } = res;
+            let displayStatus = status;
+
+            if (status === 'CONFIRMED') {
+              const reservationStart = new Date(`${rentalDate}T${rentalTime}`);
+              if (reservationStart > new Date()) {
+                displayStatus = 'UPCOMING';
+              }
+            }
+
+            return (
+              <ReservationCard key={res.id}>
+                <CarModel>{res.car?.carName || '차량 정보 없음'}</CarModel>
+                <ReservationInfo>
+                  {formatReservationDateTime(res.rentalDate, res.rentalTime)} ~ {formatReservationDateTime(res.returnDate, res.returnTime)}
+                </ReservationInfo>
+                <StatusBadge status={displayStatus}>{displayStatus}</StatusBadge>
+              </ReservationCard>
+            );
+          })
         )}
         <ViewMoreButton>예약 내역 더보기</ViewMoreButton>
       </Section>
@@ -255,8 +267,16 @@ const StatusBadge = styled.span`
   grid-column: 2 / 3;
   grid-row: 1 / 3;
   align-self: center;
-  color: ${({ status }) => (status === '예정' ? '#4CAF50' : '#757575')};
-  background-color: ${({ status }) => (status === '예정' ? '#E8F5E9' : '#F5F5F5')};
+  color: ${({ status }) => {
+    if (status === 'UPCOMING') return '#4CAF50';
+    if (status === 'CANCELLED') return '#F44336';
+    return '#757575';
+  }};
+  background-color: ${({ status }) => {
+    if (status === 'UPCOMING') return '#E8F5E9';
+    if (status === 'CANCELLED') return '#FFEBEE';
+    return '#F5F5F5';
+  }};
 `;
 
 const ViewMoreButton = styled.button`
