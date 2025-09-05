@@ -42,6 +42,9 @@ public class SecurityConfig {
                         // 예약 관련 API는 인증 필요
                         .requestMatchers("/api/reservations/**").authenticated()
 
+                        // 마이페이지 관련 API는 인증 필요
+                        .requestMatchers("/api/my-page/**").authenticated()
+
                         // 나머지는 허용
                         .anyRequest().permitAll()
                 )
