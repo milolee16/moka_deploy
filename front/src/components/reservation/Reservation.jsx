@@ -1,10 +1,5 @@
 import {useMemo, useState, useEffect} from "react";
-
-// ================= Icon Images (Base64 Encoded) =================
-const plusIcon = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM3OTU1NDgiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSIxMiIgeTE9IjUiIHgyPSIxMiIgeTI9IjE5Ij48L2xpbmU+PGxpbmUgeDE9IjUiIHkxPSIxMiIgeDI9IjE5IiB5Mj0iMTIiPjwvbGluZT48L3N2Zz4=";
-const minusIcon = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM3OTU1NDgiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSI1IiB5MT0iMTIiIHgyPSIxOSIgeTI9IjEyIj48L2xpbmU+PC9zdmc+";
-const minusIconDisabled = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNkN2NjYzkiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSI1IiB5MT0iMTIiIHgyPSIxOSIgeTI9IjEyIj48L2xpbmU+PC9zdmc+";
-
+import { useNavigate } from "react-router-dom";
 
 // ================= Modal Component (Modal.jsx 대체) =================
 const Modal = ({ isOpen, onClose, children }) => {
@@ -32,13 +27,7 @@ function formatCurrencyKRW(n) {
 
 /** ================= Component ================= */
 const Reservation = () => {
-    // In a real react-router-dom app, you would use `useNavigate()`.
-    // For this environment, we'll simulate navigation with a log.
-    const navigate = (path, options) => {
-        console.log("Navigating to:", path, "with state:", options?.state);
-        // Using a simple alert for demonstration as real navigation is not possible here.
-        alert(`Reservation confirmed!\nDetails sent to the next step.`);
-    };
+    const navigate = useNavigate(); // react-router-dom의 useNavigate hook 사용
 
     // 오늘 ~ 14일치 날짜 옵션
     const dateOptions = useMemo(() => {
@@ -285,6 +274,7 @@ const Reservation = () => {
                     gap: 12px; /* 버튼과 숫자 사이 간격 추가 */
                     justify-self: start;
                 }
+                /* --- SVG 대신 Text를 사용하도록 스타일 수정 --- */
                 .stepper-button {
                     width: 38px;
                     height: 38px;
@@ -295,8 +285,14 @@ const Reservation = () => {
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
-                    padding: 0;
+                    transition: background-color 0.2s, color 0.2s, border-color 0.2s, transform 0.1s;
+                    
+                    /* 텍스트 스타일링 */
+                    font-size: 26px; /* 텍스트 크기 */
+                    font-weight: 300; /* 얇은 폰트로 세련되게 */
+                    color: #795548; /* 기본 텍스트 색상 */
+                    line-height: 1; /* 수직 정렬을 위한 line-height 조정 */
+                    padding: 0 0 2px 0; /* 미세한 수직 위치 조정 */
                 }
                 .stepper-button:hover:not(:disabled) {
                     background: #f5f1ed;
@@ -309,16 +305,11 @@ const Reservation = () => {
                     background: #f5f1ed;
                     cursor: not-allowed;
                     border-color: #f5f1ed;
+                    color: #d7ccc8; /* 비활성화 시 텍스트 색상 */
                 }
                 .stepper-button:focus-visible {
                     outline: none;
                     box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.4);
-                }
-                /* --- 아이콘 이미지 스타일 --- */
-                .stepper-button img {
-                    width: 16px;
-                    height: 16px;
-                    pointer-events: none; /* 이미지 클릭 방지 */
                 }
                 .passenger-value-box {
                     min-width: 40px;
@@ -440,6 +431,8 @@ const Reservation = () => {
                         총 <strong>{diff.days > 0 && `${diff.days}일 `}{diff.hours}시간 {diff.minutes}분</strong> 이용
                     </div>
 
+
+
                     <div className="field-row">
                         <div className="field-label">탑승 인원</div>
                         <div className="stepper-group" aria-label="탑승 인원 선택">
@@ -450,7 +443,7 @@ const Reservation = () => {
                                 onClick={() => setPassengerCount(p => Math.max(1, p - 1))}
                                 disabled={passengerCount <= 1}
                             >
-                                <img src={passengerCount <= 1 ? minusIconDisabled : minusIcon} alt="Decrease count" />
+                                -
                             </button>
 
                             <span className="passenger-value-box" aria-live="polite">
@@ -463,7 +456,7 @@ const Reservation = () => {
                                 aria-label="인원 증가"
                                 onClick={() => setPassengerCount(p => p + 1)}
                             >
-                                <img src={plusIcon} alt="Increase count" />
+                                +
                             </button>
                         </div>
                     </div>
@@ -489,8 +482,6 @@ const Reservation = () => {
                     </span>
                     <span className="info-label">탑승 인원</span>
                     <span className="info-value">{passengerCount}명</span>
-                    <span className="info-label">예상 요금</span>
-                    <span className="info-value"><strong>{formatCurrencyKRW(price)}원</strong></span>
                 </div>
                 <button className="confirm-button" onClick={handleConfirmAndNavigate}>
                     지도에서 찾기
