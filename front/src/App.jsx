@@ -25,56 +25,61 @@ import FAQPage from './pages/FAQPage';
 import NoticeWritePage from './components/notices/NoticeWritePage.jsx';
 import PaymentsAndLicenses from "./pages/PaymentsAndLicenses.jsx";
 import AddPaymentPage from "./pages/AddPaymentPage.jsx";
+import Chatbot from "./components/Chatbot.jsx";   // 🔥 챗봇 컴포넌트 추가
+import ChatbotWidget from "./components/ChatbotWidget.jsx";
 
 function App() {
-  return (
-    <AuthProvider>
-      <Routes>
-        {/* Routes with the common Layout */}
-        <Route element={<Layout />}>
-          <Route path="/" element={<Welcome />} />
-          <Route path="/home" element={<Index />} />
-          <Route path="/reserve" element={<Reservation />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/cars" element={<CarSelect />} />
-          <Route path="/insurance" element={<InsuranceSelect />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/payment-options" element={<PaymentOptions />} />
-          <Route path="/ocr" element={<OcrPage />} />
-          <Route path="/payment-result/:status" element={<PaymentResult />} />
-          <Route path="/notices" element={<NoticesPage />} />
-          <Route path="/notices/write" element={<NoticeWritePage/>} />
-          <Route path="/payments-licenses" element={<PaymentsAndLicenses />} />
-          <Route path="/add-payment" element={<AddPaymentPage />} />
-          <Route path="/faq" element={<FAQPage />} />
+    return (
+        <AuthProvider>
+            <Routes>
+                {/* Routes with the common Layout */}
+                <Route element={<Layout />}>
+                    <Route path="/" element={<Welcome />} />
+                    <Route path="/home" element={<Index />} />
+                    <Route path="/reserve" element={<Reservation />} />
+                    <Route path="/map" element={<MapPage />} />
+                    <Route path="/cars" element={<CarSelect />} />
+                    <Route path="/insurance" element={<InsuranceSelect />} />
+                    <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/payment-options" element={<PaymentOptions />} />
+                    <Route path="/ocr" element={<OcrPage />} />
+                    <Route path="/payment-result/:status" element={<PaymentResult />} />
+                    <Route path="/notices" element={<NoticesPage />} />
+                    <Route path="/notices/write" element={<NoticeWritePage />} />
+                    <Route path="/payments-licenses" element={<PaymentsAndLicenses />} />
+                    <Route path="/add-payment" element={<AddPaymentPage />} />
+                    <Route path="/faq" element={<FAQPage />} />
+                    <Route path="/chatbot" element={<Chatbot />} /> {/* 🔥 챗봇 라우트 추가 */}
 
-          {/* Protected Route for My Page */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/mypage" element={<MyPage />} />
-          </Route>
+                    {/* Protected Route for My Page */}
+                    <Route element={<ProtectedRoute />}>
+                        <Route path="/mypage" element={<MyPage />} />
+                    </Route>
 
-          {/* Protected Route for Admin Page */}
-          <Route element={<ProtectedRoute adminOnly={true} />}>
-            <Route path="/admin/*" element={<AdminPage />} />
-          </Route>
-        </Route>
-0-
-        {/* Routes without the common Layout */}
-        <Route
-          path="/login"
-          element={<LoginPage redirectPath="/auth/kakao/callback" />}
-        />
-        <Route
-          path="/loginTest"
-          element={<LoginPage redirectPath="/auth/kakao/callback/test" />}
-        />
-        <Route path="/signup" element={<SignupPage />} />
-        {/* KakaoCallback 컴포넌트가 두 개의 다른 콜백 경로를 모두 처리 */}
-        <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
-        <Route path="/auth/kakao/callback/test" element={<KakaoCallback />} />
-      </Routes>
-    </AuthProvider>
-  );
+                    {/* Protected Route for Admin Page */}
+                    <Route element={<ProtectedRoute adminOnly={true} />}>
+                        <Route path="/admin/*" element={<AdminPage />} />
+                    </Route>
+                </Route>
+
+                {/* Routes without the common Layout */}
+                <Route
+                    path="/login"
+                    element={<LoginPage redirectPath="/auth/kakao/callback" />}
+                />
+                <Route
+                    path="/loginTest"
+                    element={<LoginPage redirectPath="/auth/kakao/callback/test" />}
+                />
+                <Route path="/signup" element={<SignupPage />} />
+                {/* KakaoCallback 컴포넌트가 두 개의 다른 콜백 경로를 모두 처리 */}
+                <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
+                <Route path="/auth/kakao/callback/test" element={<KakaoCallback />} />
+            </Routes>
+            {/* 오른쪽 하단 챗봇 위젯 */}
+            <ChatbotWidget />   {/* 🔥 Layout 밖에서 항상 보이도록 */}
+        </AuthProvider>
+    );
 }
 
 export default App;
