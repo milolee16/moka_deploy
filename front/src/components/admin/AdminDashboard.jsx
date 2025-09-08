@@ -2,6 +2,7 @@ import { Routes, Route, NavLink } from 'react-router-dom';
 import styled from 'styled-components';
 import RentalAdminDashboard from './RentalAdminDashboard.jsx';
 import AdminReservationManagement from './AdminReservationManagement.jsx';
+import AdminUserManagement from './AdminUserManagement.jsx'; // 새로 추가
 
 // 아직 만들지 않은 페이지를 위한 임시 컴포넌트
 const Placeholder = ({ title }) => (
@@ -29,7 +30,8 @@ function AdminDashboard() {
         <Routes>
           <Route index element={<RentalAdminDashboard />} />
           <Route path="reservations" element={<AdminReservationManagement />} />
-          <Route path="users" element={<Placeholder title="사용자 관리" />} />
+          <Route path="users" element={<AdminUserManagement />} />{' '}
+          {/* 새로 추가 */}
           <Route path="vehicles" element={<Placeholder title="차량 관리" />} />
         </Routes>
       </Content>
@@ -39,7 +41,7 @@ function AdminDashboard() {
 
 export default AdminDashboard;
 
-// Styled Components
+// Styled Components (기존과 동일)
 const DashboardContainer = styled.div`
   display: flex;
   gap: 16px;
@@ -119,9 +121,9 @@ const StyledNavLink = styled(NavLink)`
   padding: 8px 12px;
   color: #6b7280;
   text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s;
 
   &:hover {
     background: #f3f4f6;
@@ -131,20 +133,16 @@ const StyledNavLink = styled(NavLink)`
   &.active {
     background: #5d4037;
     color: white;
-    font-weight: 500;
   }
 
   @media (max-width: 768px) {
     padding: 6px 10px;
-    font-size: 0.8rem;
-    flex: 1;
-    text-align: center;
-    min-width: fit-content;
+    font-size: 14px;
   }
 
   @media (min-width: 769px) {
     padding: 12px 16px;
-    font-size: 1rem;
+    font-size: 15px;
   }
 `;
 
@@ -152,12 +150,8 @@ const Content = styled.main`
   flex: 1;
   background: #ffffff;
   border-radius: 12px;
-  border: 1px solid #e7e0d9;
   overflow: hidden;
-
-  @media (max-width: 768px) {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  }
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 
   @media (min-width: 769px) {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
@@ -165,43 +159,16 @@ const Content = styled.main`
 `;
 
 const PlaceholderContainer = styled.div`
-  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
   text-align: center;
   color: #6b7280;
 
   h2 {
-    margin: 0 0 16px 0;
+    margin-bottom: 8px;
     color: #374151;
-  }
-
-  p {
-    margin: 0;
-    font-size: 1rem;
-  }
-
-  @media (max-width: 768px) {
-    padding: 20px;
-
-    h2 {
-      font-size: 1.2rem;
-      margin-bottom: 12px;
-    }
-
-    p {
-      font-size: 0.9rem;
-    }
-  }
-
-  @media (min-width: 769px) {
-    padding: 48px;
-
-    h2 {
-      font-size: 1.5rem;
-      margin-bottom: 20px;
-    }
-
-    p {
-      font-size: 1.1rem;
-    }
   }
 `;

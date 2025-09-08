@@ -45,6 +45,12 @@ public class SecurityConfig {
                         // 마이페이지 관련 API는 인증 필요
                         .requestMatchers("/api/my-page/**").authenticated()
 
+                        // 관리자 전용
+                        .requestMatchers("/api/users/admin/**").hasRole("ADMIN")
+
+                        // 인증된 사용자만
+                        .requestMatchers("/api/users/profile").authenticated()
+
                         // 나머지는 허용
                         .anyRequest().permitAll()
                 )

@@ -13,7 +13,7 @@ const ChatbotWidget = () => {
         setChat((prev) => [...prev, { role: "user", text: input }]);
 
         try {
-            const res = await axios.post("http://localhost:5000/get_response", {
+            const res = await axios.post("http://127.0.0.1:5000/get_response", {
                 message: input,
             });
 
