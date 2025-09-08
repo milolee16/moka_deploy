@@ -53,7 +53,7 @@ const AdminReservationManagement = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       if (!token) {
         throw new Error('로그인이 필요합니다.');
       }
@@ -91,7 +91,7 @@ const AdminReservationManagement = () => {
   // 예약 상태 변경
   const updateReservationStatus = async (reservationId, newStatus) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(
         `http://localhost:8080/api/reservations/admin/${reservationId}/status?status=${newStatus}`,
         {
@@ -134,7 +134,7 @@ const AdminReservationManagement = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(
         `http://localhost:8080/api/reservations/admin/${reservationId}`,
         {
@@ -169,7 +169,7 @@ const AdminReservationManagement = () => {
   // 예약 상세 조회
   const viewReservationDetails = async (reservationId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(
         `http://localhost:8080/api/reservations/admin/${reservationId}`,
         {
@@ -327,6 +327,7 @@ const AdminReservationManagement = () => {
                           title="상세보기"
                         >
                           <FiEye />
+                          <span>상세</span>
                         </ActionButton>
                         <ActionButton
                           onClick={() => {
@@ -337,6 +338,7 @@ const AdminReservationManagement = () => {
                           color="#3b82f6"
                         >
                           <FiEdit />
+                          <span>수정</span>
                         </ActionButton>
                         <ActionButton
                           onClick={() => deleteReservation(reservation.id)}
@@ -344,6 +346,7 @@ const AdminReservationManagement = () => {
                           color="#ef4444"
                         >
                           <FiTrash2 />
+                          <span>삭제</span>
                         </ActionButton>
                       </ActionButtons>
                     </td>
@@ -669,17 +672,36 @@ const ActionButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
+  gap: 4px;
+  min-width: 80px; // 32px에서 80px로 확장
   height: 32px;
+  padding: 0 12px; // 패딩 추가
   border: none;
   border-radius: 6px;
   background: ${(props) => props.color || '#6b7280'};
   color: white;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px; // 폰트 크기 약간 줄임
+  font-weight: 500;
+  white-space: nowrap; // 텍스트 줄바꿈 방지
 
   &:hover {
     opacity: 0.8;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  // 모바일에서는 아이콘만 표시
+  @media (max-width: 768px) {
+    min-width: 32px;
+    padding: 0;
+
+    span {
+      display: none;
+    }
   }
 `;
 
