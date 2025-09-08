@@ -16,8 +16,16 @@ public interface CarRepository extends JpaRepository<Car, Long> {
 
     @Query("SELECT c FROM Car c JOIN FETCH c.vehicleType")
     List<Car> findAllWithVehicleType();
-    
-    // 차량 상태별 통계를 한번에 가져오는 최적화된 쿼리
+
+    List<Car> findByStatusAndVehicleTypeCode(String status, String vehicleTypeCode);
+    boolean existsByCarNumber(String carNumber);
+    List<Car> findByCarNameContainingIgnoreCase(String carName);
+    List<Car> findByCarNumberContainingIgnoreCase(String carNumber);
+
+    // 관리자용 통계 쿼리들
     @Query("SELECT c.status, COUNT(c) FROM Car c GROUP BY c.status")
     List<Object[]> getCarStatusStats();
+
+    @Query("SELECT c.vehicleTypeCode, COUNT(c) FROM Car c GROUP BY c.vehicleTypeCode")
+    List<Object[]> getCarTypeStats();
 }
