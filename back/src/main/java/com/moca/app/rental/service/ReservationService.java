@@ -1,6 +1,7 @@
 package com.moca.app.rental.service;
 
 import com.moca.app.notification.service.NotificationService;
+import com.moca.app.notification.Notification; // 이 import 추가!
 import com.moca.app.rental.Reservation;
 import com.moca.app.rental.dto.ReservationRequestDto;
 import com.moca.app.rental.repository.ReservationRepository;
@@ -76,14 +77,28 @@ public class ReservationService {
         // 예약 저장
         Reservation savedReservation = reservationRepository.save(reservation);
 
-        // 예약 생성 후 알림 생성 (핵심 추가 부분!)
+        // 예약 생성 후 알림 생성 (수정된 부분)
         try {
-            notificationService.createReservationNotifications(savedReservation);
-            log.info("예약 알림 생성 완료: reservationId={}, userId={}",
-                    savedReservation.getId(), userId);
+            // 예약 날짜/시간을 LocalDateTime으로 변환
+            LocalDateTime pickupDateTime = LocalDateTime.of(savedReservation.getDate(), savedReservation.getTime());
+            LocalDateTime returnDateTime = null;
+
+            // 반납 날짜/시간이 있는 경우 변환
+            if (savedReservation.getReturnDate() != null && savedReservation.getReturnTime() != null) {
+                returnDateTime = LocalDateTime.of(savedReservation.getReturnDate(), savedReservation.getReturnTime());
+            }
+
+            // NotificationService의 현재 메서드 시그니처에 맞게 호출
+            notificationService.createReservationNotifications(
+                    savedReservation.getId(),        // Long reservationId
+                    userId,                          // String userId
+                    pickupDateTime,                  // LocalDateTime pickupTime
+                    returnDateTime                   // LocalDateTime returnTime (null 가능)
+            );
+
+            log.info("예약 알림 생성 완료: reservationId={}, userId={}", savedReservation.getId(), userId);
         } catch (Exception e) {
-            log.error("예약 알림 생성 실패: reservationId={}, error={}",
-                    savedReservation.getId(), e.getMessage());
+            log.error("예약 알림 생성 실패: reservationId={}, error={}", savedReservation.getId(), e.getMessage());
             // 알림 생성 실패해도 예약은 성공으로 처리
         }
 
@@ -112,6 +127,7 @@ public class ReservationService {
         return reservationRepository.findByUserIdAndStatus(userId, status);
     }
 
+    // cancelReservation 메서드에서 알림 생성 부분 수정
     /**
      * 사용자 권한 확인 후 예약 취소
      */
@@ -131,11 +147,11 @@ public class ReservationService {
 
         reservation.setStatus("CANCELLED");
 
-        // 취소 알림 생성
+        // 취소 알림 생성 (수정된 부분)
         try {
             notificationService.createAndSendImmediateNotification(
                     userId,
-                    com.moca.app.notification.Notification.NotificationType.RESERVATION_CANCELLED,
+                    Notification.NotificationType.RESERVATION_CANCELLED,
                     "예약이 취소되었습니다",
                     String.format("예약번호 %d번이 성공적으로 취소되었습니다.", reservationId),
                     reservationId
