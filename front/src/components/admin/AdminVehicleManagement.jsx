@@ -17,7 +17,7 @@ const AdminVehicleManagement = () => {
     carNumber: '',
     vehicleTypeCode: 'FULLSIZE',
     status: 'AVAILABLE',
-    rentPricePer10Min: '',
+    rentPricePer10min: '',
     imageUrl: '',
   });
 
@@ -134,7 +134,7 @@ const AdminVehicleManagement = () => {
         carNumber: '',
         vehicleTypeCode: 'FULLSIZE',
         status: 'AVAILABLE',
-        rentPricePer10Min: '',
+        rentPricePer10min: '',
         imageUrl: '',
       });
       alert('차량이 성공적으로 등록되었습니다.');
@@ -334,7 +334,7 @@ const AdminVehicleManagement = () => {
 
               <PriceInfo>
                 <PriceIcon>💰</PriceIcon>
-                <Price>{formatPrice(vehicle.rentPricePer10Min)} / 10분</Price>
+                <Price>{formatPrice(vehicle.rentPricePer10min)} / 10분</Price>
               </PriceInfo>
 
               <ActionButtons>
@@ -455,11 +455,15 @@ const AdminVehicleManagement = () => {
                     <FormLabel>요금 (10분당)</FormLabel>
                     <FormInput
                       type="number"
-                      value={selectedVehicle.rentPricePer10Min}
+                      value={
+                        selectedVehicle.rentPricePer10min ||
+                        selectedVehicle.price ||
+                        ''
+                      }
                       onChange={(e) =>
                         setSelectedVehicle({
                           ...selectedVehicle,
-                          rentPricePer10Min: e.target.value,
+                          rentPricePer10min: e.target.value,
                         })
                       }
                     />
@@ -510,7 +514,7 @@ const AdminVehicleManagement = () => {
                   <DetailItem>
                     <DetailLabel>요금</DetailLabel>
                     <DetailValue>
-                      {formatPrice(selectedVehicle.rentPricePer10Min)} / 10분
+                      {formatPrice(selectedVehicle.rentPricePer10min)} / 10분
                     </DetailValue>
                   </DetailItem>
                 </DetailGrid>
@@ -579,11 +583,11 @@ const AdminVehicleManagement = () => {
                   <FormLabel>요금 (10분당)</FormLabel>
                   <FormInput
                     type="number"
-                    value={newVehicle.rentPricePer10Min}
+                    value={newVehicle.rentPricePer10min}
                     onChange={(e) =>
                       setNewVehicle({
                         ...newVehicle,
-                        rentPricePer10Min: e.target.value,
+                        rentPricePer10min: e.target.value,
                       })
                     }
                     placeholder="예: 5000"
