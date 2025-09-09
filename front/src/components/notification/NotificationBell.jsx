@@ -1,33 +1,15 @@
-// src/components/notification/NotificationBell.jsx
-import React, { useState, useEffect } from 'react';
+// front/src/components/notification/NotificationBell.jsx (WebSocket 연동 버전)
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { notificationService } from '../../services/notificationService';
 import { HiOutlineBell } from 'react-icons/hi';
+import { useNotifications } from '../../hooks/useNotifications';
+import { useWebSocket } from '../../hooks/useWebSocket';
 import NotificationList from './NotificationList';
 
 const NotificationBell = () => {
-  const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
-
-  useEffect(() => {
-    loadUnreadCount();
-
-    // 5분마다 읽지 않은 알림 개수 업데이트
-    const interval = setInterval(() => {
-      loadUnreadCount();
-    }, 5 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadUnreadCount = async () => {
-    try {
-      const count = await notificationService.getUnreadCount();
-      setUnreadCount(count);
-    } catch (err) {
-      console.error('읽지 않은 알림 개수 조회 실패:', err);
-    }
-  };
+  const { unreadCount } = useNotifications();
+  const { getConnectionStatus } = useWebSocket();
 
   const handleBellClick = () => {
     setShowNotifications(!showNotifications);
@@ -35,17 +17,21 @@ const NotificationBell = () => {
 
   const handleCloseNotifications = () => {
     setShowNotifications(false);
-    // 알림 목록을 닫을 때 읽지 않은 개수 다시 로드
-    loadUnreadCount();
   };
+
+  const connectionStatus = getConnectionStatus();
 
   return (
     <>
       <BellContainer onClick={handleBellClick}>
-        <HiOutlineBell size={22} />
-        {unreadCount > 0 && (
-          <Badge>{unreadCount > 99 ? '99+' : unreadCount}</Badge>
-        )}
+        <BellWrapper>
+          <HiOutlineBell size={22} />
+          {unreadCount > 0 && (
+            <Badge>{unreadCount > 99 ? '99+' : unreadCount}</Badge>
+          )}
+          {/* 연결 상태 표시 (선택사항) */}
+          <ConnectionIndicator connected={connectionStatus.isConnected} />
+        </BellWrapper>
       </BellContainer>
 
       {showNotifications && (
@@ -67,20 +53,17 @@ const BellContainer = styled.div`
   }
 `;
 
-const BellIcon = styled.div`
-  font-size: 24px;
-  color: #6b7280;
-  transition: color 0.2s;
-
-  ${BellContainer}:hover & {
-    color: #374151;
-  }
+const BellWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const Badge = styled.div`
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: -8px;
+  right: -8px;
   background: #ef4444;
   color: white;
   border-radius: 10px;
@@ -93,6 +76,18 @@ const Badge = styled.div`
   align-items: center;
   justify-content: center;
   border: 2px solid white;
+`;
+
+const ConnectionIndicator = styled.div`
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: ${(props) => (props.connected ? '#10b981' : '#ef4444')};
+  border: 1px solid white;
+  opacity: 0.8;
 `;
 
 export default NotificationBell;
