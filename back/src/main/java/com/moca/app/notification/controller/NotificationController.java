@@ -1,110 +1,123 @@
 package com.moca.app.notification.controller;
 
 import com.moca.app.notification.Notification;
+import com.moca.app.notification.dto.NotificationResponseDto;
 import com.moca.app.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/notifications")
+@RequestMapping("/notifications") // 최종 엔드포인트: /api/notifications
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationController {
 
     private final NotificationService notificationService;
 
     /**
-     * 사용자 알림 목록 조회
+     * 사용자의 알림 목록 조회
      */
     @GetMapping
-    public ResponseEntity<List<NotificationDTO>> getUserNotifications(Authentication auth) {
-        String userId = auth.getName();
-        List<Notification> notifications = notificationService.getUserNotifications(userId);
+    public ResponseEntity<?> getUserNotifications() {
+        String userId = extractUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
 
-        List<NotificationDTO> dtoList = notifications.stream()
-                .map(NotificationDTO::from)
-                .toList();
+        try {
+            List<Notification> notifications = notificationService.getUserNotifications(userId);
+            List<NotificationResponseDto> responseList = notifications.stream()
+                    .map(NotificationResponseDto::from)
+                    .collect(Collectors.toList());
 
-        return ResponseEntity.ok(dtoList);
+            return ResponseEntity.ok(responseList);
+        } catch (Exception e) {
+            log.error("알림 목록 조회 실패: userId={}, error={}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("알림 목록 조회 중 오류가 발생했습니다.");
+        }
     }
 
     /**
      * 읽지 않은 알림 개수 조회
      */
     @GetMapping("/unread-count")
-    public ResponseEntity<UnreadCountResponse> getUnreadCount(Authentication auth) {
-        String userId = auth.getName();
-        long count = notificationService.getUnreadNotificationCount(userId);
+    public ResponseEntity<?> getUnreadNotificationCount() {
+        String userId = extractUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
 
-        return ResponseEntity.ok(new UnreadCountResponse(count));
+        try {
+            long unreadCount = notificationService.getUnreadNotificationCount(userId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("unreadCount", unreadCount);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("읽지 않은 알림 개수 조회 실패: userId={}, error={}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("읽지 않은 알림 개수 조회 중 오류가 발생했습니다.");
+        }
     }
 
     /**
      * 특정 알림을 읽음 처리
      */
-    @PatchMapping("/{notificationId}/read")
-    public ResponseEntity<Void> markAsRead(@PathVariable Long notificationId,
-                                           Authentication auth) {
-        String userId = auth.getName();
-        notificationService.markAsRead(notificationId, userId);
+    @PutMapping("/{notificationId}/read")
+    public ResponseEntity<?> markNotificationAsRead(@PathVariable Long notificationId) {
+        String userId = extractUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
 
-        return ResponseEntity.ok().build();
+        try {
+            notificationService.markAsRead(notificationId, userId);
+            return ResponseEntity.ok().body("알림이 읽음 처리되었습니다.");
+        } catch (Exception e) {
+            log.error("알림 읽음 처리 실패: notificationId={}, userId={}, error={}",
+                    notificationId, userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("알림 읽음 처리 중 오류가 발생했습니다.");
+        }
     }
 
     /**
      * 모든 알림을 읽음 처리
      */
-    @PatchMapping("/read-all")
-    public ResponseEntity<Void> markAllAsRead(Authentication auth) {
-        String userId = auth.getName();
-        notificationService.markAllAsRead(userId);
-
-        return ResponseEntity.ok().build();
-    }
-
-    // DTO 클래스들
-    public record NotificationDTO(
-            Long id,
-            String type,
-            String title,
-            String message,
-            Long reservationId,
-            boolean isRead,
-            String createdAt,
-            String timeAgo
-    ) {
-        public static NotificationDTO from(Notification notification) {
-            return new NotificationDTO(
-                    notification.getId(),
-                    notification.getNotificationType().name(),
-                    notification.getTitle(),
-                    notification.getMessage(),
-                    notification.getReservationId(),
-                    notification.getIsRead(),
-                    notification.getCreatedAt().toString(),
-                    calculateTimeAgo(notification.getCreatedAt())
-            );
+    @PutMapping("/read-all")
+    public ResponseEntity<?> markAllNotificationsAsRead() {
+        String userId = extractUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
         }
 
-        private static String calculateTimeAgo(java.time.LocalDateTime createdAt) {
-            java.time.Duration duration = java.time.Duration.between(createdAt, java.time.LocalDateTime.now());
-
-            long minutes = duration.toMinutes();
-            long hours = duration.toHours();
-            long days = duration.toDays();
-
-            if (minutes < 60) {
-                return minutes + "분 전";
-            } else if (hours < 24) {
-                return hours + "시간 전";
-            } else {
-                return days + "일 전";
-            }
+        try {
+            notificationService.markAllAsRead(userId);
+            return ResponseEntity.ok().body("모든 알림이 읽음 처리되었습니다.");
+        } catch (Exception e) {
+            log.error("모든 알림 읽음 처리 실패: userId={}, error={}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("모든 알림 읽음 처리 중 오류가 발생했습니다.");
         }
     }
 
-    public record UnreadCountResponse(long count) {}
+    // ======== Private Helper Methods ========
+
+    private String extractUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser")) {
+            return auth.getName();
+        }
+        return null;
+    }
 }

@@ -1,8 +1,11 @@
 package com.moca.app.rental.service;
 
+import com.moca.app.notification.service.NotificationService;
 import com.moca.app.rental.Reservation;
 import com.moca.app.rental.dto.ReservationRequestDto;
 import com.moca.app.rental.repository.ReservationRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,39 +20,74 @@ import java.time.ZoneId;
 import java.util.List;
 
 @Service
+@Slf4j
+@Transactional
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final NotificationService notificationService; // 알림 서비스 의존성 주입
 
-    public ReservationService(ReservationRepository reservationRepository) {
+    // 생성자 기반 의존성 주입
+    public ReservationService(ReservationRepository reservationRepository,
+                              NotificationService notificationService) {
         this.reservationRepository = reservationRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
     public Reservation createReservation(ReservationRequestDto requestDto, String userId) {
         // Parse startDate and endDate strings
         // 'Z' indicates UTC. LocalDateTime.parse() does not handle 'Z' by default.
-        // Parse as Instant and then convert to LocalDateTime in system default timezone
-        LocalDateTime startDateTime = Instant.parse(requestDto.getStartDate()).atZone(ZoneId.systemDefault()).toLocalDateTime();
-        LocalDateTime endDateTime = Instant.parse(requestDto.getEndDate()).atZone(ZoneId.systemDefault()).toLocalDateTime();
 
-        Reservation reservation = Reservation.builder()
-                .userId(userId)
-                .carId(requestDto.getCarId())
-                .locationName(requestDto.getLocationName())
-                .date(startDateTime.toLocalDate()) // RENTAL_DATE
-                .time(startDateTime.toLocalTime()) // RENTAL_TIME
-                .returnDate(endDateTime.toLocalDate()) // RETURN_DATE
-                .returnTime(endDateTime.toLocalTime()) // RETURN_TIME
-                .passengerCount(requestDto.getPassengerCount())
-                .memo(requestDto.getMemo())
-                .status("CONFIRMED") // Or PENDING, depending on business logic
-                .totalAmount(requestDto.getTotalAmount())
-                .build();
+        LocalDateTime startDateTime;
+        LocalDateTime endDateTime = null;
 
-        System.out.println("reservation 리포지터리 : " + reservation);
+        try {
+            // ISO 8601 형식 파싱 (UTC 시간대 포함)
+            Instant startInstant = Instant.parse(requestDto.getStartDate());
+            startDateTime = LocalDateTime.ofInstant(startInstant, ZoneId.systemDefault());
 
-        return reservationRepository.save(reservation);
+            if (requestDto.getEndDate() != null && !requestDto.getEndDate().isEmpty()) {
+                Instant endInstant = Instant.parse(requestDto.getEndDate());
+                endDateTime = LocalDateTime.ofInstant(endInstant, ZoneId.systemDefault());
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("날짜 형식이 올바르지 않습니다: " + e.getMessage());
+        }
+
+        // 예약 엔티티 생성
+        Reservation reservation = new Reservation();
+        reservation.setUserId(userId);
+        reservation.setCarId(requestDto.getCarId());
+        reservation.setLocationName(requestDto.getLocationName());
+        reservation.setDate(startDateTime.toLocalDate());
+        reservation.setTime(startDateTime.toLocalTime());
+
+        if (endDateTime != null) {
+            reservation.setReturnDate(endDateTime.toLocalDate());
+            reservation.setReturnTime(endDateTime.toLocalTime());
+        }
+
+        reservation.setPassengerCount(requestDto.getPassengerCount());
+        reservation.setMemo(requestDto.getMemo());
+        reservation.setTotalAmount(requestDto.getTotalAmount());
+        reservation.setStatus("CONFIRMED"); // 기본 상태를 CONFIRMED로 설정
+
+        // 예약 저장
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        // 예약 생성 후 알림 생성 (핵심 추가 부분!)
+        try {
+            notificationService.createReservationNotifications(savedReservation);
+            log.info("예약 알림 생성 완료: reservationId={}, userId={}",
+                    savedReservation.getId(), userId);
+        } catch (Exception e) {
+            log.error("예약 알림 생성 실패: reservationId={}, error={}",
+                    savedReservation.getId(), e.getMessage());
+            // 알림 생성 실패해도 예약은 성공으로 처리
+        }
+
+        return savedReservation;
     }
 
     @Transactional
@@ -57,40 +95,34 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found with ID: " + reservationId));
 
-        // Set return date and time to now
+        reservation.setStatus("COMPLETED");
         reservation.setReturnDate(LocalDate.now());
         reservation.setReturnTime(LocalTime.now());
-        reservation.setStatus("COMPLETED");
 
         return reservationRepository.save(reservation);
     }
 
-    // 기존 메서드들
+    @Transactional(readOnly = true)
     public List<Reservation> findReservationsByUserId(String userId) {
         return reservationRepository.findByUserId(userId);
     }
 
+    @Transactional(readOnly = true)
     public List<Reservation> findReservationsByUserIdAndStatus(String userId, String status) {
-        if (status != null && !status.equalsIgnoreCase("ALL")) {
-            return reservationRepository.findByUserIdAndStatus(userId, status);
-        } else {
-            return reservationRepository.findByUserId(userId);
-        }
+        return reservationRepository.findByUserIdAndStatus(userId, status);
     }
 
-    // 기존 메서드명과 맞추기 위해 getReservationsByUserIdAndStatus도 유지
-    public List<Reservation> getReservationsByUserIdAndStatus(String userId, String status) {
-        return findReservationsByUserIdAndStatus(userId, status);
-    }
-
+    /**
+     * 사용자 권한 확인 후 예약 취소
+     */
     @Transactional
     public Reservation cancelReservation(Long reservationId, String userId) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new IllegalArgumentException("Reservation not found with ID: " + reservationId));
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 예약을 찾을 수 없습니다: " + reservationId));
 
         // 사용자 권한 확인
         if (!reservation.getUserId().equals(userId)) {
-            throw new IllegalArgumentException("해당 예약에 대한 권한이 없습니다.");
+            throw new IllegalArgumentException("자신의 예약만 취소할 수 있습니다.");
         }
 
         if (!"CONFIRMED".equals(reservation.getStatus()) && !"PENDING".equals(reservation.getStatus())) {
@@ -98,6 +130,20 @@ public class ReservationService {
         }
 
         reservation.setStatus("CANCELLED");
+
+        // 취소 알림 생성
+        try {
+            notificationService.createAndSendImmediateNotification(
+                    userId,
+                    com.moca.app.notification.Notification.NotificationType.RESERVATION_CANCELLED,
+                    "예약이 취소되었습니다",
+                    String.format("예약번호 %d번이 성공적으로 취소되었습니다.", reservationId),
+                    reservationId
+            );
+        } catch (Exception e) {
+            log.error("예약 취소 알림 생성 실패: reservationId={}, error={}", reservationId, e.getMessage());
+        }
+
         return reservationRepository.save(reservation);
     }
 
@@ -120,6 +166,7 @@ public class ReservationService {
     /**
      * 관리자용 - 모든 예약 조회 (페이징)
      */
+    @Transactional(readOnly = true)
     public List<Reservation> findAllReservations(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         return reservationRepository.findAll(pageable).getContent();
@@ -128,6 +175,7 @@ public class ReservationService {
     /**
      * 관리자용 - 상태별 예약 조회 (페이징)
      */
+    @Transactional(readOnly = true)
     public List<Reservation> findReservationsByStatus(String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         return reservationRepository.findByStatus(status);
@@ -179,6 +227,7 @@ public class ReservationService {
     /**
      * 관리자용 - 예약 상세 조회
      */
+    @Transactional(readOnly = true)
     public Reservation findReservationById(Long reservationId) {
         return reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID의 예약을 찾을 수 없습니다: " + reservationId));

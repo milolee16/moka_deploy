@@ -13,24 +13,54 @@ import java.util.List;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    // 사용자별 알림 조회 (최신순)
+    /**
+     * 사용자별 알림 목록 조회 (생성일 기준 내림차순)
+     */
     List<Notification> findByUserIdOrderByCreatedAtDesc(String userId);
 
-    // 읽지 않은 알림 조회
-    List<Notification> findByUserIdAndIsReadFalseOrderByCreatedAtDesc(String userId);
-
-    // 읽지 않은 알림 개수
+    /**
+     * 사용자별 읽지 않은 알림 개수
+     */
     long countByUserIdAndIsReadFalse(String userId);
 
-    // 예약별 알림 조회
+    /**
+     * 사용자별 특정 상태의 알림 조회
+     */
+    List<Notification> findByUserIdAndIsRead(String userId, Boolean isRead);
+
+    /**
+     * 사용자별 알림 타입으로 조회
+     */
+    List<Notification> findByUserIdAndNotificationType(String userId, Notification.NotificationType notificationType);
+
+    /**
+     * 특정 예약의 알림들 조회
+     */
     List<Notification> findByReservationId(Long reservationId);
 
-    // 발송 대기 중인 스케줄 알림 조회
-    @Query("SELECT n FROM Notification n WHERE n.scheduledAt <= :now AND n.sentAt IS NULL")
-    List<Notification> findPendingScheduledNotifications(@Param("now") LocalDateTime now);
-
-    // 사용자의 모든 알림을 읽음 처리
+    /**
+     * 사용자의 모든 알림을 읽음 처리
+     */
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.userId = :userId AND n.isRead = false")
-    int markAllAsReadByUserId(@Param("userId") String userId);
+    void markAllAsReadByUserId(@Param("userId") String userId);
+
+    /**
+     * 발송 대기 중인 스케줄 알림 조회 (배치 처리용)
+     */
+    @Query("SELECT n FROM Notification n WHERE n.scheduledAt IS NOT NULL AND n.scheduledAt <= :currentTime AND n.sentAt IS NULL")
+    List<Notification> findPendingScheduledNotifications(@Param("currentTime") LocalDateTime currentTime);
+
+    /**
+     * 생성일 기준으로 오래된 알림 삭제 (데이터 정리용)
+     */
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.createdAt < :cutoffDate")
+    void deleteOldNotifications(@Param("cutoffDate") LocalDateTime cutoffDate);
+
+    /**
+     * 사용자별 최근 N개 알림 조회
+     */
+    @Query("SELECT n FROM Notification n WHERE n.userId = :userId ORDER BY n.createdAt DESC LIMIT :limit")
+    List<Notification> findRecentNotificationsByUserId(@Param("userId") String userId, @Param("limit") int limit);
 }
