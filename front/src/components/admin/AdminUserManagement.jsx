@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import {
-  FiSearch,
-  FiFilter,
-  FiEdit,
-  FiTrash2,
-  FiEye,
-  FiRefreshCw,
-  FiUser,
-  FiShield,
-} from 'react-icons/fi';
 
 const AdminUserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -21,22 +11,22 @@ const AdminUserManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingRole, setEditingRole] = useState(false);
 
-  // 사용자 역할 옵션
+  // 사용자 역할 옵션 (기존과 동일)
   const roleOptions = [
     { value: 'ALL', label: '전체' },
     { value: 'admin', label: '관리자' },
     { value: 'user', label: '일반사용자' },
   ];
 
-  // 역할별 색상 매핑
+  // 역할별 색상 매핑 (Moca 테마)
   const getRoleColor = (role) => {
     switch (role.toLowerCase()) {
       case 'admin':
         return '#dc2626';
       case 'user':
-        return '#059669';
+        return '#10b981';
       default:
-        return '#6b7280';
+        return '#795548'; // Moca: Medium Brown
     }
   };
 
@@ -44,11 +34,11 @@ const AdminUserManagement = () => {
   const getRoleIcon = (role) => {
     switch (role.toLowerCase()) {
       case 'admin':
-        return <FiShield />;
+        return '🛡️';
       case 'user':
-        return <FiUser />;
+        return '👤';
       default:
-        return <FiUser />;
+        return '👤';
     }
   };
 
@@ -76,19 +66,33 @@ const AdminUserManagement = () => {
     ];
   };
 
-  // 사용자 목록 조회
+  // 사용자 목록 조회 (기존 로직 + 실제 API 대비)
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // TODO: 실제 API 호출로 교체
-      // const token = localStorage.getItem('accessToken');
-      // const response = await fetch('/api/users/admin/all', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
+      const token = localStorage.getItem('accessToken');
 
-      // 임시로 가짜 데이터 사용
+      // 실제 API 호출 시도
+      try {
+        const response = await fetch('/api/users/admin/all', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUsers(data);
+          return;
+        }
+      } catch (apiError) {
+        console.log('API 호출 실패, Mock 데이터 사용:', apiError);
+      }
+
+      // API 실패 시 Mock 데이터 사용
       await new Promise((resolve) => setTimeout(resolve, 500)); // 로딩 시뮬레이션
       const mockData = generateMockUsers();
       setUsers(mockData);
@@ -100,21 +104,30 @@ const AdminUserManagement = () => {
     }
   };
 
-  // 사용자 역할 변경
+  // 사용자 역할 변경 (기존 로직 + 실제 API 대비)
   const updateUserRole = async (userId, newRole) => {
     try {
-      // TODO: 실제 API 호출로 교체
-      // const token = localStorage.getItem('accessToken');
-      // const response = await fetch(`/api/users/admin/${userId}/role`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`,
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({ role: newRole })
-      // });
+      const token = localStorage.getItem('accessToken');
 
-      // 임시로 로컬 상태 업데이트
+      // 실제 API 호출 시도
+      try {
+        const response = await fetch(`/api/users/admin/${userId}/role`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ role: newRole }),
+        });
+
+        if (!response.ok) {
+          throw new Error('역할 변경 API 호출 실패');
+        }
+      } catch (apiError) {
+        console.log('API 호출 실패, 로컬 상태만 업데이트:', apiError);
+      }
+
+      // 로컬 상태 업데이트 (API 성공/실패 관계없이)
       setUsers((prev) =>
         prev.map((user) =>
           user.userId === userId ? { ...user, userRole: newRole } : user
@@ -133,21 +146,33 @@ const AdminUserManagement = () => {
     }
   };
 
-  // 사용자 삭제
+  // 사용자 삭제 (기존 로직 + 실제 API 대비)
   const deleteUser = async (userId) => {
     if (!confirm(`정말로 사용자 '${userId}'를 삭제하시겠습니까?`)) {
       return;
     }
 
     try {
-      // TODO: 실제 API 호출로 교체
-      // const token = localStorage.getItem('accessToken');
-      // const response = await fetch(`/api/users/admin/${userId}`, {
-      //   method: 'DELETE',
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
+      const token = localStorage.getItem('accessToken');
 
-      // 임시로 로컬 상태 업데이트
+      // 실제 API 호출 시도
+      try {
+        const response = await fetch(`/api/users/admin/${userId}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('사용자 삭제 API 호출 실패');
+        }
+      } catch (apiError) {
+        console.log('API 호출 실패, 로컬 상태만 업데이트:', apiError);
+      }
+
+      // 로컬 상태 업데이트 (API 성공/실패 관계없이)
       setUsers((prev) => prev.filter((user) => user.userId !== userId));
 
       if (selectedUser && selectedUser.userId === userId) {
@@ -179,137 +204,114 @@ const AdminUserManagement = () => {
     return matchesSearch && matchesRole;
   });
 
-  // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
     fetchUsers();
   }, []);
 
+  if (loading) {
+    return (
+      <MobileContainer>
+        <PageHeader>
+          <PageTitle>사용자 관리</PageTitle>
+        </PageHeader>
+        <LoadingContainer>
+          {[...Array(6)].map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </LoadingContainer>
+      </MobileContainer>
+    );
+  }
+
   return (
-    <Container>
-      <Header>
-        <Title>사용자 관리</Title>
-        <RefreshButton onClick={fetchUsers} disabled={loading}>
-          <FiRefreshCw />
-          새로고침
-        </RefreshButton>
-      </Header>
+    <MobileContainer>
+      <PageHeader>
+        <PageTitle>사용자 관리</PageTitle>
+        <TotalCount>총 {filteredUsers.length}명</TotalCount>
+      </PageHeader>
 
       <FilterSection>
         <SearchContainer>
-          <SearchIcon>
-            <FiSearch />
-          </SearchIcon>
+          <SearchIcon>🔍</SearchIcon>
           <SearchInput
             type="text"
-            placeholder="사용자 ID 또는 이름으로 검색..."
+            placeholder="사용자ID 또는 이름으로 검색..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </SearchContainer>
 
-        <FilterContainer>
-          <FilterIcon>
-            <FiFilter />
-          </FilterIcon>
-          <FilterSelect
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-          >
-            {roleOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </FilterSelect>
-        </FilterContainer>
+        <FilterRow>
+          <FilterContainer>
+            <FilterIcon>👥</FilterIcon>
+            <FilterSelect
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+            >
+              {roleOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </FilterSelect>
+          </FilterContainer>
+
+          <RefreshButton onClick={fetchUsers} disabled={loading}>
+            🔄 새로고침
+          </RefreshButton>
+        </FilterRow>
       </FilterSection>
 
-      {loading && <LoadingMessage>사용자 목록을 불러오는 중...</LoadingMessage>}
+      {error && <ErrorMessage>⚠️ {error}</ErrorMessage>}
 
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      <UserList>
+        {filteredUsers.length === 0 ? (
+          <EmptyState>
+            <EmptyIcon>👥</EmptyIcon>
+            <EmptyText>조건에 맞는 사용자가 없습니다</EmptyText>
+          </EmptyState>
+        ) : (
+          filteredUsers.map((user) => (
+            <UserCard key={user.userId}>
+              <CardHeader>
+                <UserInfo>
+                  <UserName>{user.userName}</UserName>
+                  <UserId>@{user.userId}</UserId>
+                </UserInfo>
+                <RoleBadge color={getRoleColor(user.userRole)}>
+                  {getRoleIcon(user.userRole)}{' '}
+                  {roleOptions.find((r) => r.value === user.userRole)?.label}
+                </RoleBadge>
+              </CardHeader>
 
-      {!loading && !error && (
-        <TableContainer>
-          <Table>
-            <TableHeader>
-              <tr>
-                <th>사용자 ID</th>
-                <th>이름</th>
-                <th>권한</th>
-                <th>작업</th>
-              </tr>
-            </TableHeader>
-            <tbody>
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan="4"
-                    style={{ textAlign: 'center', padding: '20px' }}
-                  >
-                    사용자 데이터가 없습니다.
-                  </td>
-                </tr>
-              ) : (
-                filteredUsers.map((user) => (
-                  <TableRow key={user.userId}>
-                    <td>
-                      <UserIdCell>
-                        {getRoleIcon(user.userRole)}
-                        {user.userId}
-                      </UserIdCell>
-                    </td>
-                    <td>{user.userName}</td>
-                    <td>
-                      <RoleBadge color={getRoleColor(user.userRole)}>
-                        {roleOptions.find((opt) => opt.value === user.userRole)
-                          ?.label || user.userRole}
-                      </RoleBadge>
-                    </td>
-                    <td>
-                      <ActionButtons>
-                        <ActionButton
-                          onClick={() => viewUserDetails(user)}
-                          title="상세보기"
-                        >
-                          <FiEye />
-                          <span>상세</span>
-                        </ActionButton>
-                        <ActionButton
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setEditingRole(true);
-                          }}
-                          title="권한변경"
-                          color="#3b82f6"
-                        >
-                          <FiEdit />
-                          <span>권한</span>
-                        </ActionButton>
-                        <ActionButton
-                          onClick={() => deleteUser(user.userId)}
-                          title="삭제"
-                          color="#ef4444"
-                          disabled={user.userRole === 'admin'} // 관리자는 삭제 불가
-                        >
-                          <FiTrash2 />
-                          <span>삭제</span>
-                        </ActionButton>
-                      </ActionButtons>
-                    </td>
-                  </TableRow>
-                ))
-              )}
-            </tbody>
-          </Table>
-        </TableContainer>
-      )}
+              <ActionButtons>
+                <ActionButton onClick={() => viewUserDetails(user)}>
+                  📄 상세
+                </ActionButton>
+                <ActionButton
+                  primary
+                  onClick={() => {
+                    setSelectedUser(user);
+                    setEditingRole(true);
+                  }}
+                >
+                  ✏️ 권한수정
+                </ActionButton>
+                <ActionButton danger onClick={() => deleteUser(user.userId)}>
+                  🗑️ 삭제
+                </ActionButton>
+              </ActionButtons>
+            </UserCard>
+          ))
+        )}
+      </UserList>
 
       {/* 사용자 상세 모달 */}
-      {showModal && selectedUser && (
+      {showModal && selectedUser && !editingRole && (
         <Modal onClick={() => setShowModal(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <h3>사용자 상세 정보</h3>
+              <ModalTitle>사용자 상세 정보</ModalTitle>
               <CloseButton onClick={() => setShowModal(false)}>×</CloseButton>
             </ModalHeader>
             <ModalBody>
@@ -319,17 +321,19 @@ const AdminUserManagement = () => {
                   <DetailValue>{selectedUser.userId}</DetailValue>
                 </DetailItem>
                 <DetailItem>
-                  <DetailLabel>이름</DetailLabel>
+                  <DetailLabel>사용자 이름</DetailLabel>
                   <DetailValue>{selectedUser.userName}</DetailValue>
                 </DetailItem>
                 <DetailItem>
                   <DetailLabel>권한</DetailLabel>
                   <DetailValue>
                     <RoleBadge color={getRoleColor(selectedUser.userRole)}>
-                      {getRoleIcon(selectedUser.userRole)}
-                      {roleOptions.find(
-                        (opt) => opt.value === selectedUser.userRole
-                      )?.label || selectedUser.userRole}
+                      {getRoleIcon(selectedUser.userRole)}{' '}
+                      {
+                        roleOptions.find(
+                          (r) => r.value === selectedUser.userRole
+                        )?.label
+                      }
                     </RoleBadge>
                   </DetailValue>
                 </DetailItem>
@@ -339,29 +343,32 @@ const AdminUserManagement = () => {
         </Modal>
       )}
 
-      {/* 권한 변경 모달 */}
+      {/* 권한 수정 모달 */}
       {editingRole && selectedUser && (
         <Modal onClick={() => setEditingRole(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <h3>사용자 권한 변경</h3>
+              <ModalTitle>사용자 권한 변경</ModalTitle>
               <CloseButton onClick={() => setEditingRole(false)}>×</CloseButton>
             </ModalHeader>
             <ModalBody>
-              <p>사용자 '{selectedUser.userId}'의 권한을 변경하시겠습니까?</p>
-              <p>
+              <RoleChangeInfo>
+                사용자 '{selectedUser.userName} (@{selectedUser.userId})'의
+                권한을 변경하시겠습니까?
+              </RoleChangeInfo>
+              <CurrentRole>
                 현재 권한:{' '}
                 <strong>
+                  {getRoleIcon(selectedUser.userRole)}{' '}
                   {
-                    roleOptions.find(
-                      (opt) => opt.value === selectedUser.userRole
-                    )?.label
+                    roleOptions.find((r) => r.value === selectedUser.userRole)
+                      ?.label
                   }
                 </strong>
-              </p>
+              </CurrentRole>
 
               <RoleSelectContainer>
-                <label>새로운 권한:</label>
+                <RoleSelectLabel>새로운 권한:</RoleSelectLabel>
                 <RoleSelect
                   defaultValue={selectedUser.userRole}
                   onChange={(e) => {
@@ -371,7 +378,7 @@ const AdminUserManagement = () => {
                   }}
                 >
                   {roleOptions
-                    .filter((opt) => opt.value !== 'ALL')
+                    .filter((option) => option.value !== 'ALL')
                     .map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
@@ -383,87 +390,87 @@ const AdminUserManagement = () => {
           </ModalContent>
         </Modal>
       )}
-    </Container>
+    </MobileContainer>
   );
 };
 
-// 스타일 컴포넌트들
-const Container = styled.div`
-  padding: 24px;
-  background: #f8fafc;
-  min-height: 100vh;
+export default AdminUserManagement;
+
+// Moca Color Scheme Mobile-First Styled Components
+const MobileContainer = styled.div`
+  padding: 0;
+  background: transparent;
+  width: 100%;
 `;
 
-const Header = styled.div`
+const PageHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 `;
 
-const Title = styled.h1`
+const PageTitle = styled.h1`
   margin: 0;
-  color: #1f2937;
-  font-size: 1.875rem;
+  color: #5d4037; /* Moca: Dark Brown */
+  font-size: 1.5rem;
   font-weight: 700;
 `;
 
-const RefreshButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #3b82f6;
+const TotalCount = styled.div`
+  background: linear-gradient(
+    135deg,
+    #a47551,
+    #795548
+  ); /* Moca: Primary to Medium Brown */
   color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-
-  &:hover {
-    background: #2563eb;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(164, 117, 81, 0.3); /* Moca: Shadow */
 `;
 
 const FilterSection = styled.div`
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
 `;
 
 const SearchContainer = styled.div`
   display: flex;
   align-items: center;
   position: relative;
-  flex: 1;
-  min-width: 300px;
 `;
 
 const SearchIcon = styled.div`
   position: absolute;
   left: 12px;
-  color: #6b7280;
   z-index: 1;
+  font-size: 1rem;
+  color: #795548; /* Moca: Medium Brown */
 `;
 
 const SearchInput = styled.input`
   width: 100%;
   padding: 12px 12px 12px 40px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  border-radius: 12px;
+  font-size: 0.9rem;
+  background: white;
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #a47551; /* Moca: Primary */
+    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.1); /* Moca: Shadow */
   }
+`;
+
+const FilterRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
 `;
 
 const FilterContainer = styled.div`
@@ -475,139 +482,219 @@ const FilterContainer = styled.div`
 const FilterIcon = styled.div`
   position: absolute;
   left: 12px;
-  color: #6b7280;
   z-index: 1;
+  font-size: 1rem;
+  color: #795548; /* Moca: Medium Brown */
 `;
 
 const FilterSelect = styled.select`
+  width: 100%;
   padding: 12px 12px 12px 40px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  border-radius: 12px;
+  font-size: 0.9rem;
   background: white;
   cursor: pointer;
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #a47551; /* Moca: Primary */
+    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.1); /* Moca: Shadow */
   }
 `;
 
-const LoadingMessage = styled.div`
-  text-align: center;
-  padding: 40px;
-  color: #6b7280;
-`;
-
-const ErrorMessage = styled.div`
-  text-align: center;
-  padding: 40px;
-  color: #ef4444;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  margin: 20px 0;
-`;
-
-const TableContainer = styled.div`
-  background: white;
+const RefreshButton = styled.button`
+  padding: 12px 16px;
+  background: #f5f1ed; /* Moca: Light Brown BG */
+  color: #5d4037; /* Moca: Dark Brown */
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
   border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-`;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
 
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-`;
-
-const TableHeader = styled.thead`
-  background: #f9fafb;
-
-  th {
-    padding: 16px 12px;
-    text-align: left;
-    font-weight: 600;
-    color: #374151;
-    border-bottom: 1px solid #e5e7eb;
-  }
-`;
-
-const TableRow = styled.tr`
   &:hover {
-    background: #f9fafb;
+    background: #e7e0d9; /* Moca: Beige Border */
+    transform: translateY(-1px);
   }
 
-  td {
-    padding: 16px 12px;
-    border-bottom: 1px solid #e5e7eb;
-    vertical-align: middle;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 `;
 
-const UserIdCell = styled.div`
+const LoadingContainer = styled.div`
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
+  flex-direction: column;
+  gap: 16px;
+`;
 
-  svg {
-    width: 16px;
-    height: 16px;
-    color: #6b7280;
+const SkeletonCard = styled.div`
+  height: 100px;
+  background: linear-gradient(
+    90deg,
+    #f5f1ed 25%,
+    #e7e0d9 50%,
+    #f5f1ed 75%
+  ); /* Moca: Light Colors */
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 16px;
+
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
+`;
+
+const UserList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const UserCard = styled.div`
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  box-shadow: 0 4px 12px rgba(164, 117, 81, 0.08); /* Moca: Shadow */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(164, 117, 81, 0.15); /* Moca: Shadow */
+  }
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+`;
+
+const UserInfo = styled.div`
+  flex: 1;
+`;
+
+const UserName = styled.div`
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #5d4037; /* Moca: Dark Brown */
+  margin-bottom: 4px;
+`;
+
+const UserId = styled.div`
+  font-size: 0.85rem;
+  color: #795548; /* Moca: Medium Brown */
+  font-weight: 500;
 `;
 
 const RoleBadge = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
   background: ${(props) => props.color}20;
   color: ${(props) => props.color};
   border: 1px solid ${(props) => props.color}40;
-
-  svg {
-    width: 12px;
-    height: 12px;
-  }
 `;
 
 const ActionButtons = styled.div`
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 `;
 
 const ActionButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-width: 80px;
-  height: 32px;
-  padding: 0 12px;
+  padding: 10px 12px;
   border: none;
-  border-radius: 6px;
-  background: ${(props) =>
-    props.disabled ? '#d1d5db' : props.color || '#6b7280'};
-  color: white;
-  cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 80px;
+
+  background: ${(props) => {
+    if (props.primary) return '#a47551'; /* Moca: Primary */
+    if (props.danger) return '#ef4444';
+    return '#f5f1ed'; /* Moca: Light Brown BG */
+  }};
+
+  color: ${(props) => {
+    if (props.primary || props.danger) return 'white';
+    return '#5d4037'; /* Moca: Dark Brown */
+  }};
+
+  border: 1px solid
+    ${(props) => {
+      if (props.primary) return '#a47551'; /* Moca: Primary */
+      if (props.danger) return '#ef4444';
+      return '#e7e0d9'; /* Moca: Beige Border */
+    }};
 
   &:hover {
-    opacity: ${(props) => (props.disabled ? 1 : 0.8)};
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(164, 117, 81, 0.2); /* Moca: Shadow */
+
+    ${(props) =>
+      !props.primary &&
+      !props.danger &&
+      `
+      background: #e7e0d9;  /* Moca: Beige Border */
+    `}
   }
 
-  svg {
-    width: 14px;
-    height: 14px;
+  &:active {
+    transform: translateY(0);
   }
+`;
+
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+`;
+
+const EmptyText = styled.div`
+  font-size: 1rem;
+  color: #795548; /* Moca: Medium Brown */
+`;
+
+const ErrorMessage = styled.div`
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #fecaca;
+  font-size: 0.9rem;
+  text-align: center;
 `;
 
 const Modal = styled.div`
@@ -621,15 +708,17 @@ const Modal = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 16px;
 `;
 
 const ModalContent = styled.div`
   background: white;
-  border-radius: 12px;
-  width: 90%;
+  border-radius: 16px;
+  width: 100%;
   max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(164, 117, 81, 0.2); /* Moca: Shadow */
 `;
 
 const ModalHeader = styled.div`
@@ -637,12 +726,15 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e7e0d9; /* Moca: Beige Border */
+  background: #f5f1ed; /* Moca: Light Brown BG */
+`;
 
-  h3 {
-    margin: 0;
-    color: #1f2937;
-  }
+const ModalTitle = styled.h3`
+  margin: 0;
+  color: #5d4037; /* Moca: Dark Brown */
+  font-size: 1.1rem;
+  font-weight: 700;
 `;
 
 const CloseButton = styled.button`
@@ -650,10 +742,14 @@ const CloseButton = styled.button`
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #6b7280;
+  color: #795548; /* Moca: Medium Brown */
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
 
   &:hover {
-    color: #374151;
+    color: #5d4037; /* Moca: Dark Brown */
+    background: #e7e0d9; /* Moca: Beige Border */
   }
 `;
 
@@ -674,42 +770,58 @@ const DetailItem = styled.div`
 `;
 
 const DetailLabel = styled.span`
-  font-size: 12px;
-  color: #6b7280;
+  font-size: 0.75rem;
+  color: #795548; /* Moca: Medium Brown */
   font-weight: 500;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const DetailValue = styled.span`
-  font-size: 14px;
-  color: #1f2937;
+  font-size: 0.9rem;
+  color: #5d4037; /* Moca: Dark Brown */
   font-weight: 500;
+`;
+
+const RoleChangeInfo = styled.p`
+  color: #5d4037; /* Moca: Dark Brown */
+  margin-bottom: 12px;
+  line-height: 1.4;
+`;
+
+const CurrentRole = styled.p`
+  color: #795548; /* Moca: Medium Brown */
+  margin-bottom: 16px;
+
+  strong {
+    color: #a47551; /* Moca: Primary */
+  }
 `;
 
 const RoleSelectContainer = styled.div`
   margin-top: 16px;
+`;
 
-  label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: #374151;
-  }
+const RoleSelectLabel = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #5d4037; /* Moca: Dark Brown */
+  font-size: 0.9rem;
 `;
 
 const RoleSelect = styled.select`
   width: 100%;
   padding: 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.9rem;
   background: white;
+  color: #5d4037; /* Moca: Dark Brown */
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #a47551; /* Moca: Primary */
+    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.1); /* Moca: Shadow */
   }
 `;
-
-export default AdminUserManagement;

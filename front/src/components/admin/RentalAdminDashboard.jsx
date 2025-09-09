@@ -1,27 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
 
 const RentalAdminDashboard = () => {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [monthlyStats, setMonthlyStats] = useState(null);
   const [vehicleStats, setVehicleStats] = useState(null);
   const [regionStats, setRegionStats] = useState(null);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState({});
 
-  // 개별 로딩 상태
+  // 개별 로딩 상태 (기존 로직과 동일)
   const [loadingStates, setLoadingStates] = useState({
     dashboard: true,
     monthly: true,
@@ -30,7 +17,7 @@ const RentalAdminDashboard = () => {
   });
 
   useEffect(() => {
-    // 병렬로 각 통계를 개별 로드
+    // 병렬로 각 통계를 개별 로드 (기존 로직)
     fetchDashboardStats();
     fetchMonthlyStats();
     fetchVehicleStats();
@@ -105,12 +92,44 @@ const RentalAdminDashboard = () => {
     }
   };
 
-  // 차트 데이터 변환
+  // 유틸리티 함수들 (기존과 동일)
+  const getStatusLabel = (status) => {
+    const labels = {
+      PENDING: '대기중',
+      CONFIRMED: '확정',
+      IN_PROGRESS: '진행중',
+      COMPLETED: '완료',
+      CANCELLED: '취소',
+    };
+    return labels[status] || status;
+  };
+
+  const getCarStatusLabel = (status) => {
+    const labels = {
+      AVAILABLE: '이용가능',
+      RENTED: '대여중',
+      MAINTENANCE: '정비중',
+    };
+    return labels[status] || status;
+  };
+
+  const getVehicleTypeLabel = (type) => {
+    const labels = {
+      COMPACT: '소형차',
+      MIDSIZE: '중형차',
+      FULLSIZE: '대형차',
+      SUV: 'SUV',
+      VAN: '승합차',
+    };
+    return labels[type] || type;
+  };
+
+  // 차트 데이터 변환 (기존 로직)
   const monthlyData = monthlyStats
     ? monthlyStats.monthly.months?.map((month, index) => ({
         name: month.substring(5), // "2024-12" -> "12"
-        예약건수: monthlyStats.monthly.counts[index],
-        매출: monthlyStats.revenue.revenues
+        count: monthlyStats.monthly.counts[index],
+        revenue: monthlyStats.revenue.revenues
           ? Math.round(monthlyStats.revenue.revenues[index] / 10000)
           : 0,
       }))
@@ -123,21 +142,12 @@ const RentalAdminDashboard = () => {
       }))
     : [];
 
-  const regionData = regionStats
-    ? Object.entries(regionStats).map(([region, count]) => ({
-        name: region,
-        예약건수: count,
-      }))
-    : [];
-
-  const COLORS = ['#5d4037', '#795548', '#8d6e63', '#a1887f', '#bcaaa4'];
-
   return (
-    <DashboardContainer>
-      <PageTitle>렌탈 관리자 대시보드</PageTitle>
+    <MobileContainer>
+      <MobileTitle>MOCA 대시보드</MobileTitle>
 
-      {/* 통계 카드들 - 우선 로드 */}
-      <StatsCardsContainer>
+      {/* 통계 카드들 */}
+      <StatsGrid>
         {loadingStates.dashboard ? (
           <>
             <SkeletonCard />
@@ -147,242 +157,179 @@ const RentalAdminDashboard = () => {
           </>
         ) : dashboardStats ? (
           <>
-            <StatCard>
+            <StatCard color="#fff3e0">
+              <StatIcon>📊</StatIcon>
               <StatNumber>{dashboardStats.totalReservations || 0}</StatNumber>
               <StatLabel>총 예약</StatLabel>
             </StatCard>
-            <StatCard>
+            <StatCard color="#e8f5e8">
+              <StatIcon>🚗</StatIcon>
               <StatNumber>{dashboardStats.totalCars || 0}</StatNumber>
               <StatLabel>총 차량</StatLabel>
             </StatCard>
-            <StatCard>
+            <StatCard color="#e3f2fd">
+              <StatIcon>👥</StatIcon>
               <StatNumber>{dashboardStats.totalUsers || 0}</StatNumber>
-              <StatLabel>총 사용자</StatLabel>
+              <StatLabel>사용자</StatLabel>
             </StatCard>
-            <StatCard>
+            <StatCard color="#fce4ec">
+              <StatIcon>📍</StatIcon>
               <StatNumber>{dashboardStats.totalLocations || 0}</StatNumber>
-              <StatLabel>총 지점</StatLabel>
+              <StatLabel>지점수</StatLabel>
             </StatCard>
           </>
-        ) : (
-          <ErrorMessage>통계 카드를 불러올 수 없습니다.</ErrorMessage>
-        )}
-      </StatsCardsContainer>
+        ) : error.dashboard ? (
+          <ErrorCard>통계 카드를 불러올 수 없습니다.</ErrorCard>
+        ) : null}
+      </StatsGrid>
 
-      <ChartsGrid>
-        {/* 월별 예약 및 매출 */}
-        <Widget>
-          <WidgetTitle>월별 예약 및 매출 현황</WidgetTitle>
-          {loadingStates.monthly ? (
-            <SkeletonChart />
-          ) : monthlyData.length > 0 ? (
-            <ChartContainer>
-              <ResponsiveContainer>
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 13 }} />
-                  <YAxis tick={{ fontSize: 13 }} />
-                  <Tooltip
-                    contentStyle={{
-                      fontSize: '0.9rem',
-                      borderRadius: '8px',
-                      border: '1px solid #e7e0d9',
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '0.9rem' }} />
-                  <Bar dataKey="예약건수" fill="#5d4037" />
-                  <Bar dataKey="매출" fill="#795548" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          ) : (
-            <ErrorMessage>월별 통계를 불러올 수 없습니다.</ErrorMessage>
+      {/* 월별 예약 현황 */}
+      {loadingStates.monthly ? (
+        <ChartSection>
+          <SectionTitle>월별 예약 현황</SectionTitle>
+          <SkeletonChart />
+        </ChartSection>
+      ) : monthlyData.length > 0 ? (
+        <ChartSection>
+          <SectionTitle>월별 예약 현황</SectionTitle>
+          <ChartCard>
+            <SimpleChart>
+              {monthlyData.map((data, index) => (
+                <ChartBar key={index}>
+                  <Bar height={data.count * 4} />
+                  <BarLabel>{data.name}월</BarLabel>
+                  <BarValue>{data.count}</BarValue>
+                </ChartBar>
+              ))}
+            </SimpleChart>
+          </ChartCard>
+        </ChartSection>
+      ) : error.monthly ? (
+        <ErrorSection>
+          <SectionTitle>월별 예약 현황</SectionTitle>
+          <ErrorCard>월별 통계를 불러올 수 없습니다.</ErrorCard>
+        </ErrorSection>
+      ) : null}
+
+      {/* 차량 타입별 현황 */}
+      {loadingStates.vehicle ? (
+        <StatusSection>
+          <SectionTitle>차량 타입별 현황</SectionTitle>
+          <SkeletonCard />
+        </StatusSection>
+      ) : vehicleTypeData.length > 0 ? (
+        <StatusSection>
+          <SectionTitle>차량 타입별 현황</SectionTitle>
+          <StatusGrid>
+            {vehicleTypeData.map((data, index) => (
+              <StatusCard key={index}>
+                <StatusDot
+                  color={
+                    ['#a47551', '#795548', '#8d6e63', '#bcaaa4', '#d7ccc8'][
+                      index % 5
+                    ]
+                  }
+                />
+                <StatusInfo>
+                  <StatusName>{data.name}</StatusName>
+                  <StatusCount>{data.value}대</StatusCount>
+                </StatusInfo>
+              </StatusCard>
+            ))}
+          </StatusGrid>
+        </StatusSection>
+      ) : error.vehicle ? (
+        <ErrorSection>
+          <SectionTitle>차량 타입별 현황</SectionTitle>
+          <ErrorCard>차량 타입 통계를 불러올 수 없습니다.</ErrorCard>
+        </ErrorSection>
+      ) : null}
+
+      {/* 현재 상태 현황 */}
+      {loadingStates.dashboard ? (
+        <StatusSection>
+          <SectionTitle>현재 상태 현황</SectionTitle>
+          <SkeletonCard />
+        </StatusSection>
+      ) : dashboardStats ? (
+        <StatusSection>
+          <SectionTitle>현재 상태 현황</SectionTitle>
+
+          {/* 예약 상태 */}
+          {dashboardStats.reservationStatusStats && (
+            <StatusSubSection>
+              <StatusSubTitle>📅 예약 상태</StatusSubTitle>
+              <StatusGrid>
+                {Object.entries(dashboardStats.reservationStatusStats).map(
+                  ([status, count]) => (
+                    <StatusCard key={status}>
+                      <ReservationStatusDot status={status} />
+                      <StatusInfo>
+                        <StatusName>{getStatusLabel(status)}</StatusName>
+                        <StatusCount>{count}건</StatusCount>
+                      </StatusInfo>
+                    </StatusCard>
+                  )
+                )}
+              </StatusGrid>
+            </StatusSubSection>
           )}
-        </Widget>
 
-        {/* 차량 타입별 예약 분포 */}
-        <Widget>
-          <WidgetTitle>차량 타입별 예약 분포</WidgetTitle>
-          {loadingStates.vehicle ? (
-            <SkeletonChart />
-          ) : vehicleTypeData.length > 0 ? (
-            <ChartContainer>
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie
-                    data={vehicleTypeData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius="80%"
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
-                    }
-                    labelStyle={{ fontSize: '0.9rem' }}
-                  >
-                    {vehicleTypeData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      fontSize: '0.9rem',
-                      borderRadius: '8px',
-                      border: '1px solid #e7e0d9',
-                    }}
-                  />
-                  <Legend
-                    wrapperStyle={{
-                      fontSize: '0.9rem',
-                      paddingTop: '15px',
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          ) : (
-            <ErrorMessage>차량 타입 통계를 불러올 수 없습니다.</ErrorMessage>
+          {/* 차량 상태 */}
+          {dashboardStats.carStatusStats && (
+            <StatusSubSection>
+              <StatusSubTitle>🚗 차량 상태</StatusSubTitle>
+              <StatusGrid>
+                {Object.entries(dashboardStats.carStatusStats).map(
+                  ([status, count]) => (
+                    <StatusCard key={status}>
+                      <CarStatusDot status={status} />
+                      <StatusInfo>
+                        <StatusName>{getCarStatusLabel(status)}</StatusName>
+                        <StatusCount>{count}대</StatusCount>
+                      </StatusInfo>
+                    </StatusCard>
+                  )
+                )}
+              </StatusGrid>
+            </StatusSubSection>
           )}
-        </Widget>
 
-        {/* 지역별 예약 현황 */}
-        <Widget>
-          <WidgetTitle>지역별 예약 현황</WidgetTitle>
-          {loadingStates.region ? (
-            <SkeletonChart />
-          ) : regionData.length > 0 ? (
-            <ChartContainer>
-              <ResponsiveContainer>
-                <BarChart
-                  layout="horizontal"
-                  data={regionData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" tick={{ fontSize: 13 }} />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    width={60}
-                    tick={{ fontSize: 13 }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      fontSize: '0.9rem',
-                      borderRadius: '8px',
-                      border: '1px solid #e7e0d9',
-                    }}
-                  />
-                  <Bar dataKey="예약건수" fill="#8d6e63" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          ) : (
-            <ErrorMessage>지역별 통계를 불러올 수 없습니다.</ErrorMessage>
-          )}
-        </Widget>
-
-        {/* 현재 상태 현황 */}
-        <Widget>
-          <WidgetTitle>현재 상태 현황</WidgetTitle>
-          {loadingStates.dashboard ? (
-            <SkeletonStatus />
-          ) : dashboardStats ? (
-            <StatusContainer>
-              <StatusSection>
-                <StatusTitle>예약 상태</StatusTitle>
-                {dashboardStats.reservationStatusStats &&
-                  Object.entries(dashboardStats.reservationStatusStats).map(
-                    ([status, count]) => (
-                      <StatusItem key={status}>
-                        <StatusLabel>{getStatusLabel(status)}</StatusLabel>
-                        <StatusCount status={status}>{count}</StatusCount>
-                      </StatusItem>
-                    )
-                  )}
-              </StatusSection>
-
-              <StatusSection>
-                <StatusTitle>차량 상태</StatusTitle>
-                {dashboardStats.carStatusStats &&
-                  Object.entries(dashboardStats.carStatusStats).map(
-                    ([status, count]) => (
-                      <StatusItem key={status}>
-                        <StatusLabel>{getCarStatusLabel(status)}</StatusLabel>
-                        <StatusCount carStatus={status}>{count}</StatusCount>
-                      </StatusItem>
-                    )
-                  )}
-              </StatusSection>
-
-              <StatusSection>
-                <StatusTitle>면허증 승인</StatusTitle>
-                {dashboardStats.licenseStats &&
-                  Object.entries(dashboardStats.licenseStats).map(
-                    ([status, count]) => (
-                      <StatusItem key={status}>
-                        <StatusLabel>
+          {/* 면허증 승인 */}
+          {dashboardStats.licenseStats && (
+            <StatusSubSection>
+              <StatusSubTitle>📄 면허증 승인</StatusSubTitle>
+              <StatusGrid>
+                {Object.entries(dashboardStats.licenseStats).map(
+                  ([status, count]) => (
+                    <StatusCard key={status}>
+                      <LicenseStatusDot status={status} />
+                      <StatusInfo>
+                        <StatusName>
                           {status === 'approved' ? '승인됨' : '대기중'}
-                        </StatusLabel>
-                        <StatusCount licenseStatus={status}>
-                          {count}
-                        </StatusCount>
-                      </StatusItem>
-                    )
-                  )}
-              </StatusSection>
-            </StatusContainer>
-          ) : (
-            <ErrorMessage>상태 현황을 불러올 수 없습니다.</ErrorMessage>
+                        </StatusName>
+                        <StatusCount>{count}건</StatusCount>
+                      </StatusInfo>
+                    </StatusCard>
+                  )
+                )}
+              </StatusGrid>
+            </StatusSubSection>
           )}
-        </Widget>
-      </ChartsGrid>
-    </DashboardContainer>
+        </StatusSection>
+      ) : error.dashboard ? (
+        <ErrorSection>
+          <SectionTitle>현재 상태 현황</SectionTitle>
+          <ErrorCard>상태 현황을 불러올 수 없습니다.</ErrorCard>
+        </ErrorSection>
+      ) : null}
+    </MobileContainer>
   );
-};
-
-// 유틸리티 함수들
-const getStatusLabel = (status) => {
-  const labels = {
-    PENDING: '대기중',
-    CONFIRMED: '확정',
-    IN_PROGRESS: '진행중',
-    COMPLETED: '완료',
-    CANCELLED: '취소',
-  };
-  return labels[status] || status;
-};
-
-const getCarStatusLabel = (status) => {
-  const labels = {
-    AVAILABLE: '이용가능',
-    RENTED: '대여중',
-    MAINTENANCE: '정비중',
-  };
-  return labels[status] || status;
-};
-
-const getVehicleTypeLabel = (type) => {
-  const labels = {
-    COMPACT: '소형차',
-    MIDSIZE: '중형차',
-    FULLSIZE: '대형차',
-    SUV: 'SUV',
-    VAN: '승합차',
-  };
-  return labels[type] || type;
 };
 
 export default RentalAdminDashboard;
 
-/* ============ Styled Components ============ */
-
-// 스켈레톤 애니메이션
+// 스켈레톤 애니메이션 (기존과 동일)
 const shimmer = keyframes`
   0% {
     background-position: -200px 0;
@@ -392,266 +339,264 @@ const shimmer = keyframes`
   }
 `;
 
-const SkeletonBase = styled.div`
-  background: #f6f7f8;
+// Moca Color Scheme Mobile-First Styled Components
+const MobileContainer = styled.div`
+  padding: 0;
+  background: transparent;
+  width: 100%;
+`;
+
+const MobileTitle = styled.h1`
+  margin: 0 0 20px 0;
+  color: #5d4037; /* Moca: Dark Brown */
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+`;
+
+const SkeletonCard = styled.div`
+  height: 80px;
+  background: #f5f1ed; /* Moca: Light Brown BG */
   background-image: linear-gradient(
     90deg,
-    #f6f7f8 0px,
-    #e2e5e7 40px,
-    #f6f7f8 80px
+    #f5f1ed 0px,
+    #e7e0d9 40px,
+    #f5f1ed 80px
   );
   background-size: 200px;
   animation: ${shimmer} 1.2s ease-in-out infinite;
-  border-radius: 8px;
+  border-radius: 16px;
 `;
 
-const SkeletonCard = styled(SkeletonBase)`
-  height: 120px;
-  border-radius: 24px;
-`;
-
-const SkeletonChart = styled(SkeletonBase)`
-  height: 320px;
-
-  @media (min-width: 769px) {
-    height: 380px;
-  }
-`;
-
-const SkeletonStatus = styled(SkeletonBase)`
+const SkeletonChart = styled(SkeletonCard)`
   height: 200px;
 `;
 
-// 기존 스타일 컴포넌트들
-const DashboardContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  width: 78vw;
-  min-height: 100vh;
-  background-color: #f7f5f3;
-
-  @media (min-width: 769px) {
-    gap: 24px;
-    padding: 24px;
-  }
-`;
-
-const PageTitle = styled.h1`
-  margin: 0 0 16px 0;
-  color: #5d4037;
-  font-size: 1.8rem;
-  font-weight: 700;
-  text-align: center;
-
-  @media (min-width: 769px) {
-    font-size: 2.2rem;
-    margin-bottom: 24px;
-  }
-`;
-
-const StatsCardsContainer = styled.div`
+const StatsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-
-  @media (min-width: 769px) {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-  }
+  margin-bottom: 24px;
 `;
 
 const StatCard = styled.div`
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 20px;
+  background: ${(props) => props.color || '#ffffff'};
+  border-radius: 16px;
+  padding: 20px 16px;
   text-align: center;
-  border: 1px solid #e7e0d9;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  box-shadow: 0 4px 12px rgba(164, 117, 81, 0.08); /* Moca: Shadow */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(164, 117, 81, 0.15);
-    border-color: #d7ccc8;
   }
+`;
 
-  @media (min-width: 769px) {
-    padding: 28px;
-  }
+const StatIcon = styled.div`
+  font-size: 1.5rem;
+  margin-bottom: 8px;
 `;
 
 const StatNumber = styled.div`
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: #5d4037;
-  margin-bottom: 8px;
-
-  @media (min-width: 769px) {
-    font-size: 2.8rem;
-  }
+  color: #5d4037; /* Moca: Dark Brown */
+  margin-bottom: 4px;
 `;
 
 const StatLabel = styled.div`
-  font-size: 0.95rem;
-  color: #795548;
+  font-size: 0.85rem;
+  color: #795548; /* Moca: Medium Brown */
   font-weight: 500;
-
-  @media (min-width: 769px) {
-    font-size: 1.1rem;
-  }
 `;
 
-const ChartsGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-
-  @media (min-width: 769px) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-  }
+const ChartSection = styled.div`
+  margin-bottom: 24px;
 `;
 
-const Widget = styled.div`
+const ErrorSection = styled(ChartSection)``;
+
+const SectionTitle = styled.h2`
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #5d4037; /* Moca: Dark Brown */
+  margin: 0 0 12px 0;
+`;
+
+const ChartCard = styled.div`
   background: #ffffff;
+  border-radius: 16px;
   padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #e7e0d9;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-
-  @media (min-width: 769px) {
-    padding: 28px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-  }
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  box-shadow: 0 4px 12px rgba(164, 117, 81, 0.08); /* Moca: Shadow */
 `;
 
-const WidgetTitle = styled.h2`
-  margin-top: 0;
-  margin-bottom: 18px;
-  color: #5d4037;
-  font-size: 1.2rem;
-
-  @media (min-width: 769px) {
-    font-size: 1.4rem;
-    margin-bottom: 26px;
-  }
+const SimpleChart = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 120px;
+  gap: 8px;
 `;
 
-const ChartContainer = styled.div`
+const ChartBar = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+`;
+
+const Bar = styled.div`
   width: 100%;
-  height: 320px;
-
-  @media (max-width: 480px) {
-    height: 300px;
-  }
-
-  @media (min-width: 769px) {
-    height: 380px;
-  }
+  max-width: 30px;
+  background: linear-gradient(
+    180deg,
+    #a47551,
+    #795548
+  ); /* Moca: Primary to Medium Brown */
+  border-radius: 4px 4px 0 0;
+  height: ${(props) => Math.max(props.height, 10)}px;
+  margin-bottom: 8px;
 `;
 
-const StatusContainer = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
+const BarLabel = styled.div`
+  font-size: 0.7rem;
+  color: #795548; /* Moca: Medium Brown */
+  margin-bottom: 2px;
+`;
 
-  @media (min-width: 769px) {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
+const BarValue = styled.div`
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #5d4037; /* Moca: Dark Brown */
 `;
 
 const StatusSection = styled.div`
+  margin-bottom: 24px;
+`;
+
+const StatusSubSection = styled.div`
+  margin-bottom: 20px;
+`;
+
+const StatusSubTitle = styled.h3`
+  font-size: 1rem;
+  font-weight: 600;
+  color: #5d4037; /* Moca: Dark Brown */
+  margin: 0 0 12px 0;
+`;
+
+const StatusGrid = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
 `;
 
-const StatusTitle = styled.h3`
-  margin: 0 0 12px 0;
-  color: #5d4037;
-  font-size: 1rem;
-  font-weight: 600;
-  border-bottom: 2px solid #e7e0d9;
-  padding-bottom: 8px;
+const StatusCard = styled.div`
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  box-shadow: 0 4px 12px rgba(164, 117, 81, 0.08); /* Moca: Shadow */
+  display: flex;
+  align-items: center;
+  gap: 12px;
 `;
 
-const StatusItem = styled.div`
+const StatusDot = styled.div`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: ${(props) => props.color};
+  flex-shrink: 0;
+`;
+
+const ReservationStatusDot = styled.div`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: ${(props) => {
+    switch (props.status) {
+      case 'CONFIRMED':
+        return '#10b981';
+      case 'PENDING':
+        return '#f59e0b';
+      case 'IN_PROGRESS':
+        return '#3b82f6';
+      case 'COMPLETED':
+        return '#795548';
+      case 'CANCELLED':
+        return '#ef4444';
+      default:
+        return '#795548';
+    }
+  }};
+`;
+
+const CarStatusDot = styled.div`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: ${(props) => {
+    switch (props.status) {
+      case 'AVAILABLE':
+        return '#10b981';
+      case 'RENTED':
+        return '#f59e0b';
+      case 'MAINTENANCE':
+        return '#ef4444';
+      default:
+        return '#795548';
+    }
+  }};
+`;
+
+const LicenseStatusDot = styled.div`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: ${(props) => {
+    switch (props.status) {
+      case 'approved':
+        return '#10b981';
+      case 'pending':
+        return '#f59e0b';
+      default:
+        return '#795548';
+    }
+  }};
+`;
+
+const StatusInfo = styled.div`
+  flex: 1;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e7e0d9;
 `;
 
-const StatusLabel = styled.span`
+const StatusName = styled.div`
+  font-size: 0.9rem;
+  color: #5d4037; /* Moca: Dark Brown */
   font-weight: 500;
-  color: #5d4037;
-  font-size: 0.9rem;
 `;
 
-const StatusCount = styled.span`
-  padding: 4px 8px;
-  border-radius: 12px;
+const StatusCount = styled.div`
+  font-size: 0.9rem;
   font-weight: 600;
-  font-size: 0.9rem;
-  color: white;
-
-  ${({ status, carStatus, licenseStatus }) => {
-    if (status) {
-      switch (status) {
-        case 'CONFIRMED':
-          return 'background-color: #28a745;';
-        case 'PENDING':
-          return 'background-color: #ffc107; color: #212529;';
-        case 'IN_PROGRESS':
-          return 'background-color: #17a2b8;';
-        case 'COMPLETED':
-          return 'background-color: #6c757d;';
-        case 'CANCELLED':
-          return 'background-color: #dc3545;';
-        default:
-          return 'background-color: #5d4037;';
-      }
-    }
-    if (carStatus) {
-      switch (carStatus) {
-        case 'AVAILABLE':
-          return 'background-color: #28a745;';
-        case 'RENTED':
-          return 'background-color: #ffc107; color: #212529;';
-        case 'MAINTENANCE':
-          return 'background-color: #dc3545;';
-        default:
-          return 'background-color: #5d4037;';
-      }
-    }
-    if (licenseStatus) {
-      switch (licenseStatus) {
-        case 'approved':
-          return 'background-color: #28a745;';
-        case 'pending':
-          return 'background-color: #ffc107; color: #212529;';
-        default:
-          return 'background-color: #5d4037;';
-      }
-    }
-    return 'background-color: #5d4037;';
-  }}
+  color: #a47551; /* Moca: Primary */
 `;
 
-const ErrorMessage = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  color: #dc3545;
-  font-size: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 2px dashed #dee2e6;
+const ErrorCard = styled.div`
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 20px;
+  border-radius: 16px;
+  text-align: center;
+  border: 1px solid #fecaca;
+  font-size: 0.9rem;
 `;

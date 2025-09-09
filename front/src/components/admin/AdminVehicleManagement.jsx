@@ -1,17 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import {
-  FiSearch,
-  FiFilter,
-  FiEdit,
-  FiTrash2,
-  FiEye,
-  FiRefreshCw,
-  FiPlus,
-  FiTruck,
-  FiZap,
-  FiCircle,
-} from 'react-icons/fi';
 
 const AdminVehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -29,11 +17,11 @@ const AdminVehicleManagement = () => {
     carNumber: '',
     vehicleTypeCode: 'FULLSIZE',
     status: 'AVAILABLE',
-    rentPricePer10Min: '',
+    rentPricePer10min: '',
     imageUrl: '',
   });
 
-  // 차량 상태 옵션
+  // 차량 상태 옵션 (기존과 동일)
   const statusOptions = [
     { value: 'ALL', label: '전체' },
     { value: 'AVAILABLE', label: '이용가능' },
@@ -41,7 +29,7 @@ const AdminVehicleManagement = () => {
     { value: 'MAINTENANCE', label: '정비중' },
   ];
 
-  // 차량 타입 옵션
+  // 차량 타입 옵션 (기존과 동일)
   const typeOptions = [
     { value: 'ALL', label: '전체' },
     { value: 'COMPACT', label: '소형차' },
@@ -52,7 +40,7 @@ const AdminVehicleManagement = () => {
     { value: 'EV', label: '전기차' },
   ];
 
-  // 상태별 색상 매핑
+  // 상태별 색상 매핑 (Moca 테마)
   const getStatusColor = (status) => {
     switch (status) {
       case 'AVAILABLE':
@@ -62,7 +50,7 @@ const AdminVehicleManagement = () => {
       case 'MAINTENANCE':
         return '#ef4444';
       default:
-        return '#6b7280';
+        return '#795548'; // Moca: Medium Brown
     }
   };
 
@@ -71,19 +59,26 @@ const AdminVehicleManagement = () => {
     switch (type) {
       case 'SUV':
       case 'VAN':
-        return <FiTruck />;
+        return '🚙';
       case 'EV':
-        return <FiZap />;
+        return '⚡';
+      case 'COMPACT':
+        return '🚗';
+      case 'MIDSIZE':
+        return '🚘';
+      case 'FULLSIZE':
+        return '🚙';
       default:
-        return <FiCircle />;
+        return '🚗';
     }
   };
 
-  // 가격 포맷팅
+  // 가격 포맷팅 (기존과 동일)
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ko-KR').format(price) + '원';
   };
 
+  // 차량 목록 조회 (기존 API 로직)
   const fetchVehicles = async () => {
     setLoading(true);
     setError(null);
@@ -113,6 +108,7 @@ const AdminVehicleManagement = () => {
     }
   };
 
+  // 차량 추가 (기존 API 로직)
   const addVehicle = async () => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -133,7 +129,14 @@ const AdminVehicleManagement = () => {
       const addedVehicle = await response.json();
       setVehicles((prev) => [...prev, addedVehicle]);
       setShowAddModal(false);
-      // newVehicle 초기화...
+      setNewVehicle({
+        carName: '',
+        carNumber: '',
+        vehicleTypeCode: 'FULLSIZE',
+        status: 'AVAILABLE',
+        rentPricePer10min: '',
+        imageUrl: '',
+      });
       alert('차량이 성공적으로 등록되었습니다.');
     } catch (err) {
       alert(err.message);
@@ -141,7 +144,7 @@ const AdminVehicleManagement = () => {
     }
   };
 
-  // 차량 수정
+  // 차량 수정 (기존 API 로직)
   const updateVehicle = async (id, updatedData) => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -163,7 +166,9 @@ const AdminVehicleManagement = () => {
       setVehicles((prev) =>
         prev.map((vehicle) => (vehicle.id === id ? updatedVehicle : vehicle))
       );
-      // 모달 상태 업데이트...
+      setShowModal(false);
+      setSelectedVehicle(null);
+      setEditingVehicle(false);
       alert('차량 정보가 성공적으로 수정되었습니다.');
     } catch (err) {
       alert(err.message);
@@ -171,7 +176,7 @@ const AdminVehicleManagement = () => {
     }
   };
 
-  // 차량 삭제
+  // 차량 삭제 (기존 API 로직)
   const deleteVehicle = async (id) => {
     if (!confirm('정말로 이 차량을 삭제하시겠습니까?')) {
       return;
@@ -192,7 +197,8 @@ const AdminVehicleManagement = () => {
       }
 
       setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id));
-      // 모달 닫기 로직...
+      setShowModal(false);
+      setSelectedVehicle(null);
       alert('차량이 성공적으로 삭제되었습니다.');
     } catch (err) {
       alert(err.message);
@@ -206,11 +212,11 @@ const AdminVehicleManagement = () => {
     setShowModal(true);
   };
 
-  // 필터링된 차량 목록
+  // 필터링된 차량 목록 (기존 로직)
   const filteredVehicles = vehicles.filter((vehicle) => {
     const matchesSearch =
-      vehicle.carName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.carNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      vehicle.carName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.carNumber?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       statusFilter === 'ALL' || vehicle.status === statusFilter;
@@ -220,32 +226,35 @@ const AdminVehicleManagement = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
     fetchVehicles();
   }, []);
 
+  if (loading) {
+    return (
+      <MobileContainer>
+        <PageHeader>
+          <PageTitle>차량 관리</PageTitle>
+        </PageHeader>
+        <LoadingContainer>
+          {[...Array(4)].map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </LoadingContainer>
+      </MobileContainer>
+    );
+  }
+
   return (
-    <Container>
-      <Header>
-        <Title>차량 관리</Title>
-        <ButtonGroup>
-          <AddButton onClick={() => setShowAddModal(true)}>
-            <FiPlus />
-            차량 추가
-          </AddButton>
-          <RefreshButton onClick={fetchVehicles} disabled={loading}>
-            <FiRefreshCw />
-            새로고침
-          </RefreshButton>
-        </ButtonGroup>
-      </Header>
+    <MobileContainer>
+      <PageHeader>
+        <PageTitle>차량 관리</PageTitle>
+        <TotalCount>총 {filteredVehicles.length}대</TotalCount>
+      </PageHeader>
 
       <FilterSection>
         <SearchContainer>
-          <SearchIcon>
-            <FiSearch />
-          </SearchIcon>
+          <SearchIcon>🔍</SearchIcon>
           <SearchInput
             type="text"
             placeholder="차량명 또는 번호로 검색..."
@@ -254,11 +263,9 @@ const AdminVehicleManagement = () => {
           />
         </SearchContainer>
 
-        <FilterGroup>
+        <FilterRow>
           <FilterContainer>
-            <FilterIcon>
-              <FiFilter />
-            </FilterIcon>
+            <FilterIcon>📋</FilterIcon>
             <FilterSelect
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -272,9 +279,7 @@ const AdminVehicleManagement = () => {
           </FilterContainer>
 
           <FilterContainer>
-            <FilterIcon>
-              <FiFilter />
-            </FilterIcon>
+            <FilterIcon>🚗</FilterIcon>
             <FilterSelect
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
@@ -286,151 +291,234 @@ const AdminVehicleManagement = () => {
               ))}
             </FilterSelect>
           </FilterContainer>
-        </FilterGroup>
+        </FilterRow>
+
+        <ActionRow>
+          <AddButton onClick={() => setShowAddModal(true)}>
+            ➕ 차량 추가
+          </AddButton>
+          <RefreshButton onClick={fetchVehicles} disabled={loading}>
+            🔄 새로고침
+          </RefreshButton>
+        </ActionRow>
       </FilterSection>
 
-      {loading && <LoadingMessage>차량 목록을 불러오는 중...</LoadingMessage>}
+      {error && <ErrorMessage>⚠️ {error}</ErrorMessage>}
 
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-
-      {!loading && !error && (
-        <VehicleGrid>
-          {filteredVehicles.length === 0 ? (
-            <EmptyMessage>차량 데이터가 없습니다.</EmptyMessage>
-          ) : (
-            filteredVehicles.map((vehicle) => (
-              <VehicleCard key={vehicle.id}>
-                <VehicleImage
-                  src={vehicle.imageUrl}
-                  alt={vehicle.carName}
-                  onError={(e) => {
-                    e.target.src = '/assets/placeholder-car.jpg'; // 기본 이미지
-                  }}
-                />
+      <VehicleList>
+        {filteredVehicles.length === 0 ? (
+          <EmptyState>
+            <EmptyIcon>🚗</EmptyIcon>
+            <EmptyText>조건에 맞는 차량이 없습니다</EmptyText>
+          </EmptyState>
+        ) : (
+          filteredVehicles.map((vehicle) => (
+            <VehicleCard key={vehicle.id}>
+              <CardHeader>
                 <VehicleInfo>
-                  <VehicleHeader>
-                    <VehicleName>{vehicle.carName}</VehicleName>
-                    <StatusBadge color={getStatusColor(vehicle.status)}>
-                      {
-                        statusOptions.find(
-                          (opt) => opt.value === vehicle.status
-                        )?.label
-                      }
-                    </StatusBadge>
-                  </VehicleHeader>
-
-                  <VehicleDetails>
-                    <DetailRow>
-                      <DetailIcon>
-                        {getTypeIcon(vehicle.vehicleTypeCode)}
-                      </DetailIcon>
-                      <DetailText>{vehicle.carNumber}</DetailText>
-                    </DetailRow>
-                    <DetailRow>
-                      <DetailText>
-                        {
-                          typeOptions.find(
-                            (opt) => opt.value === vehicle.vehicleTypeCode
-                          )?.label
-                        }
-                      </DetailText>
-                    </DetailRow>
-                    <PriceRow>
-                      <PriceText>
-                        {formatPrice(vehicle.rentPricePer10Min)}/10분
-                      </PriceText>
-                    </PriceRow>
-                  </VehicleDetails>
-
-                  <ActionButtons>
-                    <ActionButton
-                      onClick={() => viewVehicleDetails(vehicle)}
-                      title="상세보기"
-                    >
-                      <FiEye />
-                      <span>상세</span>
-                    </ActionButton>
-                    <ActionButton
-                      onClick={() => {
-                        setSelectedVehicle(vehicle);
-                        setEditingVehicle(true);
-                      }}
-                      title="수정"
-                      color="#3b82f6"
-                    >
-                      <FiEdit />
-                      <span>수정</span>
-                    </ActionButton>
-                    <ActionButton
-                      onClick={() => deleteVehicle(vehicle.id)}
-                      title="삭제"
-                      color="#ef4444"
-                    >
-                      <FiTrash2 />
-                      <span>삭제</span>
-                    </ActionButton>
-                  </ActionButtons>
-                </VehicleInfo>
-              </VehicleCard>
-            ))
-          )}
-        </VehicleGrid>
-      )}
-
-      {/* 차량 상세 모달 */}
-      {showModal && selectedVehicle && (
-        <Modal onClick={() => setShowModal(false)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <ModalHeader>
-              <h3>차량 상세 정보</h3>
-              <CloseButton onClick={() => setShowModal(false)}>×</CloseButton>
-            </ModalHeader>
-            <ModalBody>
-              <VehicleImageLarge
-                src={selectedVehicle.imageUrl}
-                alt={selectedVehicle.carName}
-                onError={(e) => {
-                  e.target.src = '/assets/placeholder-car.jpg';
-                }}
-              />
-              <DetailGrid>
-                <DetailItem>
-                  <DetailLabel>차량명</DetailLabel>
-                  <DetailValue>{selectedVehicle.carName}</DetailValue>
-                </DetailItem>
-                <DetailItem>
-                  <DetailLabel>차량번호</DetailLabel>
-                  <DetailValue>{selectedVehicle.carNumber}</DetailValue>
-                </DetailItem>
-                <DetailItem>
-                  <DetailLabel>차량타입</DetailLabel>
-                  <DetailValue>
+                  <VehicleName>{vehicle.carName}</VehicleName>
+                  <VehicleNumber>{vehicle.carNumber}</VehicleNumber>
+                  <VehicleType>
+                    {getTypeIcon(vehicle.vehicleTypeCode)}{' '}
                     {
                       typeOptions.find(
-                        (opt) => opt.value === selectedVehicle.vehicleTypeCode
+                        (t) => t.value === vehicle.vehicleTypeCode
                       )?.label
                     }
-                  </DetailValue>
-                </DetailItem>
-                <DetailItem>
-                  <DetailLabel>상태</DetailLabel>
-                  <DetailValue>
-                    <StatusBadge color={getStatusColor(selectedVehicle.status)}>
+                  </VehicleType>
+                </VehicleInfo>
+                <StatusBadge color={getStatusColor(vehicle.status)}>
+                  {statusOptions.find((s) => s.value === vehicle.status)?.label}
+                </StatusBadge>
+              </CardHeader>
+
+              <PriceInfo>
+                <PriceIcon>💰</PriceIcon>
+                <Price>{formatPrice(vehicle.rentPricePer10min)} / 10분</Price>
+              </PriceInfo>
+
+              <ActionButtons>
+                <ActionButton onClick={() => viewVehicleDetails(vehicle)}>
+                  📄 상세
+                </ActionButton>
+                <ActionButton
+                  primary
+                  onClick={() => {
+                    setSelectedVehicle(vehicle);
+                    setEditingVehicle(true);
+                    setShowModal(true);
+                  }}
+                >
+                  ✏️ 수정
+                </ActionButton>
+                <ActionButton danger onClick={() => deleteVehicle(vehicle.id)}>
+                  🗑️ 삭제
+                </ActionButton>
+              </ActionButtons>
+            </VehicleCard>
+          ))
+        )}
+      </VehicleList>
+
+      {/* 차량 상세/수정 모달 */}
+      {showModal && selectedVehicle && (
+        <Modal
+          onClick={() => {
+            setShowModal(false);
+            setSelectedVehicle(null);
+            setEditingVehicle(false);
+          }}
+        >
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>
+                {editingVehicle ? '차량 정보 수정' : '차량 상세 정보'}
+              </ModalTitle>
+              <CloseButton
+                onClick={() => {
+                  setShowModal(false);
+                  setSelectedVehicle(null);
+                  setEditingVehicle(false);
+                }}
+              >
+                ×
+              </CloseButton>
+            </ModalHeader>
+            <ModalBody>
+              {editingVehicle ? (
+                <EditForm>
+                  <FormField>
+                    <FormLabel>차량명</FormLabel>
+                    <FormInput
+                      value={selectedVehicle.carName}
+                      onChange={(e) =>
+                        setSelectedVehicle({
+                          ...selectedVehicle,
+                          carName: e.target.value,
+                        })
+                      }
+                    />
+                  </FormField>
+                  <FormField>
+                    <FormLabel>차량번호</FormLabel>
+                    <FormInput
+                      value={selectedVehicle.carNumber}
+                      onChange={(e) =>
+                        setSelectedVehicle({
+                          ...selectedVehicle,
+                          carNumber: e.target.value,
+                        })
+                      }
+                    />
+                  </FormField>
+                  <FormField>
+                    <FormLabel>차량타입</FormLabel>
+                    <FormSelect
+                      value={selectedVehicle.vehicleTypeCode}
+                      onChange={(e) =>
+                        setSelectedVehicle({
+                          ...selectedVehicle,
+                          vehicleTypeCode: e.target.value,
+                        })
+                      }
+                    >
+                      {typeOptions
+                        .filter((t) => t.value !== 'ALL')
+                        .map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                    </FormSelect>
+                  </FormField>
+                  <FormField>
+                    <FormLabel>상태</FormLabel>
+                    <FormSelect
+                      value={selectedVehicle.status}
+                      onChange={(e) =>
+                        setSelectedVehicle({
+                          ...selectedVehicle,
+                          status: e.target.value,
+                        })
+                      }
+                    >
+                      {statusOptions
+                        .filter((s) => s.value !== 'ALL')
+                        .map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                    </FormSelect>
+                  </FormField>
+                  <FormField>
+                    <FormLabel>요금 (10분당)</FormLabel>
+                    <FormInput
+                      type="number"
+                      value={
+                        selectedVehicle.rentPricePer10min ||
+                        selectedVehicle.price ||
+                        ''
+                      }
+                      onChange={(e) =>
+                        setSelectedVehicle({
+                          ...selectedVehicle,
+                          rentPricePer10min: e.target.value,
+                        })
+                      }
+                    />
+                  </FormField>
+                  <SaveButton
+                    onClick={() =>
+                      updateVehicle(selectedVehicle.id, selectedVehicle)
+                    }
+                  >
+                    💾 저장
+                  </SaveButton>
+                </EditForm>
+              ) : (
+                <DetailGrid>
+                  <DetailItem>
+                    <DetailLabel>차량명</DetailLabel>
+                    <DetailValue>{selectedVehicle.carName}</DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>차량번호</DetailLabel>
+                    <DetailValue>{selectedVehicle.carNumber}</DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>차량타입</DetailLabel>
+                    <DetailValue>
+                      {getTypeIcon(selectedVehicle.vehicleTypeCode)}{' '}
                       {
-                        statusOptions.find(
-                          (opt) => opt.value === selectedVehicle.status
+                        typeOptions.find(
+                          (t) => t.value === selectedVehicle.vehicleTypeCode
                         )?.label
                       }
-                    </StatusBadge>
-                  </DetailValue>
-                </DetailItem>
-                <DetailItem>
-                  <DetailLabel>10분당 요금</DetailLabel>
-                  <DetailValue>
-                    {formatPrice(selectedVehicle.rentPricePer10Min)}
-                  </DetailValue>
-                </DetailItem>
-              </DetailGrid>
+                    </DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>상태</DetailLabel>
+                    <DetailValue>
+                      <StatusBadge
+                        color={getStatusColor(selectedVehicle.status)}
+                      >
+                        {
+                          statusOptions.find(
+                            (s) => s.value === selectedVehicle.status
+                          )?.label
+                        }
+                      </StatusBadge>
+                    </DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>요금</DetailLabel>
+                    <DetailValue>
+                      {formatPrice(selectedVehicle.rentPricePer10min)} / 10분
+                    </DetailValue>
+                  </DetailItem>
+                </DetailGrid>
+              )}
             </ModalBody>
           </ModalContent>
         </Modal>
@@ -441,278 +529,156 @@ const AdminVehicleManagement = () => {
         <Modal onClick={() => setShowAddModal(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <h3>새 차량 등록</h3>
+              <ModalTitle>새 차량 추가</ModalTitle>
               <CloseButton onClick={() => setShowAddModal(false)}>
                 ×
               </CloseButton>
             </ModalHeader>
             <ModalBody>
-              <FormGrid>
-                <FormItem>
-                  <FormLabel>차량명 *</FormLabel>
+              <EditForm>
+                <FormField>
+                  <FormLabel>차량명</FormLabel>
                   <FormInput
-                    type="text"
                     value={newVehicle.carName}
                     onChange={(e) =>
-                      setNewVehicle((prev) => ({
-                        ...prev,
-                        carName: e.target.value,
-                      }))
+                      setNewVehicle({ ...newVehicle, carName: e.target.value })
                     }
-                    placeholder="예: 람보르기니 우라칸"
+                    placeholder="예: 현대 아반떼"
                   />
-                </FormItem>
-                <FormItem>
-                  <FormLabel>차량번호 *</FormLabel>
+                </FormField>
+                <FormField>
+                  <FormLabel>차량번호</FormLabel>
                   <FormInput
-                    type="text"
                     value={newVehicle.carNumber}
                     onChange={(e) =>
-                      setNewVehicle((prev) => ({
-                        ...prev,
+                      setNewVehicle({
+                        ...newVehicle,
                         carNumber: e.target.value,
-                      }))
+                      })
                     }
-                    placeholder="예: 98가2803"
+                    placeholder="예: 12가3456"
                   />
-                </FormItem>
-                <FormItem>
-                  <FormLabel>차량타입 *</FormLabel>
+                </FormField>
+                <FormField>
+                  <FormLabel>차량타입</FormLabel>
                   <FormSelect
                     value={newVehicle.vehicleTypeCode}
                     onChange={(e) =>
-                      setNewVehicle((prev) => ({
-                        ...prev,
+                      setNewVehicle({
+                        ...newVehicle,
                         vehicleTypeCode: e.target.value,
-                      }))
+                      })
                     }
                   >
                     {typeOptions
-                      .filter((opt) => opt.value !== 'ALL')
+                      .filter((t) => t.value !== 'ALL')
                       .map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
                       ))}
                   </FormSelect>
-                </FormItem>
-                <FormItem>
-                  <FormLabel>상태 *</FormLabel>
-                  <FormSelect
-                    value={newVehicle.status}
-                    onChange={(e) =>
-                      setNewVehicle((prev) => ({
-                        ...prev,
-                        status: e.target.value,
-                      }))
-                    }
-                  >
-                    {statusOptions
-                      .filter((opt) => opt.value !== 'ALL')
-                      .map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                  </FormSelect>
-                </FormItem>
-                <FormItem>
-                  <FormLabel>10분당 요금 (원) *</FormLabel>
+                </FormField>
+                <FormField>
+                  <FormLabel>요금 (10분당)</FormLabel>
                   <FormInput
                     type="number"
-                    value={newVehicle.rentPricePer10Min}
+                    value={newVehicle.rentPricePer10min}
                     onChange={(e) =>
-                      setNewVehicle((prev) => ({
-                        ...prev,
-                        rentPricePer10Min: e.target.value,
-                      }))
+                      setNewVehicle({
+                        ...newVehicle,
+                        rentPricePer10min: e.target.value,
+                      })
                     }
-                    placeholder="예: 25000"
+                    placeholder="예: 5000"
                   />
-                </FormItem>
-                <FormItem>
-                  <FormLabel>이미지 URL</FormLabel>
-                  <FormInput
-                    type="text"
-                    value={newVehicle.imageUrl}
-                    onChange={(e) =>
-                      setNewVehicle((prev) => ({
-                        ...prev,
-                        imageUrl: e.target.value,
-                      }))
-                    }
-                    placeholder="예: /assets/cars/vehicle.jpg"
-                  />
-                </FormItem>
-              </FormGrid>
-              <FormActions>
-                <CancelButton onClick={() => setShowAddModal(false)}>
-                  취소
-                </CancelButton>
-                <SubmitButton
-                  onClick={addVehicle}
-                  disabled={
-                    !newVehicle.carName ||
-                    !newVehicle.carNumber ||
-                    !newVehicle.rentPricePer10Min
-                  }
-                >
-                  등록
-                </SubmitButton>
-              </FormActions>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-      )}
-
-      {/* 차량 수정 모달 */}
-      {editingVehicle && selectedVehicle && (
-        <Modal onClick={() => setEditingVehicle(false)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <ModalHeader>
-              <h3>차량 정보 수정</h3>
-              <CloseButton onClick={() => setEditingVehicle(false)}>
-                ×
-              </CloseButton>
-            </ModalHeader>
-            <ModalBody>
-              <p>차량 '{selectedVehicle.carName}'의 정보를 수정하시겠습니까?</p>
-
-              <EditForm>
-                <FormItem>
-                  <FormLabel>상태</FormLabel>
-                  <FormSelect
-                    defaultValue={selectedVehicle.status}
-                    onChange={(e) => {
-                      if (e.target.value !== selectedVehicle.status) {
-                        updateVehicle(selectedVehicle.id, {
-                          status: e.target.value,
-                        });
-                      }
-                    }}
-                  >
-                    {statusOptions
-                      .filter((opt) => opt.value !== 'ALL')
-                      .map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                  </FormSelect>
-                </FormItem>
+                </FormField>
+                <SaveButton onClick={addVehicle}>➕ 차량 추가</SaveButton>
               </EditForm>
             </ModalBody>
           </ModalContent>
         </Modal>
       )}
-    </Container>
+    </MobileContainer>
   );
 };
 
-// 스타일 컴포넌트들
-const Container = styled.div`
-  padding: 24px;
-  background: #f8fafc;
-  min-height: 100vh;
+export default AdminVehicleManagement;
+
+// Moca Color Scheme Mobile-First Styled Components
+const MobileContainer = styled.div`
+  padding: 0;
+  background: transparent;
+  width: 100%;
 `;
 
-const Header = styled.div`
+const PageHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 `;
 
-const Title = styled.h1`
+const PageTitle = styled.h1`
   margin: 0;
-  color: #1f2937;
-  font-size: 1.875rem;
+  color: #5d4037; /* Moca: Dark Brown */
+  font-size: 1.5rem;
   font-weight: 700;
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 12px;
-`;
-
-const AddButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #10b981;
+const TotalCount = styled.div`
+  background: linear-gradient(
+    135deg,
+    #a47551,
+    #795548
+  ); /* Moca: Primary to Medium Brown */
   color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-
-  &:hover {
-    background: #059669;
-  }
-`;
-
-const RefreshButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-
-  &:hover {
-    background: #2563eb;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(164, 117, 81, 0.3); /* Moca: Shadow */
 `;
 
 const FilterSection = styled.div`
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
 `;
 
 const SearchContainer = styled.div`
   display: flex;
   align-items: center;
   position: relative;
-  flex: 1;
-  min-width: 300px;
 `;
 
 const SearchIcon = styled.div`
   position: absolute;
   left: 12px;
-  color: #6b7280;
   z-index: 1;
+  font-size: 1rem;
+  color: #795548; /* Moca: Medium Brown */
 `;
 
 const SearchInput = styled.input`
   width: 100%;
   padding: 12px 12px 12px 40px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  border-radius: 12px;
+  font-size: 0.9rem;
+  background: white;
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #a47551; /* Moca: Primary */
+    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.1); /* Moca: Shadow */
   }
 `;
 
-const FilterGroup = styled.div`
-  display: flex;
+const FilterRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
 `;
 
@@ -725,168 +691,266 @@ const FilterContainer = styled.div`
 const FilterIcon = styled.div`
   position: absolute;
   left: 12px;
-  color: #6b7280;
   z-index: 1;
+  font-size: 1rem;
+  color: #795548; /* Moca: Medium Brown */
 `;
 
 const FilterSelect = styled.select`
+  width: 100%;
   padding: 12px 12px 12px 40px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  border-radius: 12px;
+  font-size: 0.9rem;
   background: white;
   cursor: pointer;
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #a47551; /* Moca: Primary */
+    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.1); /* Moca: Shadow */
   }
 `;
 
-const LoadingMessage = styled.div`
-  text-align: center;
-  padding: 40px;
-  color: #6b7280;
-`;
-
-const ErrorMessage = styled.div`
-  text-align: center;
-  padding: 40px;
-  color: #ef4444;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  margin: 20px 0;
-`;
-
-const VehicleGrid = styled.div`
+const ActionRow = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 24px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 `;
 
-const EmptyMessage = styled.div`
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 60px 20px;
-  color: #6b7280;
-  font-size: 16px;
+const AddButton = styled.button`
+  padding: 12px 16px;
+  background: #a47551; /* Moca: Primary */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #795548; /* Moca: Medium Brown */
+    transform: translateY(-1px);
+  }
+`;
+
+const RefreshButton = styled.button`
+  padding: 12px 16px;
+  background: #f5f1ed; /* Moca: Light Brown BG */
+  color: #5d4037; /* Moca: Dark Brown */
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #e7e0d9; /* Moca: Beige Border */
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const SkeletonCard = styled.div`
+  height: 150px;
+  background: linear-gradient(
+    90deg,
+    #f5f1ed 25%,
+    #e7e0d9 50%,
+    #f5f1ed 75%
+  ); /* Moca: Light Colors */
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 16px;
+
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+`;
+
+const VehicleList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 
 const VehicleCard = styled.div`
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  box-shadow: 0 4px 12px rgba(164, 117, 81, 0.08); /* Moca: Shadow */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 20px rgba(164, 117, 81, 0.15); /* Moca: Shadow */
   }
 `;
 
-const VehicleImage = styled.img`
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  background: #f3f4f6;
+const CardHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
 `;
 
 const VehicleInfo = styled.div`
-  padding: 20px;
+  flex: 1;
 `;
 
-const VehicleHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-`;
-
-const VehicleName = styled.h3`
-  margin: 0;
-  font-size: 18px;
+const VehicleName = styled.div`
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #5d4037; /* Moca: Dark Brown */
+  margin-bottom: 4px;
 `;
 
-const VehicleDetails = styled.div`
-  margin-bottom: 16px;
+const VehicleNumber = styled.div`
+  font-size: 0.9rem;
+  color: #795548; /* Moca: Medium Brown */
+  margin-bottom: 4px;
+  font-weight: 500;
 `;
 
-const DetailRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-`;
-
-const DetailIcon = styled.div`
-  color: #6b7280;
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-`;
-
-const DetailText = styled.span`
-  color: #4b5563;
-  font-size: 14px;
-`;
-
-const PriceRow = styled.div`
-  margin-top: 12px;
-`;
-
-const PriceText = styled.span`
-  color: #059669;
-  font-size: 16px;
-  font-weight: 600;
+const VehicleType = styled.div`
+  font-size: 0.85rem;
+  color: #a47551; /* Moca: Primary */
+  font-weight: 500;
 `;
 
 const StatusBadge = styled.span`
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
   background: ${(props) => props.color}20;
   color: ${(props) => props.color};
   border: 1px solid ${(props) => props.color}40;
 `;
 
+const PriceInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f5f1ed; /* Moca: Light Brown BG */
+  border-radius: 12px;
+`;
+
+const PriceIcon = styled.div`
+  font-size: 1rem;
+`;
+
+const Price = styled.div`
+  font-size: 1rem;
+  color: #a47551; /* Moca: Primary */
+  font-weight: 700;
+`;
+
 const ActionButtons = styled.div`
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 `;
 
 const ActionButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  flex: 1;
-  height: 36px;
-  padding: 0 12px;
+  padding: 10px 12px;
   border: none;
-  border-radius: 6px;
-  background: ${(props) => props.color || '#6b7280'};
-  color: white;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 80px;
+
+  background: ${(props) => {
+    if (props.primary) return '#a47551'; /* Moca: Primary */
+    if (props.danger) return '#ef4444';
+    return '#f5f1ed'; /* Moca: Light Brown BG */
+  }};
+
+  color: ${(props) => {
+    if (props.primary || props.danger) return 'white';
+    return '#5d4037'; /* Moca: Dark Brown */
+  }};
+
+  border: 1px solid
+    ${(props) => {
+      if (props.primary) return '#a47551'; /* Moca: Primary */
+      if (props.danger) return '#ef4444';
+      return '#e7e0d9'; /* Moca: Beige Border */
+    }};
 
   &:hover {
-    opacity: 0.8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(164, 117, 81, 0.2); /* Moca: Shadow */
+
+    ${(props) =>
+      !props.primary &&
+      !props.danger &&
+      `
+      background: #e7e0d9;  /* Moca: Beige Border */
+    `}
   }
 
-  svg {
-    width: 14px;
-    height: 14px;
+  &:active {
+    transform: translateY(0);
   }
+`;
+
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+`;
+
+const EmptyText = styled.div`
+  font-size: 1rem;
+  color: #795548; /* Moca: Medium Brown */
+`;
+
+const ErrorMessage = styled.div`
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #fecaca;
+  font-size: 0.9rem;
+  text-align: center;
 `;
 
 const Modal = styled.div`
@@ -900,15 +964,17 @@ const Modal = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 16px;
 `;
 
 const ModalContent = styled.div`
   background: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 600px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(164, 117, 81, 0.2); /* Moca: Shadow */
 `;
 
 const ModalHeader = styled.div`
@@ -916,12 +982,15 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e7e0d9; /* Moca: Beige Border */
+  background: #f5f1ed; /* Moca: Light Brown BG */
+`;
 
-  h3 {
-    margin: 0;
-    color: #1f2937;
-  }
+const ModalTitle = styled.h3`
+  margin: 0;
+  color: #5d4037; /* Moca: Dark Brown */
+  font-size: 1.1rem;
+  font-weight: 700;
 `;
 
 const CloseButton = styled.button`
@@ -929,10 +998,14 @@ const CloseButton = styled.button`
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #6b7280;
+  color: #795548; /* Moca: Medium Brown */
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
 
   &:hover {
-    color: #374151;
+    color: #5d4037; /* Moca: Dark Brown */
+    background: #e7e0d9; /* Moca: Beige Border */
   }
 `;
 
@@ -940,18 +1013,9 @@ const ModalBody = styled.div`
   padding: 24px;
 `;
 
-const VehicleImageLarge = styled.img`
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  background: #f3f4f6;
-`;
-
 const DetailGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
 `;
 
@@ -962,100 +1026,82 @@ const DetailItem = styled.div`
 `;
 
 const DetailLabel = styled.span`
-  font-size: 12px;
-  color: #6b7280;
+  font-size: 0.75rem;
+  color: #795548; /* Moca: Medium Brown */
   font-weight: 500;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const DetailValue = styled.span`
-  font-size: 14px;
-  color: #1f2937;
+  font-size: 0.9rem;
+  color: #5d4037; /* Moca: Dark Brown */
   font-weight: 500;
 `;
 
-const FormGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
-`;
-
-const FormItem = styled.div`
+const EditForm = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
+`;
+
+const FormField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 `;
 
 const FormLabel = styled.label`
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #5d4037; /* Moca: Dark Brown */
 `;
 
 const FormInput = styled.input`
   padding: 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.9rem;
+  background: white;
+  color: #5d4037; /* Moca: Dark Brown */
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #a47551; /* Moca: Primary */
+    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.1); /* Moca: Shadow */
   }
 `;
 
 const FormSelect = styled.select`
   padding: 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.9rem;
   background: white;
+  color: #5d4037; /* Moca: Dark Brown */
+  cursor: pointer;
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #a47551; /* Moca: Primary */
+    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.1); /* Moca: Shadow */
   }
 `;
 
-const FormActions = styled.div`
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-`;
-
-const CancelButton = styled.button`
-  padding: 12px 24px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: white;
-  color: #374151;
-  cursor: pointer;
-  font-size: 14px;
-
-  &:hover {
-    background: #f9fafb;
-  }
-`;
-
-const SubmitButton = styled.button`
-  padding: 12px 24px;
+const SaveButton = styled.button`
+  padding: 12px 16px;
+  background: #a47551; /* Moca: Primary */
+  color: white;
   border: none;
   border-radius: 8px;
-  background: ${(props) => (props.disabled ? '#d1d5db' : '#10b981')};
-  color: white;
-  cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
-  font-size: 14px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  margin-top: 8px;
 
   &:hover {
-    background: ${(props) => (props.disabled ? '#d1d5db' : '#059669')};
+    background: #795548; /* Moca: Medium Brown */
+    transform: translateY(-1px);
   }
 `;
-
-const EditForm = styled.div`
-  margin-top: 16px;
-`;
-
-export default AdminVehicleManagement;
