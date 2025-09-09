@@ -23,7 +23,7 @@ const ChatbotWidget = () => {
           role: "assistant",
           text:
             "안녕하세요. MOCA 고객지원 챗봇입니다.\n" +
-            "예약/변경, 결제/환불, 차량/보험, 계정/로그인 관련 문의를 도와드립니다.",
+            "무엇을 도와드릴까요?",
         },
       ]);
       welcomedRef.current = true;
