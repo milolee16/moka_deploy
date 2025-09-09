@@ -5,6 +5,7 @@ import com.moca.app.login.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -51,6 +52,9 @@ public class SecurityConfig {
                         // 인증된 사용자만
                         .requestMatchers("/api/users/profile").authenticated()
 
+                        .requestMatchers(HttpMethod.GET, "/api/cars", "/api/cars/*").permitAll()
+
+                        .requestMatchers("/api/cars/admin/**").hasRole("ADMIN")
                         // 나머지는 허용
                         .anyRequest().permitAll()
                 )

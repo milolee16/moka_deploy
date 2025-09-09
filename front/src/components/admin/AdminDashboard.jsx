@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import RentalAdminDashboard from './RentalAdminDashboard.jsx';
 import AdminReservationManagement from './AdminReservationManagement.jsx';
 import AdminUserManagement from './AdminUserManagement.jsx'; // 새로 추가
+import AdminVehicleManagement from './AdminVehicleManagement.jsx';
 
 // 아직 만들지 않은 페이지를 위한 임시 컴포넌트
 const Placeholder = ({ title }) => (
@@ -30,9 +31,9 @@ function AdminDashboard() {
         <Routes>
           <Route index element={<RentalAdminDashboard />} />
           <Route path="reservations" element={<AdminReservationManagement />} />
-          <Route path="users" element={<AdminUserManagement />} />{' '}
+          <Route path="users" element={<AdminUserManagement />} />
+          <Route path="vehicles" element={<AdminVehicleManagement />} />{' '}
           {/* 새로 추가 */}
-          <Route path="vehicles" element={<Placeholder title="차량 관리" />} />
         </Routes>
       </Content>
     </DashboardContainer>
