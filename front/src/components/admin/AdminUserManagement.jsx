@@ -286,7 +286,7 @@ const AdminUserManagement = () => {
 
               <ActionButtons>
                 <ActionButton onClick={() => viewUserDetails(user)}>
-                  📄 상세
+                  상세
                 </ActionButton>
                 <ActionButton
                   primary
@@ -295,10 +295,10 @@ const AdminUserManagement = () => {
                     setEditingRole(true);
                   }}
                 >
-                  ✏️ 권한수정
+                  권한수정
                 </ActionButton>
                 <ActionButton danger onClick={() => deleteUser(user.userId)}>
-                  🗑️ 삭제
+                  삭제
                 </ActionButton>
               </ActionButtons>
             </UserCard>

@@ -73,56 +73,71 @@ public class NotificationService {
         String userId = reservation.getUserId();
         Long reservationId = reservation.getId();
 
-        // 1. 예약 확정 알림 (즉시)
-        createAndSendImmediateNotification(
-                userId,
-                Notification.NotificationType.RESERVATION_CONFIRMED,
-                "예약이 확정되었습니다!",
-                String.format("차량 대여 예약이 성공적으로 완료되었습니다. 예약일: %s",
-                        reservation.getDate().toString()),
-                reservationId
-        );
+        log.info("예약 알림 생성 시작: reservationId={}, userId={}", reservationId, userId);
 
-        // 2. 24시간 전 알림 (스케줄)
-        LocalDateTime reminderTime24h = LocalDateTime.from(reservation.getTime().minusHours(24));
-        if (reminderTime24h.isAfter(LocalDateTime.now())) {
-            createScheduledNotification(
+        try {
+            // 1. 예약 확정 알림 (즉시)
+            createAndSendImmediateNotification(
                     userId,
-                    Notification.NotificationType.REMINDER_24H,
-                    "내일 차량 대여 예정입니다",
-                    String.format("예약하신 차량 대여가 내일(%s)입니다. 준비해주세요!",
-                            reservation.getDate().toString()),
-                    reservationId,
-                    reminderTime24h
+                    Notification.NotificationType.RESERVATION_CONFIRMED,
+                    "예약이 확정되었습니다!",
+                    String.format("차량 대여 예약이 성공적으로 완료되었습니다. 예약일: %s %s",
+                            reservation.getDate().toString(),
+                            reservation.getTime().toString()),
+                    reservationId
             );
-        }
 
-        // 3. 1시간 전 알림 (스케줄)
-        LocalDateTime reminderTime1h = LocalDateTime.from(reservation.getTime().minusHours(1));
-        if (reminderTime1h.isAfter(LocalDateTime.now())) {
-            createScheduledNotification(
-                    userId,
-                    Notification.NotificationType.REMINDER_1H,
-                    "곧 차량 대여 시간입니다",
-                    String.format("1시간 후 차량 대여 예정입니다. 대여 지점으로 이동해주세요."),
-                    reservationId,
-                    reminderTime1h
-            );
-        }
+            // 2. 24시간 전 알림 (스케줄)
+            LocalDateTime reservationDateTime = LocalDateTime.of(reservation.getDate(), reservation.getTime());
+            LocalDateTime reminderTime24h = reservationDateTime.minusHours(24);
 
-        // 4. 반납 알림 (반납 1시간 전)
-        if (reservation.getReturnTime() != null) {
-            LocalDateTime returnReminderTime = LocalDateTime.from(reservation.getReturnTime().minusHours(1));
-            if (returnReminderTime.isAfter(LocalDateTime.now())) {
+            if (reminderTime24h.isAfter(LocalDateTime.now())) {
                 createScheduledNotification(
                         userId,
-                        Notification.NotificationType.RETURN_REMINDER,
-                        "차량 반납 시간이 다가옵니다",
-                        String.format("1시간 후 차량 반납 예정입니다. 반납 준비를 해주세요."),
+                        Notification.NotificationType.REMINDER_24H,
+                        "내일 차량 대여 예정입니다",
+                        String.format("예약하신 차량 대여가 내일(%s)입니다. 준비해주세요!",
+                                reservation.getDate().toString()),
                         reservationId,
-                        returnReminderTime
+                        reminderTime24h
                 );
             }
+
+            // 3. 1시간 전 알림 (스케줄)
+            LocalDateTime reminderTime1h = reservationDateTime.minusHours(1);
+            if (reminderTime1h.isAfter(LocalDateTime.now())) {
+                createScheduledNotification(
+                        userId,
+                        Notification.NotificationType.REMINDER_1H,
+                        "곧 차량 대여 시간입니다",
+                        "1시간 후 차량 대여 예정입니다. 대여 지점으로 이동해주세요.",
+                        reservationId,
+                        reminderTime1h
+                );
+            }
+
+            // 4. 반납 알림 (반납 1시간 전)
+            if (reservation.getReturnDate() != null && reservation.getReturnTime() != null) {
+                LocalDateTime returnDateTime = LocalDateTime.of(reservation.getReturnDate(), reservation.getReturnTime());
+                LocalDateTime returnReminderTime = returnDateTime.minusHours(1);
+
+                if (returnReminderTime.isAfter(LocalDateTime.now())) {
+                    createScheduledNotification(
+                            userId,
+                            Notification.NotificationType.RETURN_REMINDER,
+                            "차량 반납 시간이 다가옵니다",
+                            "1시간 후 차량 반납 예정입니다. 반납 준비를 해주세요.",
+                            reservationId,
+                            returnReminderTime
+                    );
+                }
+            }
+
+            log.info("예약 알림 생성 완료: reservationId={}, userId={}", reservationId, userId);
+
+        } catch (Exception e) {
+            log.error("예약 알림 생성 중 오류: reservationId={}, error={}", reservationId, e.getMessage(), e);
+            throw e;
         }
     }
 

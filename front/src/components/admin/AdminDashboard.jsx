@@ -20,11 +20,11 @@ function AdminDashboard() {
         <NavTitle>MOCA 관리자</NavTitle>
         <TabNavigation>
           <StyledNavLink to="/admin" end>
-            📊 대시보드
+            대시보드
           </StyledNavLink>
-          <StyledNavLink to="/admin/reservations">📅 예약관리</StyledNavLink>
-          <StyledNavLink to="/admin/users">👥 사용자</StyledNavLink>
-          <StyledNavLink to="/admin/vehicles">🚗 차량관리</StyledNavLink>
+          <StyledNavLink to="/admin/reservations">예약관리</StyledNavLink>
+          <StyledNavLink to="/admin/users">사용자</StyledNavLink>
+          <StyledNavLink to="/admin/vehicles">차량관리</StyledNavLink>
         </TabNavigation>
       </MobileNav>
 

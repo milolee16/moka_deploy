@@ -54,25 +54,6 @@ const AdminVehicleManagement = () => {
     }
   };
 
-  // 차량 타입별 아이콘
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'SUV':
-      case 'VAN':
-        return '🚙';
-      case 'EV':
-        return '⚡';
-      case 'COMPACT':
-        return '🚗';
-      case 'MIDSIZE':
-        return '🚘';
-      case 'FULLSIZE':
-        return '🚙';
-      default:
-        return '🚗';
-    }
-  };
-
   // 가격 포맷팅 (기존과 동일)
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ko-KR').format(price) + '원';
@@ -319,7 +300,6 @@ const AdminVehicleManagement = () => {
                   <VehicleName>{vehicle.carName}</VehicleName>
                   <VehicleNumber>{vehicle.carNumber}</VehicleNumber>
                   <VehicleType>
-                    {getTypeIcon(vehicle.vehicleTypeCode)}{' '}
                     {
                       typeOptions.find(
                         (t) => t.value === vehicle.vehicleTypeCode
@@ -333,13 +313,12 @@ const AdminVehicleManagement = () => {
               </CardHeader>
 
               <PriceInfo>
-                <PriceIcon>💰</PriceIcon>
                 <Price>{formatPrice(vehicle.rentPricePer10min)} / 10분</Price>
               </PriceInfo>
 
               <ActionButtons>
                 <ActionButton onClick={() => viewVehicleDetails(vehicle)}>
-                  📄 상세
+                  상세
                 </ActionButton>
                 <ActionButton
                   primary
@@ -349,10 +328,10 @@ const AdminVehicleManagement = () => {
                     setShowModal(true);
                   }}
                 >
-                  ✏️ 수정
+                  수정
                 </ActionButton>
                 <ActionButton danger onClick={() => deleteVehicle(vehicle.id)}>
-                  🗑️ 삭제
+                  삭제
                 </ActionButton>
               </ActionButtons>
             </VehicleCard>
@@ -489,7 +468,6 @@ const AdminVehicleManagement = () => {
                   <DetailItem>
                     <DetailLabel>차량타입</DetailLabel>
                     <DetailValue>
-                      {getTypeIcon(selectedVehicle.vehicleTypeCode)}{' '}
                       {
                         typeOptions.find(
                           (t) => t.value === selectedVehicle.vehicleTypeCode
