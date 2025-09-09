@@ -297,7 +297,6 @@ const AdminReservationManagement = () => {
               </CardHeader>
 
               <VehicleInfo>
-                <VehicleIcon>🚗</VehicleIcon>
                 <VehicleDetails>
                   <VehicleName>{reservation.car?.carName || '-'}</VehicleName>
                   <PassengerCount>
@@ -307,7 +306,6 @@ const AdminReservationManagement = () => {
               </VehicleInfo>
 
               <DateInfo>
-                <DateIcon>📅</DateIcon>
                 <DateDetails>
                   <DateLabel>대여</DateLabel>
                   <DateValue>
@@ -320,7 +318,6 @@ const AdminReservationManagement = () => {
               </DateInfo>
 
               <DateInfo>
-                <DateIcon>🔚</DateIcon>
                 <DateDetails>
                   <DateLabel>반납</DateLabel>
                   <DateValue>
@@ -333,7 +330,6 @@ const AdminReservationManagement = () => {
               </DateInfo>
 
               <PriceInfo>
-                <PriceIcon>💰</PriceIcon>
                 <Price>{formatPrice(reservation.totalAmount)}</Price>
               </PriceInfo>
 
@@ -341,7 +337,7 @@ const AdminReservationManagement = () => {
                 <ActionButton
                   onClick={() => viewReservationDetails(reservation.id)}
                 >
-                  📄 상세
+                  상세
                 </ActionButton>
                 <ActionButton
                   primary
@@ -350,13 +346,13 @@ const AdminReservationManagement = () => {
                     setEditingStatus(true);
                   }}
                 >
-                  ✏️ 수정
+                  수정
                 </ActionButton>
                 <ActionButton
                   danger
                   onClick={() => deleteReservation(reservation.id)}
                 >
-                  🗑️ 삭제
+                  삭제
                 </ActionButton>
               </ActionButtons>
             </ReservationCard>
