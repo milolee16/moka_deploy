@@ -19,6 +19,7 @@ import java.time.LocalTime;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -103,6 +104,14 @@ public class ReservationService {
         }
 
         return savedReservation;
+    }
+
+    public List<Long> getReservedCarIds(LocalDate date) {
+        List<Reservation> reservations = reservationRepository.findByDate(date);
+        return reservations.stream()
+                .map(Reservation::getCarId)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     @Transactional

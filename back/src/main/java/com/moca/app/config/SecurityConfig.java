@@ -25,6 +25,8 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -46,6 +48,11 @@ public class SecurityConfig {
                         // 마이페이지 관련 API는 인증 필요
                         .requestMatchers("/api/my-page/**").authenticated()
 
+<<<<<<< HEAD
+                        // 사용자 정보 관련 API는 인증 필요
+                        .requestMatchers("/api/user/**").authenticated()
+
+=======
                         // 관리자 전용
                         .requestMatchers("/api/users/admin/**").hasRole("ADMIN")
 
@@ -55,6 +62,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/cars", "/api/cars/*").permitAll()
 
                         .requestMatchers("/api/cars/admin/**").hasRole("ADMIN")
+>>>>>>> 50432643581ea9348fd2fef62136181f1ffb12e5
                         // 나머지는 허용
                         .anyRequest().permitAll()
                 )

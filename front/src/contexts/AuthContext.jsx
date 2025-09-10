@@ -150,7 +150,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // 회원가입 함수
-  const register = async (userId, password, userName) => {
+  const register = async (userId, password, userName, birthDate, phoneNumber) => {
     setLoading(true);
     try {
       const response = await fetch('http://localhost:8080/api/auth/register', {
@@ -162,6 +162,8 @@ export const AuthProvider = ({ children }) => {
           userId: userId,
           password: password,
           userName: userName,
+          birthDate: birthDate,
+          phoneNumber: phoneNumber,
         }),
       });
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
@@ -8,20 +8,70 @@ const SignupPage = () => {
         userId: "",
         password: "",
         confirmPassword: "",
-        userName: ""
+        userName: "",
+        birthDate: "",
+        phoneNumber: ""
     });
     const [userIdChecked, setUserIdChecked] = useState(false);
     const [userIdAvailable, setUserIdAvailable] = useState(false);
+    const [ageValidation, setAgeValidation] = useState({ isValid: true, message: '' });
     const { register, checkUserId, loading } = useAuth();
+
+    const validateAge = useCallback((birthDate) => {
+        if (birthDate.length !== 6) {
+            setAgeValidation({ isValid: true, message: '' });
+            return true;
+        }
+
+        let year = parseInt(birthDate.substring(0, 2), 10);
+        const month = parseInt(birthDate.substring(2, 4), 10);
+        const day = parseInt(birthDate.substring(4, 6), 10);
+        year = year >= 30 ? 1900 + year : 2000 + year;
+
+        // Check if the date is valid
+        const generatedDate = new Date(year, month - 1, day);
+        if (generatedDate.getFullYear() !== year || generatedDate.getMonth() !== month - 1 || generatedDate.getDate() !== day) {
+            setAgeValidation({ isValid: false, message: '유효하지 않은 생년월일입니다.' });
+            return false;
+        }
+
+        const today = new Date();
+        const birth = generatedDate;
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+
+        if (age < 18) {
+            setAgeValidation({ isValid: false, message: '만 18세 미만은 회원가입이 불가능합니다.' });
+            return false;
+        } else {
+            setAgeValidation({ isValid: true, message: '' });
+            return true;
+        }
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
 
-        // ID가 변경되면 중복 체크 상태를 초기화
+        if (name === 'phoneNumber') {
+            const cleaned = value.replace(/\D/g, '');
+            let formatted = cleaned;
+            if (cleaned.length > 3 && cleaned.length <= 7) {
+                formatted = `${cleaned.slice(0, 3)}-${cleaned.slice(3)}`;
+            } else if (cleaned.length > 7) {
+                formatted = `${cleaned.slice(0, 3)}-${cleaned.slice(3, 7)}-${cleaned.slice(7, 11)}`;
+            }
+            setFormData(prev => ({ ...prev, [name]: formatted }));
+        } else if (name === 'birthDate') {
+            const cleaned = value.replace(/\D/g, '');
+            setFormData(prev => ({ ...prev, [name]: cleaned }));
+            validateAge(cleaned);
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+
         if (name === 'userId') {
             setUserIdChecked(false);
             setUserIdAvailable(false);
@@ -33,12 +83,10 @@ const SignupPage = () => {
             alert("아이디를 입력해주세요.");
             return;
         }
-
         if (formData.userId.trim().length < 4) {
             alert("아이디는 4자 이상이어야 합니다.");
             return;
         }
-
         try {
             const result = await checkUserId(formData.userId.trim());
             setUserIdChecked(true);
@@ -52,47 +100,45 @@ const SignupPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // 입력값 검증
-        if (!formData.userId.trim()) {
-            alert("아이디를 입력해주세요.");
-            return;
-        }
-        if (!formData.password.trim()) {
-            alert("비밀번호를 입력해주세요.");
-            return;
-        }
-        if (!formData.confirmPassword.trim()) {
-            alert("비밀번호 확인을 입력해주세요.");
-            return;
-        }
-        if (!formData.userName.trim()) {
-            alert("이름을 입력해주세요.");
-            return;
-        }
+        const { userId, password, confirmPassword, userName, birthDate, phoneNumber } = formData;
 
-        // 아이디 중복 체크 확인
+        if (!userId.trim() || !password.trim() || !confirmPassword.trim() || !userName.trim() || !birthDate.trim() || !phoneNumber.trim()) {
+            alert("모든 필드를 입력해주세요.");
+            return;
+        }
+        if (!ageValidation.isValid) {
+            alert(ageValidation.message);
+            return;
+        }
+        if (birthDate.length !== 6) {
+            alert("생년월일은 6자리로 입력해주세요.");
+            return;
+        }
         if (!userIdChecked || !userIdAvailable) {
             alert("아이디 중복 확인을 해주세요.");
             return;
         }
-
-        // 비밀번호 일치 확인
-        if (formData.password !== formData.confirmPassword) {
+        if (password !== confirmPassword) {
             alert("비밀번호가 일치하지 않습니다.");
             return;
         }
-
-        // 비밀번호 길이 확인
-        if (formData.password.length < 4) {
+        if (password.length < 4) {
             alert("비밀번호는 4자 이상이어야 합니다.");
             return;
         }
 
-        // 회원가입 시도
+        let year = parseInt(birthDate.substring(0, 2), 10);
+        const month = birthDate.substring(2, 4);
+        const day = birthDate.substring(4, 6);
+        year = year >= 30 ? 1900 + year : 2000 + year;
+        const fullBirthDateStr = `${year}-${month}-${day}`;
+
         await register(
-            formData.userId.trim(),
-            formData.password,
-            formData.userName.trim()
+            userId.trim(),
+            password,
+            userName.trim(),
+            fullBirthDateStr,
+            phoneNumber.trim()
         );
     };
 
@@ -132,6 +178,34 @@ const SignupPage = () => {
                     name="userName"
                     placeholder="이름을 입력하세요"
                     value={formData.userName}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    required
+                />
+
+                <InputGroup>
+                    <Input
+                        type="text"
+                        name="birthDate"
+                        placeholder="생년월일 6자리를 입력해주세요 (예: 990101)"
+                        value={formData.birthDate}
+                        onChange={handleInputChange}
+                        maxLength="6"
+                        disabled={loading}
+                        required
+                    />
+                    {!ageValidation.isValid && (
+                        <CheckMessage $available={false}>
+                            {ageValidation.message}
+                        </CheckMessage>
+                    )}
+                </InputGroup>
+
+                <Input
+                    type="tel"
+                    name="phoneNumber"
+                    placeholder="휴대폰 번호 (010-1234-5678)"
+                    value={formData.phoneNumber}
                     onChange={handleInputChange}
                     disabled={loading}
                     required
