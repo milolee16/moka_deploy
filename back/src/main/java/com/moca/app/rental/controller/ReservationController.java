@@ -11,6 +11,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,6 +40,13 @@ public class ReservationController {
         // 엔티티 -> 응답 DTO 변환
         ReservationResponseDto body = ReservationResponseDto.from(created);
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
+
+    /** 예약된 차량 ID 목록 조회 */
+    @GetMapping("/reserved-cars")
+    public ResponseEntity<List<Long>> getReservedCarIds(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<Long> reservedCarIds = reservationService.getReservedCarIds(date);
+        return ResponseEntity.ok(reservedCarIds);
     }
 
     /** 반납 완료 처리 */

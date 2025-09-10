@@ -56,7 +56,11 @@ const PaymentsAndLicenses = () => {
 
     useEffect(() => {
         if (!authLoading) {
-            fetchInfo();
+            if (user) {
+                fetchInfo();
+            } else {
+                setLoading(false);
+            }
         }
     }, [user, authLoading]);
 

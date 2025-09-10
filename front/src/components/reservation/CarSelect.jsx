@@ -14,6 +14,9 @@ const CarSelect = ({ locationName = "반얀트리 호텔" }) => {
     const [brandFilter, setBrandFilter] = useState('');
     const [typeFilter, setTypeFilter] = useState('');
     const [sortOrder, setSortOrder] = useState('');
+    const [reservedCarIds, setReservedCarIds] = useState([]);
+
+    const info = useMemo(() => location.state || {}, [location.state]);
 
     useEffect(() => {
         const fetchCars = async () => {
@@ -56,7 +59,26 @@ const CarSelect = ({ locationName = "반얀트리 호텔" }) => {
         fetchCars();
     }, []);
 
-    const info = useMemo(() => location.state || {}, [location.state]);
+    useEffect(() => {
+        const fetchReservedCars = async () => {
+            if (!info.startDate) return;
+
+            const date = new Date(info.startDate).toISOString().split('T')[0];
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/reservations/reserved-cars?date=${date}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch reserved cars');
+                }
+                const data = await response.json();
+                setReservedCarIds(data);
+            } catch (error) {
+                console.error("Failed to fetch reserved car IDs:", error);
+            }
+        };
+
+        fetchReservedCars();
+    }, [info.startDate]);
 
     const handleSelectCar = (car) => {
         navigate("/insurance", {
@@ -65,7 +87,7 @@ const CarSelect = ({ locationName = "반얀트리 호텔" }) => {
     };
 
     // 필터링과 정렬 로직
-    const filteredAndSortedCars = useMemo(() => {
+    const { availableCars, unavailableCars } = useMemo(() => {
         let result = [...cars];
 
         // 브랜드 필터
@@ -85,8 +107,11 @@ const CarSelect = ({ locationName = "반얀트리 호텔" }) => {
             result.sort((a, b) => b.rentPricePer10min - a.rentPricePer10min);
         }
 
-        return result;
-    }, [cars, brandFilter, typeFilter, sortOrder]);
+        const available = result.filter(car => !reservedCarIds.includes(car.id));
+        const unavailable = result.filter(car => reservedCarIds.includes(car.id));
+
+        return { availableCars: available, unavailableCars: unavailable };
+    }, [cars, brandFilter, typeFilter, sortOrder, reservedCarIds]);
 
     // 필터 옵션 생성
     const carBrands = useMemo(() => [...new Set(cars.map(car => car.brand))], [cars]);
@@ -121,7 +146,7 @@ const CarSelect = ({ locationName = "반얀트리 호텔" }) => {
             </FilterContainer>
 
             <List>
-                {filteredAndSortedCars.map((car) => (
+                {availableCars.map((car) => (
                     <Item key={car.id} onClick={() => handleSelectCar(car)}>
                         <Thumb>
                             <img src={car.imageUrl} alt={car.carName} />
@@ -135,6 +160,26 @@ const CarSelect = ({ locationName = "반얀트리 호텔" }) => {
                         </NextIcon>
                     </Item>
                 ))}
+
+                {unavailableCars.length > 0 && (
+                    <>
+                        <Separator><span>예약 불가 차량</span></Separator>
+                        {unavailableCars.map((car) => (
+                            <Item key={car.id} disabled={true}>
+                                <Thumb>
+                                    <img src={car.imageUrl} alt={car.carName} />
+                                </Thumb>
+                                <Meta>
+                                    <CarName>{car.carName}</CarName>
+                                    <CarPrice>10분당 {car.rentPricePer10min.toLocaleString()}원</CarPrice>
+                                </Meta>
+                                <NextIcon>
+                                    <HiOutlineChevronRight size={22} />
+                                </NextIcon>
+                            </Item>
+                        ))}
+                    </>
+                )}
             </List>
         </Wrap>
     );
@@ -210,6 +255,26 @@ const List = styled.ul`
     padding: 0; margin: 0; list-style: none;
 `;
 
+const Separator = styled.div`
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 24px 8px 16px;
+    color: #adb5bd;
+    font-size: 13px;
+    font-weight: 600;
+
+    &::before, &::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    & > span {
+        padding: 0 12px;
+    }
+`;
+
 const Item = styled.li`
     display: grid;
     grid-template-columns: 130px 1fr auto;
@@ -224,6 +289,25 @@ const Item = styled.li`
     transition: transform .06s ease, box-shadow .12s ease;
     cursor: pointer;
     &:active { transform: scale(0.995); }
+
+    ${props => props.disabled && `
+        background: #f8f9fa; // very light grey
+        cursor: not-allowed;
+        box-shadow: none;
+
+        img {
+            filter: grayscale(80%);
+        }
+
+        ${CarName}, ${CarPrice} {
+            color: #ced4da; // light grey text
+        }
+
+        &:hover {
+            transform: none;
+            box-shadow: none;
+        }
+    `}
 `;
 
 const Thumb = styled.div`

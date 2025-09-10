@@ -69,6 +69,8 @@ public class AuthController {
         String userId = requestBody.get("userId");
         String password = requestBody.get("password");
         String userName = requestBody.get("userName");
+        String birthDate = requestBody.get("birthDate");
+        String phoneNumber = requestBody.get("phoneNumber");
 
         // 입력값 검증
         if (userId == null || userId.trim().isEmpty()) {
@@ -80,6 +82,12 @@ public class AuthController {
         if (userName == null || userName.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("사용자 이름이 필요합니다.");
         }
+        if (birthDate == null || birthDate.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("생년월일이 필요합니다.");
+        }
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("휴대폰 번호가 필요합니다.");
+        }
 
         // 기본적인 유효성 검사
         if (userId.trim().length() < 4) {
@@ -90,7 +98,7 @@ public class AuthController {
         }
 
         try {
-            String jwtToken = authService.register(userId.trim(), password, userName.trim());
+            String jwtToken = authService.register(userId.trim(), password, userName.trim(), birthDate.trim(), phoneNumber.trim());
             return ResponseEntity.ok(Map.of("accessToken", jwtToken));
 
         } catch (RuntimeException e) {
