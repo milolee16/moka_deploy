@@ -251,4 +251,46 @@ public class NotificationService {
             log.info("스케줄 알림 배치 처리 완료: {}개", pendingNotifications.size());
         }
     }
+
+    /**
+     * 사용자의 모든 알림 삭제
+     */
+    @Transactional
+    public void deleteAllNotifications(String userId) {
+        try {
+            notificationRepository.deleteAllByUserId(userId);
+            log.info("모든 알림 삭제 완료: userId={}", userId);
+        } catch (Exception e) {
+            log.error("모든 알림 삭제 중 오류: userId={}, error={}", userId, e.getMessage(), e);
+            throw new RuntimeException("알림 삭제 중 오류가 발생했습니다.", e);
+        }
+    }
+
+    /**
+     * 사용자의 읽은 알림만 삭제
+     */
+    @Transactional
+    public void deleteReadNotifications(String userId) {
+        try {
+            notificationRepository.deleteReadNotificationsByUserId(userId);
+            log.info("읽은 알림 삭제 완료: userId={}", userId);
+        } catch (Exception e) {
+            log.error("읽은 알림 삭제 중 오류: userId={}, error={}", userId, e.getMessage(), e);
+            throw new RuntimeException("읽은 알림 삭제 중 오류가 발생했습니다.", e);
+        }
+    }
+
+    /**
+     * 특정 알림 삭제
+     */
+    @Transactional
+    public void deleteNotification(Long notificationId) {
+        try {
+            notificationRepository.deleteById(notificationId);
+            log.info("알림 삭제 완료: notificationId={}", notificationId);
+        } catch (Exception e) {
+            log.error("알림 삭제 중 오류: notificationId={}, error={}", notificationId, e.getMessage(), e);
+            throw new RuntimeException("알림 삭제 중 오류가 발생했습니다.", e);
+        }
+    }
 }

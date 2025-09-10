@@ -52,6 +52,20 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findPendingScheduledNotifications(@Param("currentTime") LocalDateTime currentTime);
 
     /**
+     * 사용자의 모든 알림 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.userId = :userId")
+    void deleteAllByUserId(@Param("userId") String userId);
+
+    /**
+     * 사용자의 읽은 알림만 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.userId = :userId AND n.isRead = true")
+    void deleteReadNotificationsByUserId(@Param("userId") String userId);
+
+    /**
      * 생성일 기준으로 오래된 알림 삭제 (데이터 정리용)
      */
     @Modifying

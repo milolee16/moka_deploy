@@ -78,6 +78,58 @@ export const useNotifications = () => {
     }
   };
 
+  // 모든 알림 삭제
+  const deleteAllNotifications = async () => {
+    try {
+      await notificationService.deleteAllNotifications();
+
+      // 로컬 상태 업데이트
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('모든 알림 삭제 실패:', err);
+      throw err; // 컴포넌트에서 에러 처리할 수 있도록
+    }
+  };
+
+  // 읽은 알림만 삭제
+  const deleteReadNotifications = async () => {
+    try {
+      await notificationService.deleteReadNotifications();
+
+      // 로컬 상태 업데이트 - 읽지 않은 알림만 남김
+      setNotifications((prev) =>
+        prev.filter((notification) => !notification.isRead)
+      );
+    } catch (err) {
+      console.error('읽은 알림 삭제 실패:', err);
+      throw err;
+    }
+  };
+
+  // 특정 알림 삭제
+  const deleteNotification = async (notificationId) => {
+    try {
+      await notificationService.deleteNotification(notificationId);
+
+      // 로컬 상태 업데이트
+      setNotifications((prev) =>
+        prev.filter((notification) => notification.id !== notificationId)
+      );
+
+      // 삭제된 알림이 읽지 않은 상태였다면 읽지 않은 개수도 업데이트
+      const deletedNotification = notifications.find(
+        (n) => n.id === notificationId
+      );
+      if (deletedNotification && !deletedNotification.isRead) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error('알림 삭제 실패:', err);
+      throw err;
+    }
+  };
+
   // 초기 데이터 로드
   useEffect(() => {
     if (user) {
@@ -179,5 +231,8 @@ export const useNotifications = () => {
     refetch: fetchNotifications,
     markAsRead,
     markAllAsRead,
+    deleteAllNotifications,
+    deleteReadNotifications,
+    deleteNotification,
   };
 };

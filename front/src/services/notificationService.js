@@ -91,6 +91,72 @@ class NotificationService {
   }
 
   /**
+   * 모든 알림 삭제
+   */
+  async deleteAllNotifications() {
+    const token = localStorage.getItem('accessToken');
+
+    const response = await fetch(`${API_BASE_URL}/notifications/all`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('모든 알림 삭제에 실패했습니다.');
+    }
+
+    return await response.text();
+  }
+
+  /**
+   * 읽은 알림만 삭제
+   */
+  async deleteReadNotifications() {
+    const token = localStorage.getItem('accessToken');
+
+    const response = await fetch(`${API_BASE_URL}/notifications/read`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('읽은 알림 삭제에 실패했습니다.');
+    }
+
+    return await response.text();
+  }
+
+  /**
+   * 특정 알림 삭제
+   */
+  async deleteNotification(notificationId) {
+    const token = localStorage.getItem('accessToken');
+
+    const response = await fetch(
+      `${API_BASE_URL}/notifications/${notificationId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('알림 삭제에 실패했습니다.');
+    }
+
+    return await response.text();
+  }
+
+  /**
    * 알림 타입별 아이콘 반환
    */
   getNotificationIcon(type) {
