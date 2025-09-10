@@ -111,6 +111,76 @@ public class NotificationController {
         }
     }
 
+    /**
+     * 사용자의 모든 알림 삭제
+     */
+    @DeleteMapping("/all")
+    public ResponseEntity<?> deleteAllNotifications() {
+        String userId = extractUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        try {
+            notificationService.deleteAllNotifications(userId);
+            return ResponseEntity.ok("모든 알림이 삭제되었습니다.");
+        } catch (Exception e) {
+            log.error("모든 알림 삭제 실패: userId={}, error={}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("알림 삭제 중 오류가 발생했습니다.");
+        }
+    }
+
+    /**
+     * 사용자의 읽은 알림만 삭제
+     */
+    @DeleteMapping("/read")
+    public ResponseEntity<?> deleteReadNotifications() {
+        String userId = extractUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        try {
+            notificationService.deleteReadNotifications(userId);
+            return ResponseEntity.ok("읽은 알림이 삭제되었습니다.");
+        } catch (Exception e) {
+            log.error("읽은 알림 삭제 실패: userId={}, error={}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("읽은 알림 삭제 중 오류가 발생했습니다.");
+        }
+    }
+
+    /**
+     * 특정 알림 삭제
+     */
+    @DeleteMapping("/{notificationId}")
+    public ResponseEntity<?> deleteNotification(@PathVariable Long notificationId) {
+        String userId = extractUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        try {
+            // 먼저 해당 알림이 사용자의 것인지 확인
+            List<Notification> userNotifications = notificationService.getUserNotifications(userId);
+            boolean isOwner = userNotifications.stream()
+                    .anyMatch(notification -> notification.getId().equals(notificationId));
+
+            if (!isOwner) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("해당 알림에 대한 권한이 없습니다.");
+            }
+
+            notificationService.deleteNotification(notificationId);
+            return ResponseEntity.ok("알림이 삭제되었습니다.");
+        } catch (Exception e) {
+            log.error("알림 삭제 실패: notificationId={}, userId={}, error={}",
+                    notificationId, userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("알림 삭제 중 오류가 발생했습니다.");
+        }
+    }
+
     // ======== Private Helper Methods ========
 
     private String extractUserId() {
