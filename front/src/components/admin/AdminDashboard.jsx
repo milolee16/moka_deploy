@@ -4,6 +4,7 @@ import RentalAdminDashboard from './RentalAdminDashboard.jsx';
 import AdminReservationManagement from './AdminReservationManagement.jsx';
 import AdminUserManagement from './AdminUserManagement.jsx';
 import AdminVehicleManagement from './AdminVehicleManagement.jsx';
+import AutoMLDashboard from './AutoMLDashboard.jsx'; // ✅ AutoML 대시보드 import
 
 // 임시 컴포넌트
 const Placeholder = ({ title }) => (
@@ -25,6 +26,7 @@ function AdminDashboard() {
           <StyledNavLink to="/admin/reservations">예약관리</StyledNavLink>
           <StyledNavLink to="/admin/users">사용자</StyledNavLink>
           <StyledNavLink to="/admin/vehicles">차량관리</StyledNavLink>
+          <StyledNavLink to="/admin/automl">AutoML</StyledNavLink>
         </TabNavigation>
       </MobileNav>
 
@@ -34,6 +36,8 @@ function AdminDashboard() {
           <Route path="reservations" element={<AdminReservationManagement />} />
           <Route path="users" element={<AdminUserManagement />} />
           <Route path="vehicles" element={<AdminVehicleManagement />} />
+          <Route path="automl" element={<AutoMLDashboard />} />{' '}
+          {/* ✅ AutoML 라우트 추가 */}
         </Routes>
       </MobileContent>
     </MobileContainer>
@@ -42,7 +46,7 @@ function AdminDashboard() {
 
 export default AdminDashboard;
 
-// Moca Color Scheme Mobile-First Styled Components
+// 기존 스타일 컴포넌트들 (변경 없음)
 const MobileContainer = styled.div`
   min-height: 100vh;
   background: #f7f5f3; /* Moca: Light Background */
@@ -69,10 +73,30 @@ const NavTitle = styled.h1`
   letter-spacing: 1px;
 `;
 
+// ✅ 5개 탭을 위한 그리드 수정
 const TabNavigation = styled.nav`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, 1fr); /* 첫 번째 줄: 2개 */
+  grid-template-rows: repeat(3, auto); /* 3줄로 배치 */
   gap: 8px;
+
+  /* 5번째 탭(AutoML)을 중앙에 배치 */
+  & > *:nth-child(5) {
+    grid-column: 1 / -1; /* 전체 너비 사용 */
+    justify-self: center;
+    max-width: 200px;
+  }
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(5, 1fr); /* 데스크톱에서는 5개 가로 배치 */
+    grid-template-rows: auto;
+
+    & > *:nth-child(5) {
+      grid-column: auto;
+      justify-self: stretch;
+      max-width: none;
+    }
+  }
 `;
 
 const StyledNavLink = styled(NavLink)`
@@ -81,33 +105,39 @@ const StyledNavLink = styled(NavLink)`
   justify-content: center;
   padding: 12px 8px;
   color: #795548; /* Moca: Medium Brown */
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
   text-decoration: none;
-  border-radius: 12px;
   font-weight: 500;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-  background: #f5f1ed; /* Moca: Light Brown BG */
-  border: 2px solid transparent;
+  font-size: 14px;
+  transition: all 0.2s ease;
   text-align: center;
+  white-space: nowrap;
 
   &:hover {
-    background: #e7e0d9; /* Moca: Beige Border */
+    background: #f5f1ed; /* Moca: Light Brown BG */
     color: #5d4037; /* Moca: Dark Brown */
+    border-color: #e7e0d9; /* Moca: Beige Border */
   }
 
   &.active {
-    background: #a47551; /* Moca: Primary */
-    color: white;
-    border-color: #795548; /* Moca: Medium Brown */
-    box-shadow: 0 4px 12px rgba(164, 117, 81, 0.35); /* Moca: Shadow */
+    background: #a47551; /* Moca: Medium-Dark Brown */
+    color: #ffffff;
+    border-color: #8d5f3b; /* Moca: Darker Brown */
+    box-shadow: 0 2px 8px rgba(164, 117, 81, 0.3);
+  }
+
+  &:active {
+    transform: translateY(1px);
+    transition-duration: 0.05s;
   }
 `;
 
-const MobileContent = styled.main`
+const MobileContent = styled.div`
   flex: 1;
-  padding: 16px;
-  max-width: 100%;
-  overflow-x: hidden;
+  overflow-y: auto;
+  background: #f7f5f3; /* Moca: Light Background */
 `;
 
 const PlaceholderContainer = styled.div`
@@ -115,22 +145,16 @@ const PlaceholderContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
+  height: 60vh;
   text-align: center;
   color: #795548; /* Moca: Medium Brown */
-  background: white;
-  border-radius: 16px;
-  padding: 32px 16px;
-  margin: 16px 0;
-  border: 1px solid #e7e0d9; /* Moca: Beige Border */
 
   h2 {
-    margin-bottom: 8px;
     color: #5d4037; /* Moca: Dark Brown */
-    font-size: 1.2rem;
+    margin-bottom: 16px;
   }
 
   p {
-    font-size: 0.9rem;
+    color: #8d6e63; /* Moca: Light Brown */
   }
 `;
