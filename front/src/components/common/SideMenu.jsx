@@ -123,11 +123,20 @@ const MenuContainer = styled.div`
 
 const CloseButton = styled.button`
   align-self: flex-end;
-  background: none;
+  background: transparent;
   border: none;
   font-size: 24px;
   cursor: pointer;
   color: #5d4037;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
 `;
 
 const UserInfo = styled.div`
@@ -175,12 +184,17 @@ const LoginButton = styled(Link)`
   ${menuItemStyles}
   background: linear-gradient(135deg, #5d4037 0%, #795548 100%);
   color: #ffffff !important;
-  font-weight: 600;
-  margin: 8px 12px 8px 0;
-  border-radius: 12px;
-  padding: 16px 12px;
+  font-weight: 800;
+  margin: 8px 0;
+  border-radius: 999px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   box-shadow: 0 4px 12px rgba(93, 64, 55, 0.3);
   transition: all 0.2s ease;
+  text-align: center;
 
   &:hover {
     background: linear-gradient(135deg, #4a2c20 0%, #5d4037 100%);
@@ -191,7 +205,19 @@ const LoginButton = styled(Link)`
 
 const LogoutButton = styled.button`
   ${menuItemStyles}
+  height: 52px;
   margin-top: auto;
-  color: #ff4d4f;
-  font-weight: bold;
+  border-radius: 999px;
+  font-weight: 800;
+  color: #fff;
+  background-color: #ff4d4f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  text-align: center;
+
+  &:hover {
+    background-color: #d9363e;
+  }
 `;
