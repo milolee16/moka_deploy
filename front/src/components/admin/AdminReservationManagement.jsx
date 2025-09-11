@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import {
-  FiSearch,
-  FiFilter,
-  FiEdit,
-  FiTrash2,
-  FiEye,
-  FiRefreshCw,
-} from 'react-icons/fi';
 
 const AdminReservationManagement = () => {
   const [reservations, setReservations] = useState([]);
@@ -19,7 +11,7 @@ const AdminReservationManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingStatus, setEditingStatus] = useState(false);
 
-  // 예약 상태 옵션
+  // 예약 상태 옵션 (기존 API와 동일)
   const statusOptions = [
     { value: 'ALL', label: '전체' },
     { value: 'PENDING', label: '대기중' },
@@ -29,25 +21,25 @@ const AdminReservationManagement = () => {
     { value: 'CANCELLED', label: '취소' },
   ];
 
-  // 상태별 색상 매핑
+  // 상태별 색상 매핑 (Moca 테마)
   const getStatusColor = (status) => {
     switch (status) {
       case 'PENDING':
         return '#f59e0b';
       case 'CONFIRMED':
-        return '#10b981';
+        return '#a47551'; // Moca: Primary
       case 'IN_PROGRESS':
-        return '#3b82f6';
+        return '#10b981';
       case 'COMPLETED':
-        return '#6b7280';
+        return '#795548'; // Moca: Medium Brown
       case 'CANCELLED':
         return '#ef4444';
       default:
-        return '#6b7280';
+        return '#795548'; // Moca: Medium Brown
     }
   };
 
-  // 예약 목록 조회
+  // 예약 목록 조회 (기존 API 로직)
   const fetchReservations = async () => {
     setLoading(true);
     setError(null);
@@ -88,7 +80,7 @@ const AdminReservationManagement = () => {
     }
   };
 
-  // 예약 상태 변경
+  // 예약 상태 변경 (기존 API 로직)
   const updateReservationStatus = async (reservationId, newStatus) => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -127,7 +119,7 @@ const AdminReservationManagement = () => {
     }
   };
 
-  // 예약 삭제
+  // 예약 삭제 (기존 API 로직)
   const deleteReservation = async (reservationId) => {
     if (!confirm('정말로 이 예약을 삭제하시겠습니까?')) {
       return;
@@ -166,7 +158,7 @@ const AdminReservationManagement = () => {
     }
   };
 
-  // 예약 상세 조회
+  // 예약 상세 조회 (기존 API 로직)
   const viewReservationDetails = async (reservationId) => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -194,7 +186,7 @@ const AdminReservationManagement = () => {
     }
   };
 
-  // 검색 필터링
+  // 검색 필터링 (기존 로직)
   const filteredReservations = reservations.filter((reservation) => {
     const matchesSearch =
       searchTerm === '' ||
@@ -209,36 +201,51 @@ const AdminReservationManagement = () => {
     return matchesSearch;
   });
 
-  // 날짜 포맷팅
+  // 날짜 포맷팅 (기존 로직)
   const formatDateTime = (date, time) => {
     if (!date) return '-';
     return `${date} ${time || ''}`.trim();
   };
 
-  // 가격 포맷팅
+  // 가격 포맷팅 (기존 로직)
   const formatPrice = (amount) => {
     if (!amount) return '-';
     return new Intl.NumberFormat('ko-KR').format(amount) + '원';
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('ko-KR');
   };
 
   useEffect(() => {
     fetchReservations();
   }, [statusFilter]);
 
+  if (loading) {
+    return (
+      <MobileContainer>
+        <PageHeader>
+          <PageTitle>예약 관리</PageTitle>
+        </PageHeader>
+        <LoadingContainer>
+          {[...Array(4)].map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </LoadingContainer>
+      </MobileContainer>
+    );
+  }
+
   return (
-    <Container>
-      <Header>
-        <Title>예약 관리</Title>
-        <RefreshButton onClick={fetchReservations} disabled={loading}>
-          <FiRefreshCw /> 새로고침
-        </RefreshButton>
-      </Header>
+    <MobileContainer>
+      <PageHeader>
+        <PageTitle>예약 관리</PageTitle>
+        <TotalCount>총 {filteredReservations.length}건</TotalCount>
+      </PageHeader>
 
       <FilterSection>
         <SearchContainer>
-          <SearchIcon>
-            <FiSearch />
-          </SearchIcon>
+          <SearchIcon>🔍</SearchIcon>
           <SearchInput
             type="text"
             placeholder="사용자ID, 차량명, 지점명으로 검색..."
@@ -248,9 +255,7 @@ const AdminReservationManagement = () => {
         </SearchContainer>
 
         <FilterContainer>
-          <FilterIcon>
-            <FiFilter />
-          </FilterIcon>
+          <FilterIcon>📋</FilterIcon>
           <FilterSelect
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -262,108 +267,105 @@ const AdminReservationManagement = () => {
             ))}
           </FilterSelect>
         </FilterContainer>
+
+        <RefreshButton onClick={fetchReservations} disabled={loading}>
+          🔄 새로고침
+        </RefreshButton>
       </FilterSection>
 
-      {loading && <LoadingMessage>데이터를 불러오는 중...</LoadingMessage>}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {error && <ErrorMessage>⚠️ {error}</ErrorMessage>}
 
-      {!loading && !error && (
-        <TableContainer>
-          <Table>
-            <TableHeader>
-              <tr>
-                <th>예약번호</th>
-                <th>사용자ID</th>
-                <th>차량</th>
-                <th>대여지점</th>
-                <th>대여일시</th>
-                <th>반납일시</th>
-                <th>상태</th>
-                <th>금액</th>
-                <th>작업</th>
-              </tr>
-            </TableHeader>
-            <tbody>
-              {filteredReservations.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan="9"
-                    style={{ textAlign: 'center', padding: '20px' }}
-                  >
-                    예약 데이터가 없습니다.
-                  </td>
-                </tr>
-              ) : (
-                filteredReservations.map((reservation) => (
-                  <TableRow key={reservation.id}>
-                    <td>#{reservation.id}</td>
-                    <td>{reservation.userId}</td>
-                    <td>{reservation.car?.carName || '-'}</td>
-                    <td>{reservation.locationName}</td>
-                    <td>
-                      {formatDateTime(
-                        reservation.rentalDate,
-                        reservation.rentalTime
-                      )}
-                    </td>
-                    <td>
-                      {formatDateTime(
-                        reservation.returnDate,
-                        reservation.returnTime
-                      )}
-                    </td>
-                    <td>
-                      <StatusBadge color={getStatusColor(reservation.status)}>
-                        {statusOptions.find(
-                          (opt) => opt.value === reservation.status
-                        )?.label || reservation.status}
-                      </StatusBadge>
-                    </td>
-                    <td>{formatPrice(reservation.totalAmount)}</td>
-                    <td>
-                      <ActionButtons>
-                        <ActionButton
-                          onClick={() => viewReservationDetails(reservation.id)}
-                          title="상세보기"
-                        >
-                          <FiEye />
-                          <span>상세</span>
-                        </ActionButton>
-                        <ActionButton
-                          onClick={() => {
-                            setSelectedReservation(reservation);
-                            setEditingStatus(true);
-                          }}
-                          title="상태변경"
-                          color="#3b82f6"
-                        >
-                          <FiEdit />
-                          <span>수정</span>
-                        </ActionButton>
-                        <ActionButton
-                          onClick={() => deleteReservation(reservation.id)}
-                          title="삭제"
-                          color="#ef4444"
-                        >
-                          <FiTrash2 />
-                          <span>삭제</span>
-                        </ActionButton>
-                      </ActionButtons>
-                    </td>
-                  </TableRow>
-                ))
-              )}
-            </tbody>
-          </Table>
-        </TableContainer>
-      )}
+      <ReservationList>
+        {filteredReservations.length === 0 ? (
+          <EmptyState>
+            <EmptyIcon>📋</EmptyIcon>
+            <EmptyText>조건에 맞는 예약이 없습니다</EmptyText>
+          </EmptyState>
+        ) : (
+          filteredReservations.map((reservation) => (
+            <ReservationCard key={reservation.id}>
+              <CardHeader>
+                <UserInfo>
+                  <UserName>{reservation.userId}</UserName>
+                  <ReservationId>예약번호: #{reservation.id}</ReservationId>
+                  <LocationName>📍 {reservation.locationName}</LocationName>
+                </UserInfo>
+                <StatusBadge color={getStatusColor(reservation.status)}>
+                  {statusOptions.find((opt) => opt.value === reservation.status)
+                    ?.label || reservation.status}
+                </StatusBadge>
+              </CardHeader>
+
+              <VehicleInfo>
+                <VehicleDetails>
+                  <VehicleName>{reservation.car?.carName || '-'}</VehicleName>
+                  <PassengerCount>
+                    승객 {reservation.passengerCount}명
+                  </PassengerCount>
+                </VehicleDetails>
+              </VehicleInfo>
+
+              <DateInfo>
+                <DateDetails>
+                  <DateLabel>대여</DateLabel>
+                  <DateValue>
+                    {formatDateTime(
+                      reservation.rentalDate,
+                      reservation.rentalTime
+                    )}
+                  </DateValue>
+                </DateDetails>
+              </DateInfo>
+
+              <DateInfo>
+                <DateDetails>
+                  <DateLabel>반납</DateLabel>
+                  <DateValue>
+                    {formatDateTime(
+                      reservation.returnDate,
+                      reservation.returnTime
+                    )}
+                  </DateValue>
+                </DateDetails>
+              </DateInfo>
+
+              <PriceInfo>
+                <Price>{formatPrice(reservation.totalAmount)}</Price>
+              </PriceInfo>
+
+              <ActionButtons>
+                <ActionButton
+                  onClick={() => viewReservationDetails(reservation.id)}
+                >
+                  상세
+                </ActionButton>
+                <ActionButton
+                  primary
+                  onClick={() => {
+                    setSelectedReservation(reservation);
+                    setEditingStatus(true);
+                  }}
+                >
+                  수정
+                </ActionButton>
+                <ActionButton
+                  danger
+                  onClick={() => deleteReservation(reservation.id)}
+                >
+                  삭제
+                </ActionButton>
+              </ActionButtons>
+            </ReservationCard>
+          ))
+        )}
+      </ReservationList>
 
       {/* 예약 상세 모달 */}
       {showModal && selectedReservation && (
         <Modal onClick={() => setShowModal(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <h3>예약 상세 정보</h3>
+              <ModalTitle>예약 상세 정보</ModalTitle>
               <CloseButton onClick={() => setShowModal(false)}>×</CloseButton>
             </ModalHeader>
             <ModalBody>
@@ -445,14 +447,16 @@ const AdminReservationManagement = () => {
         <Modal onClick={() => setEditingStatus(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <h3>예약 상태 변경</h3>
+              <ModalTitle>예약 상태 변경</ModalTitle>
               <CloseButton onClick={() => setEditingStatus(false)}>
                 ×
               </CloseButton>
             </ModalHeader>
             <ModalBody>
-              <p>예약 #{selectedReservation.id}의 상태를 변경하시겠습니까?</p>
-              <p>
+              <StatusChangeInfo>
+                예약 #{selectedReservation.id}의 상태를 변경하시겠습니까?
+              </StatusChangeInfo>
+              <CurrentStatus>
                 현재 상태:{' '}
                 <strong>
                   {
@@ -461,10 +465,10 @@ const AdminReservationManagement = () => {
                     )?.label
                   }
                 </strong>
-              </p>
+              </CurrentStatus>
 
               <StatusSelectContainer>
-                <label>새로운 상태:</label>
+                <StatusSelectLabel>새로운 상태:</StatusSelectLabel>
                 <StatusSelect
                   defaultValue={selectedReservation.status}
                   onChange={(e) => {
@@ -489,86 +493,78 @@ const AdminReservationManagement = () => {
           </ModalContent>
         </Modal>
       )}
-    </Container>
+    </MobileContainer>
   );
 };
 
-// 스타일 컴포넌트들
-const Container = styled.div`
-  padding: 24px;
-  background: #f8fafc;
-  min-height: 100vh;
+// Moca Color Scheme Mobile-First Styled Components
+const MobileContainer = styled.div`
+  padding: 0;
+  background: transparent;
+  width: 100%;
 `;
 
-const Header = styled.div`
+const PageHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 `;
 
-const Title = styled.h1`
+const PageTitle = styled.h1`
   margin: 0;
-  color: #1f2937;
-  font-size: 1.875rem;
+  color: #5d4037; /* Moca: Dark Brown */
+  font-size: 1.5rem;
   font-weight: 700;
 `;
 
-const RefreshButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #3b82f6;
+const TotalCount = styled.div`
+  background: linear-gradient(
+    135deg,
+    #a47551,
+    #795548
+  ); /* Moca: Primary to Medium Brown */
   color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-
-  &:hover {
-    background: #2563eb;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(164, 117, 81, 0.3); /* Moca: Shadow */
 `;
 
 const FilterSection = styled.div`
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
 `;
 
 const SearchContainer = styled.div`
   display: flex;
   align-items: center;
   position: relative;
-  flex: 1;
-  min-width: 300px;
 `;
 
 const SearchIcon = styled.div`
   position: absolute;
   left: 12px;
-  color: #6b7280;
   z-index: 1;
+  font-size: 1rem;
+  color: #795548; /* Moca: Medium Brown */
 `;
 
 const SearchInput = styled.input`
   width: 100%;
   padding: 12px 12px 12px 40px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  border-radius: 12px;
+  font-size: 0.9rem;
+  background: white;
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #a47551; /* Moca: Primary */
+    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.1); /* Moca: Shadow */
   }
 `;
 
@@ -581,128 +577,297 @@ const FilterContainer = styled.div`
 const FilterIcon = styled.div`
   position: absolute;
   left: 12px;
-  color: #6b7280;
   z-index: 1;
+  font-size: 1rem;
+  color: #795548; /* Moca: Medium Brown */
 `;
 
 const FilterSelect = styled.select`
+  width: 100%;
   padding: 12px 12px 12px 40px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  border-radius: 12px;
+  font-size: 0.9rem;
   background: white;
   cursor: pointer;
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #a47551; /* Moca: Primary */
+    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.1); /* Moca: Shadow */
   }
 `;
 
-const LoadingMessage = styled.div`
-  text-align: center;
-  padding: 40px;
-  color: #6b7280;
-`;
-
-const ErrorMessage = styled.div`
-  text-align: center;
-  padding: 40px;
-  color: #ef4444;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  margin: 20px 0;
-`;
-
-const TableContainer = styled.div`
-  background: white;
+const RefreshButton = styled.button`
+  padding: 12px 16px;
+  background: #a47551; /* Moca: Primary */
+  color: white;
+  border: none;
   border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-`;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
 
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-`;
-
-const TableHeader = styled.thead`
-  background: #f9fafb;
-
-  th {
-    padding: 16px 12px;
-    text-align: left;
-    font-weight: 600;
-    color: #374151;
-    border-bottom: 1px solid #e5e7eb;
-  }
-`;
-
-const TableRow = styled.tr`
   &:hover {
-    background: #f9fafb;
+    background: #795548; /* Moca: Medium Brown */
+    transform: translateY(-1px);
   }
 
-  td {
-    padding: 16px 12px;
-    border-bottom: 1px solid #e5e7eb;
-    vertical-align: middle;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const SkeletonCard = styled.div`
+  height: 200px;
+  background: linear-gradient(
+    90deg,
+    #f5f1ed 25%,
+    #e7e0d9 50%,
+    #f5f1ed 75%
+  ); /* Moca: Light Colors */
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 16px;
+
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+`;
+
+const ReservationList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const ReservationCard = styled.div`
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+  box-shadow: 0 4px 12px rgba(164, 117, 81, 0.08); /* Moca: Shadow */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(164, 117, 81, 0.15); /* Moca: Shadow */
+  }
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+`;
+
+const UserInfo = styled.div`
+  flex: 1;
+`;
+
+const UserName = styled.div`
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #5d4037; /* Moca: Dark Brown */
+  margin-bottom: 4px;
+`;
+
+const ReservationId = styled.div`
+  font-size: 0.75rem;
+  color: #a47551; /* Moca: Primary */
+  font-weight: 500;
+  margin-bottom: 2px;
+`;
+
+const LocationName = styled.div`
+  font-size: 0.85rem;
+  color: #795548; /* Moca: Medium Brown */
 `;
 
 const StatusBadge = styled.span`
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
   background: ${(props) => props.color}20;
   color: ${(props) => props.color};
   border: 1px solid ${(props) => props.color}40;
 `;
 
+const VehicleInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px;
+  background: #f5f1ed; /* Moca: Light Brown BG */
+  border-radius: 12px;
+`;
+
+const VehicleIcon = styled.div`
+  font-size: 1.2rem;
+`;
+
+const VehicleDetails = styled.div`
+  flex: 1;
+`;
+
+const VehicleName = styled.div`
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #5d4037; /* Moca: Dark Brown */
+  margin-bottom: 2px;
+`;
+
+const PassengerCount = styled.div`
+  font-size: 0.85rem;
+  color: #795548; /* Moca: Medium Brown */
+`;
+
+const DateInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+`;
+
+const DateIcon = styled.div`
+  font-size: 1rem;
+  width: 20px;
+`;
+
+const DateDetails = styled.div`
+  flex: 1;
+`;
+
+const DateLabel = styled.div`
+  font-size: 0.75rem;
+  color: #795548; /* Moca: Medium Brown */
+  margin-bottom: 2px;
+`;
+
+const DateValue = styled.div`
+  font-size: 0.9rem;
+  color: #5d4037; /* Moca: Dark Brown */
+  font-weight: 500;
+`;
+
+const PriceInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+`;
+
+const PriceIcon = styled.div`
+  font-size: 1rem;
+`;
+
+const Price = styled.div`
+  font-size: 1rem;
+  color: #a47551; /* Moca: Primary */
+  font-weight: 700;
+`;
+
 const ActionButtons = styled.div`
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 `;
 
 const ActionButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-width: 80px; // 32px에서 80px로 확장
-  height: 32px;
-  padding: 0 12px; // 패딩 추가
+  padding: 10px 12px;
   border: none;
-  border-radius: 6px;
-  background: ${(props) => props.color || '#6b7280'};
-  color: white;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 12px; // 폰트 크기 약간 줄임
-  font-weight: 500;
-  white-space: nowrap; // 텍스트 줄바꿈 방지
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 80px;
+
+  background: ${(props) => {
+    if (props.primary) return '#a47551'; /* Moca: Primary */
+    if (props.danger) return '#ef4444';
+    return '#f5f1ed'; /* Moca: Light Brown BG */
+  }};
+
+  color: ${(props) => {
+    if (props.primary || props.danger) return 'white';
+    return '#5d4037'; /* Moca: Dark Brown */
+  }};
+
+  border: 1px solid
+    ${(props) => {
+      if (props.primary) return '#a47551'; /* Moca: Primary */
+      if (props.danger) return '#ef4444';
+      return '#e7e0d9'; /* Moca: Beige Border */
+    }};
 
   &:hover {
-    opacity: 0.8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(164, 117, 81, 0.2); /* Moca: Shadow */
+
+    ${(props) =>
+      !props.primary &&
+      !props.danger &&
+      `
+      background: #e7e0d9;  /* Moca: Beige Border */
+    `}
   }
 
-  svg {
-    width: 14px;
-    height: 14px;
+  &:active {
+    transform: translateY(0);
   }
+`;
 
-  // 모바일에서는 아이콘만 표시
-  @media (max-width: 768px) {
-    min-width: 32px;
-    padding: 0;
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
+`;
 
-    span {
-      display: none;
-    }
-  }
+const EmptyIcon = styled.div`
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+`;
+
+const EmptyText = styled.div`
+  font-size: 1rem;
+  color: #795548; /* Moca: Medium Brown */
+`;
+
+const ErrorMessage = styled.div`
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #fecaca;
+  font-size: 0.9rem;
+  text-align: center;
 `;
 
 const Modal = styled.div`
@@ -716,15 +881,17 @@ const Modal = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 16px;
 `;
 
 const ModalContent = styled.div`
   background: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 600px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(164, 117, 81, 0.2); /* Moca: Shadow */
 `;
 
 const ModalHeader = styled.div`
@@ -732,12 +899,15 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e7e0d9; /* Moca: Beige Border */
+  background: #f5f1ed; /* Moca: Light Brown BG */
+`;
 
-  h3 {
-    margin: 0;
-    color: #1f2937;
-  }
+const ModalTitle = styled.h3`
+  margin: 0;
+  color: #5d4037; /* Moca: Dark Brown */
+  font-size: 1.1rem;
+  font-weight: 700;
 `;
 
 const CloseButton = styled.button`
@@ -745,10 +915,14 @@ const CloseButton = styled.button`
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #6b7280;
+  color: #795548; /* Moca: Medium Brown */
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
 
   &:hover {
-    color: #374151;
+    color: #5d4037; /* Moca: Dark Brown */
+    background: #e7e0d9; /* Moca: Beige Border */
   }
 `;
 
@@ -764,6 +938,10 @@ const DetailGrid = styled.div`
   .full-width {
     grid-column: 1 / -1;
   }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const DetailItem = styled.div`
@@ -773,41 +951,58 @@ const DetailItem = styled.div`
 `;
 
 const DetailLabel = styled.span`
-  font-size: 12px;
-  color: #6b7280;
+  font-size: 0.75rem;
+  color: #795548; /* Moca: Medium Brown */
   font-weight: 500;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const DetailValue = styled.span`
-  font-size: 14px;
-  color: #1f2937;
+  font-size: 0.9rem;
+  color: #5d4037; /* Moca: Dark Brown */
   font-weight: 500;
+`;
+
+const StatusChangeInfo = styled.p`
+  color: #5d4037; /* Moca: Dark Brown */
+  margin-bottom: 12px;
+`;
+
+const CurrentStatus = styled.p`
+  color: #795548; /* Moca: Medium Brown */
+  margin-bottom: 16px;
+
+  strong {
+    color: #a47551; /* Moca: Primary */
+  }
 `;
 
 const StatusSelectContainer = styled.div`
   margin-top: 16px;
+`;
 
-  label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: #374151;
-  }
+const StatusSelectLabel = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #5d4037; /* Moca: Dark Brown */
+  font-size: 0.9rem;
 `;
 
 const StatusSelect = styled.select`
   width: 100%;
   padding: 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #e7e0d9; /* Moca: Beige Border */
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.9rem;
   background: white;
+  color: #5d4037; /* Moca: Dark Brown */
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #a47551; /* Moca: Primary */
+    box-shadow: 0 0 0 3px rgba(164, 117, 81, 0.1); /* Moca: Shadow */
   }
 `;
 
