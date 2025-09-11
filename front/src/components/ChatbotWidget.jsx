@@ -206,7 +206,7 @@ const ChatbotWidget = () => {
         onDoubleClick={showSessionInfo}
         title="MOCA 챗봇"
       >
-        {isLoading ? "⏳" : "💬"}
+        {isLoading ? "⏳" : "🤔"}
       </button>
 
       {isOpen && (
