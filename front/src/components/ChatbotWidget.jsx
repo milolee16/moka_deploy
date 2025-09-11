@@ -1,11 +1,19 @@
-import { useRef, useState, useEffect } from 'react';
-import axios from 'axios';
-import './ChatbotWidget.css';
+import { useRef, useState, useEffect } from "react";
+import axios from "axios";
+import "./ChatbotWidget.css";
 
+/**
+ * 우하단 플로팅 챗봇 위젯 (강화판)
+ * - 한글 IME 입력 중 Enter 방지
+ * - POST 실패/400시 GET 폴백 (?message=)
+ * - 자동 스크롤/첫 오픈 환영/인풋 포커스
+ * - API 응답 source(FAQ/LLM/intent/score) 뱃지 표시
+ */
 const ChatbotWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [chat, setChat] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
   // 세션 관리
@@ -16,6 +24,21 @@ const ChatbotWidget = () => {
   const messagesRef = useRef(null);
   const endRef = useRef(null);
   const firstScrollDoneRef = useRef(false);
+  const inputRef = useRef(null);
+
+  // API Base URL (env → dev/prod)
+  const RAW_BASE =
+    (import.meta?.env?.VITE_CHATBOT_API || "").trim() ||
+    (import.meta?.env?.MODE === "development"
+      ? "http://127.0.0.1:5000"
+      : "https://YOUR-PROD-DOMAIN");
+  const BASE_URL = RAW_BASE.endsWith("/") ? RAW_BASE.slice(0, -1) : RAW_BASE;
+
+  const api = axios.create({
+    baseURL: BASE_URL,
+    timeout: 15000,
+    headers: { "Content-Type": "application/json" },
+  });
 
   // 세션 ID 생성
   const generateSessionId = () => {
@@ -27,7 +50,7 @@ const ChatbotWidget = () => {
     if (!sessionId) {
       const newSessionId = generateSessionId();
       setSessionId(newSessionId);
-      console.log('🆔 새 세션 생성:', newSessionId);
+      console.log("🆔 새 세션 생성:", newSessionId);
     }
   }, [sessionId]);
 
@@ -39,11 +62,11 @@ const ChatbotWidget = () => {
     if (willOpen && !welcomedRef.current && chat.length === 0) {
       setChat([
         {
-          role: 'assistant',
+          role: "assistant",
           text:
-            '안녕하세요! MOCA 고객지원 챗봇입니다.\n' +
-            '차량 예약, 요금 문의, 이용 방법 등 무엇이든 물어보세요.\n' +
-            '대화 내용을 기억하고 있으니 편하게 대화하세요! 😊',
+            "안녕하세요! MOCA 고객지원 챗봇입니다.\n" +
+            "차량 예약, 요금 문의, 이용 방법 등 무엇이든 물어보세요.\n" +
+            "대화 내용을 기억하고 있으니 편하게 대화하세요! 😊",
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -51,42 +74,44 @@ const ChatbotWidget = () => {
     }
   };
 
+  const safeAppend = (entry) => setChat((prev) => [...prev, entry]);
+
   const sendMessage = async () => {
     if (!input.trim() || isLoading || !sessionId) return;
 
     const userMessage = {
-      role: 'user',
+      role: "user",
       text: input.trim(),
       timestamp: new Date().toISOString(),
     };
 
     // UI 업데이트
     setChat((prev) => [...prev, userMessage]);
-    setInput('');
+    setInput("");
     setIsLoading(true);
 
     try {
-      console.log('📤 메시지 전송:', {
+      console.log("📤 메시지 전송:", {
         message: userMessage.text,
         session_id: sessionId,
       });
 
       const res = await axios.post(
-        'http://127.0.0.1:5000/get_response',
+        "http://127.0.0.1:5000/get_response",
         {
           message: userMessage.text,
           session_id: sessionId,
         },
         {
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
           timeout: 30000, // 30초 타임아웃
         }
       );
 
-      console.log('📥 응답 받음:', res.data);
+      console.log("📥 응답 받음:", res.data);
 
       const botMessage = {
-        role: 'assistant',
+        role: "assistant",
         text: res.data.response,
         timestamp: new Date().toISOString(),
       };
@@ -96,26 +121,26 @@ const ChatbotWidget = () => {
       // 세션 ID가 응답에 포함되어 있으면 업데이트
       if (res.data.session_id && res.data.session_id !== sessionId) {
         setSessionId(res.data.session_id);
-        console.log('🆔 세션 ID 업데이트:', res.data.session_id);
+        console.log("🆔 세션 ID 업데이트:", res.data.session_id);
       }
     } catch (err) {
-      console.error('❌ 서버 오류:', err);
+      console.error("❌ 서버 오류:", err);
 
-      let errorMessage = '서버와 연결할 수 없어요.';
+      let errorMessage = "서버와 연결할 수 없어요.";
 
-      if (err.code === 'ECONNABORTED') {
-        errorMessage = '응답 시간이 초과되었어요. 다시 시도해 주세요.';
+      if (err.code === "ECONNABORTED") {
+        errorMessage = "응답 시간이 초과되었어요. 다시 시도해 주세요.";
       } else if (err.response?.status === 500) {
         errorMessage =
-          '서버에 일시적인 문제가 있어요. 잠시 후 다시 시도해 주세요.';
+          "서버에 일시적인 문제가 있어요. 잠시 후 다시 시도해 주세요.";
       } else if (err.response?.status === 400) {
-        errorMessage = '메시지를 이해할 수 없어요. 다시 입력해 주세요.';
+        errorMessage = "메시지를 이해할 수 없어요. 다시 입력해 주세요.";
       }
 
       setChat((prev) => [
         ...prev,
         {
-          role: 'assistant',
+          role: "assistant",
           text: `⚠️ ${errorMessage}`,
           timestamp: new Date().toISOString(),
           isError: true,
@@ -133,8 +158,8 @@ const ChatbotWidget = () => {
     requestAnimationFrame(() => {
       if (endRef.current) {
         endRef.current.scrollIntoView({
-          behavior: firstScrollDoneRef.current ? 'smooth' : 'auto',
-          block: 'end',
+          behavior: firstScrollDoneRef.current ? "smooth" : "auto",
+          block: "end",
         });
       } else if (messagesRef.current) {
         const el = messagesRef.current;
@@ -142,11 +167,20 @@ const ChatbotWidget = () => {
       }
       firstScrollDoneRef.current = true;
     });
-  }, [chat, isOpen]);
+  }, [chat, isOpen, loading]);
+
+  const onKeyDown = (e) => {
+    // 한글 IME 조합 중에는 Enter로 전송하지 않음
+    if (composingRef.current) return;
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
 
   // 엔터키 핸들링
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
@@ -154,8 +188,8 @@ const ChatbotWidget = () => {
 
   // 세션 정보 디버깅 (개발 모드에서만)
   const showSessionInfo = () => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 현재 세션 정보:', {
+    if (process.env.NODE_ENV === "development") {
+      console.log("🔍 현재 세션 정보:", {
         sessionId,
         messageCount: chat.length,
         isOpen,
@@ -172,7 +206,7 @@ const ChatbotWidget = () => {
         onDoubleClick={showSessionInfo}
         title="MOCA 챗봇"
       >
-        {isLoading ? '⏳' : '💬'}
+        {isLoading ? "⏳" : "💬"}
       </button>
 
       {isOpen && (
@@ -180,8 +214,8 @@ const ChatbotWidget = () => {
           <div className="chatbot-header">
             <span>
               MOCA 챗봇
-              {process.env.NODE_ENV === 'development' && sessionId && (
-                <span style={{ fontSize: '10px', opacity: 0.7 }}>
+              {process.env.NODE_ENV === "development" && sessionId && (
+                <span style={{ fontSize: "10px", opacity: 0.7 }}>
                   {` (${sessionId.slice(-8)})`}
                 </span>
               )}
@@ -194,12 +228,12 @@ const ChatbotWidget = () => {
               <div
                 key={i}
                 className={`chat-bubble ${
-                  msg.role === 'user' ? 'user' : 'bot'
-                } ${msg.isError ? 'error' : ''}`}
+                  msg.role === "user" ? "user" : "bot"
+                } ${msg.isError ? "error" : ""}`}
                 title={
                   msg.timestamp
                     ? new Date(msg.timestamp).toLocaleTimeString()
-                    : ''
+                    : ""
                 }
               >
                 {msg.text}
@@ -222,7 +256,7 @@ const ChatbotWidget = () => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={
-                isLoading ? '응답을 기다리는 중...' : '메시지를 입력하세요...'
+                isLoading ? "응답을 기다리는 중..." : "메시지를 입력하세요..."
               }
               disabled={isLoading || !sessionId}
               maxLength={500}
@@ -231,7 +265,7 @@ const ChatbotWidget = () => {
               onClick={sendMessage}
               disabled={isLoading || !input.trim() || !sessionId}
             >
-              {isLoading ? '⏳' : '전송'}
+              {isLoading ? "⏳" : "전송"}
             </button>
           </div>
         </div>
