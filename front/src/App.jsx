@@ -26,7 +26,6 @@ import FAQPage from "./pages/FAQPage";
 import NoticeWritePage from "./components/notices/NoticeWritePage.jsx";
 import PaymentsAndLicenses from "./pages/PaymentsAndLicenses.jsx";
 import AddPaymentPage from "./pages/AddPaymentPage.jsx";
-import Chatbot from "./components/Chatbot.jsx";
 import ChatbotWidget from "./components/ChatbotWidget.jsx";
 import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
 
@@ -79,7 +78,6 @@ function App() {
             />
             <Route path="/add-payment" element={<AddPaymentPage />} />
             <Route path="/faq" element={<FAQPage />} />
-            <Route path="/chatbot" element={<Chatbot />} />
 
             {/* Protected Route for My Page */}
             <Route element={<ProtectedRoute />}>

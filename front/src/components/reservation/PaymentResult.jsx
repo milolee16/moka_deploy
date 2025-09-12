@@ -132,7 +132,7 @@ const Title = styled.h1`font-size: 20px; font-weight: 700; color: #5d4037;`;
 const Message = styled.p`font-size: 16px; color: #6d4c41; margin: 0;`;
 const HomeButton = styled.button`
     margin-top: 16px; padding: 12px 28px; font-size: 15px; font-weight: 600;
-    color: white; background-color: #8b4513; border: none; border-radius: 12px; cursor: pointer;
+    color: white; background-color: #a47551; border: none; border-radius: 12px; cursor: pointer;
     transition: background-color 0.2s ease;
-    &:hover { background-color: #a0522d; }
+    &:hover { background-color: #a47551; }
 `;
