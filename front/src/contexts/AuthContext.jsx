@@ -184,13 +184,13 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
 
-        navigate('/home');
-        alert(`${userData.username}님, 환영합니다! 회원가입이 완료되었습니다.`);
-        return true;
+        // navigate('/home');
+        // alert(`${userData.username}님, 환영합니다! 회원가입이 완료되었습니다.`);
+        return userData;
       } else {
         const errorData = await response.text();
         alert(errorData || '회원가입 중 오류가 발생했습니다.');
-        return false;
+        return null;
       }
     } catch (error) {
       console.error('회원가입 중 오류 발생:', error);

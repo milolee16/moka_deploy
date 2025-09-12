@@ -4,7 +4,10 @@ import com.moca.app.notification.service.NotificationService;
 import com.moca.app.notification.Notification; // 이 import 추가!
 import com.moca.app.rental.Reservation;
 import com.moca.app.rental.dto.ReservationRequestDto;
+import com.moca.app.rental.Car;
+import com.moca.app.rental.repository.CarRepository;
 import com.moca.app.rental.repository.ReservationRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -28,12 +31,18 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final NotificationService notificationService; // 알림 서비스 의존성 주입
+    private final CarRepository carRepository; // 차량 리포지토리 의존성 주입
+    private final EntityManager entityManager; // EntityManager 의존성 주입
 
     // 생성자 기반 의존성 주입
     public ReservationService(ReservationRepository reservationRepository,
-                              NotificationService notificationService) {
+                              NotificationService notificationService,
+                              CarRepository carRepository,
+                              EntityManager entityManager) {
         this.reservationRepository = reservationRepository;
         this.notificationService = notificationService;
+        this.carRepository = carRepository;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -107,7 +116,8 @@ public class ReservationService {
     }
 
     public List<Long> getReservedCarIds(LocalDate date) {
-        List<Reservation> reservations = reservationRepository.findByDate(date);
+        List<String> statuses = List.of("CONFIRMED", "IN_USE");
+        List<Reservation> reservations = reservationRepository.findByDateAndStatusIn(date, statuses);
         return reservations.stream()
                 .map(Reservation::getCarId)
                 .distinct()
@@ -123,7 +133,16 @@ public class ReservationService {
         reservation.setReturnDate(LocalDate.now());
         reservation.setReturnTime(LocalTime.now());
 
-        return reservationRepository.save(reservation);
+        log.info("Updating reservation {}: returnDate={}, returnTime={}", reservationId, reservation.getReturnDate(), reservation.getReturnTime());
+
+        Car car = carRepository.findById(reservation.getCarId())
+                .orElseThrow(() -> new IllegalArgumentException("Car not found with ID: " + reservation.getCarId()));
+        car.setStatus("AVAILABLE");
+        carRepository.save(car);
+
+        Reservation savedReservation = reservationRepository.save(reservation);
+        entityManager.flush(); // 변경사항을 즉시 데이터베이스에 반영
+        return savedReservation;
     }
 
     @Transactional(readOnly = true)
