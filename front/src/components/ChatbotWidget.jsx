@@ -1,8 +1,7 @@
-import { useRef, useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import axios from 'axios';
 
-// --- CSS Styles ---
-// All styles are now embedded within the component file to avoid import errors.
+// --- Complete CSS Styles ---
 const cssStyles = `
 /* Main Widget Container */
 .chatbot-widget {
@@ -15,7 +14,7 @@ const cssStyles = `
 
 /* Chatbot Toggle Button */
 .chatbot-button {
-  background-color: #a47551; /* SaddleBrown */
+  background-color: #a47551;
   color: white;
   border: none;
   border-radius: 50%;
@@ -30,10 +29,10 @@ const cssStyles = `
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-// .chatbot-button:hover {
-//   background-color: #a47551; /* Sienna */
-//   transform: scale(1.1);
-// }
+.chatbot-button:hover {
+  background-color: #8b5a2b;
+  transform: scale(1.1);
+}
 
 /* Chat Popup Window */
 .chatbot-popup {
@@ -64,7 +63,7 @@ const cssStyles = `
 
 /* Header */
 .chatbot-header {
-  background-color: #a47551; /* SaddleBrown */
+  background-color: #a47551;
   color: white;
   padding: 10px 15px;
   display: flex;
@@ -76,7 +75,7 @@ const cssStyles = `
 }
 
 .chatbot-header span {
-  margin-right: auto; /* Push buttons to the right */
+  margin-right: auto;
 }
 
 .chatbot-header button.header-btn {
@@ -85,25 +84,20 @@ const cssStyles = `
   color: white;
   font-size: 20px;
   cursor: pointer;
-  padding: 0;
+  padding: 4px;
   line-height: 1;
+  border-radius: 4px;
+  transition: background 0.2s ease;
 }
 
-.chatbot-header button.summarize-btn {
-    font-size: 18px;
-    opacity: 0.9;
-    transition: opacity 0.2s;
+.chatbot-header button.header-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
-
-// .chatbot-header button.summarize-btn:hover {
-//     opacity: 1;
-// }
 
 .chatbot-header button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
-
 
 /* ML Stats Banner (Dev Mode) */
 .ml-stats-banner {
@@ -124,6 +118,17 @@ const cssStyles = `
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.chatbot-messages::-webkit-scrollbar {
+  width: 8px;
+}
+.chatbot-messages::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+.chatbot-messages::-webkit-scrollbar-thumb {
+  background: #cbbba9;
+  border-radius: 8px;
 }
 
 /* General Chat Bubble Style */
@@ -151,7 +156,7 @@ const cssStyles = `
 
 /* User Message Bubble */
 .chat-bubble.user {
-  background-color: #a47551; /* Sienna */
+  background-color: #a47551;
   color: white;
   align-self: flex-end;
   border-bottom-right-radius: 4px;
@@ -167,6 +172,7 @@ const cssStyles = `
   max-width: 100%;
   align-self: center;
 }
+
 .chat-bubble.error {
   background-color: #fbe2e2;
   color: #b52a2a;
@@ -179,13 +185,17 @@ const cssStyles = `
   padding: 15px;
 }
 
+.typing-animation {
+  display: flex;
+  gap: 2px;
+}
+
 .typing-animation span {
   display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background-color: #999;
-  margin: 0 2px;
   animation: typing 1s infinite ease-in-out;
 }
 .typing-animation span:nth-child(2) { animation-delay: 0.2s; }
@@ -217,6 +227,7 @@ const cssStyles = `
   gap: 5px;
   justify-content: flex-end;
 }
+
 .feedback-btn {
   background: rgba(0,0,0,0.05);
   border: 1px solid rgba(0,0,0,0.1);
@@ -230,9 +241,10 @@ const cssStyles = `
   justify-content: center;
   align-items: center;
 }
-// .feedback-btn:hover {
-//   background: rgba(0,0,0,0.1);
-// }
+
+.feedback-btn:hover {
+  background: rgba(0,0,0,0.1);
+}
 
 /* Input Area */
 .chatbot-input {
@@ -253,62 +265,59 @@ const cssStyles = `
 }
 
 .chatbot-input input:focus {
-  border-color: #a47551; /* Sienna */
+  border-color: #a47551;
+}
+
+.chatbot-input input:disabled {
+  background: #f8f8f8;
+  color: #999;
+  cursor: not-allowed;
 }
 
 .chatbot-input button {
-  // background-color: #a47551; /* SaddleBrown */
+  background-color: #a47551;
   color: white;
   border: none;
   border-radius: 50%;
   width: 40px;
   height: 40px;
   margin-left: 8px;
-  font-size: 20px; /* 이모지 크기 조정 */
+  font-size: 20px;
   cursor: pointer;
-  transition: all 0.2s ease; /* 모든 효과에 전환 적용 */
+  transition: all 0.2s ease;
   flex-shrink: 0;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-// .chatbot-input button:hover {
-//   background-color: #a47551; /* Sienna */
-// }
-
-// .chatbot-input button:not(.rephrase-btn):hover {
-//   background-color: #a47551; /* Sienna */
-//   transform: scale(1.1); /* 살짝 커지는 효과 추가 */
-// }
+.chatbot-input button:hover:not(:disabled) {
+  background-color: #8b5a2b;
+  transform: scale(1.1);
+}
 
 .chatbot-input button:disabled {
   background-color: #c09b82;
   cursor: not-allowed;
-  transform: scale(1); /* 비활성 시에는 커지지 않도록 */
+  transform: scale(1);
 }
 
 .chatbot-input button.rephrase-btn {
-    // background: none;
-    // border: 1px solid #ccc;
-    // color: #a47551; /* SaddleBrown */
+    background-color: #6c757d;
     width: 36px;
     height: 36px;
-    font-size: 18px; /* 이모지 크기 조정 */
+    font-size: 18px;
 }
 
-// .chatbot-input button.rephrase-btn:hover {
-//     background-color: #f0f0f0;
-//     border-color: #a47551; /* SaddleBrown */
-//     transform: scale(1.1); /* 살짝 커지는 효과 추가 */
-// }
+.chatbot-input button.rephrase-btn:hover:not(:disabled) {
+    background-color: #545b62;
+}
 
 .chatbot-input button.rephrase-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background-color: transparent !important;
+    background-color: #c09b82 !important;
 }
-
 
 /* Feedback Modal */
 .feedback-modal-overlay {
@@ -321,7 +330,7 @@ const cssStyles = `
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1001;
+  z-index: 2000;
 }
 
 .feedback-modal {
@@ -341,14 +350,25 @@ const cssStyles = `
   padding-bottom: 10px;
   margin-bottom: 15px;
 }
+
 .feedback-header h3 {
   margin: 0;
+  font-size: 18px;
+  color: #333;
 }
+
 .feedback-header button {
   background: none;
   border: none;
   font-size: 20px;
   cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .feedback-section {
@@ -360,6 +380,7 @@ const cssStyles = `
   font-weight: bold;
   margin-bottom: 5px;
   font-size: 14px;
+  color: #333;
 }
 
 .feedback-section p {
@@ -369,6 +390,8 @@ const cssStyles = `
   margin: 0;
   font-style: italic;
   font-size: 14px;
+  color: #666;
+  border: 1px solid #e0e0e0;
 }
 
 .feedback-section select {
@@ -376,6 +399,8 @@ const cssStyles = `
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  font-size: 14px;
+  background-color: white;
 }
 
 .feedback-actions {
@@ -391,247 +416,268 @@ const cssStyles = `
   border: none;
   cursor: pointer;
   font-weight: bold;
+  font-size: 14px;
+  transition: background-color 0.2s;
 }
+
 .btn-primary {
-  background-color: #a47551; /* SaddleBrown */
+  background-color: #a47551;
   color: white;
 }
+
+.btn-primary:hover {
+  background-color: #8b5a2b;
+}
+
 .btn-secondary {
   background-color: #6c757d;
   color: white;
 }
+
+.btn-secondary:hover {
+  background-color: #545b62;
+}
+
+/* Responsive Design */
+@media (max-width: 420px) {
+  .chatbot-popup {
+    width: 320px;
+    height: 440px;
+    bottom: 70px;
+    right: 10px;
+  }
+
+  .chatbot-widget {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .chat-bubble {
+    max-width: 85%;
+    font-size: 13px;
+  }
+}
 `;
 
-// Component to inject the CSS styles into the document head
-const ChatbotStyles = () => <style>{cssStyles}</style>;
-
-// Constants for intent options to make the feedback form more maintainable
-const INTENT_OPTIONS = [
-  { value: "예약_문의", label: "예약 문의" },
-  { value: "요금_문의", label: "요금 문의" },
-  { value: "이용_방법", label: "이용 방법" },
-  { value: "문제_해결", label: "문제 해결" },
-  { value: "계정_관리", label: "계정 관리" },
-  { value: "인사", label: "인사" },
-  { value: "감사", label: "감사" },
-  { value: "기타_문의", label: "기타 문의" },
-];
-
-/**
- * A single message bubble component.
- * @param {object} props - The component props.
- * @param {object} props.msg - The message object.
- * @param {boolean} props.isDevMode - Flag for development mode.
- * @param {function} props.onOpenFeedback - Function to open the feedback modal.
- * @param {function} props.onSubmitFeedback - Function to submit quick "thumbs up" feedback.
- */
-const MessageBubble = ({
-                         msg,
-                         isDevMode,
-                         onOpenFeedback,
-                         onSubmitFeedback,
-                       }) => {
-  const bubbleClasses = `chat-bubble ${
-      msg.role === "user"
-          ? "user"
-          : msg.isError
-              ? "error"
-              : msg.isSystem
-                  ? "system"
-                  : "bot"
-  }`;
-
-  return (
-      <div
-          className={bubbleClasses}
-          title={msg.timestamp ? new Date(msg.timestamp).toLocaleString() : ""}
-      >
-        <div className="message-content">{msg.text}</div>
-
-        {/* Renders ML prediction info in development mode */}
-        {isDevMode && msg.ml_prediction && (
-            <div className="ml-prediction-info">
-              🤖 {msg.ml_prediction.prediction_source}:{" "}
-              {msg.ml_prediction.final_intent}
-              {msg.ml_prediction.ml_confidence &&
-                  ` (${(msg.ml_prediction.ml_confidence * 100).toFixed(0)}%)`}
-            </div>
-        )}
-
-        {/* Renders feedback buttons for assistant messages */}
-        {msg.role === "assistant" &&
-            !msg.isError &&
-            !msg.isSystem &&
-            msg.messageId && (
-                <div className="feedback-buttons">
-                  <button
-                      className="feedback-btn thumbs-up"
-                      onClick={() =>
-                          onSubmitFeedback(msg.messageId, { satisfied: true })
-                      }
-                      title="도움이 되었어요"
-                      aria-label="도움이 되었어요"
-                  >
-                    👍
-                  </button>
-                  <button
-                      className="feedback-btn thumbs-down"
-                      onClick={() => onOpenFeedback(msg.messageId)}
-                      title="개선이 필요해요"
-                      aria-label="개선이 필요해요"
-                  >
-                    👎
-                  </button>
-                </div>
-            )}
-      </div>
-  );
-};
-
-/**
- * Feedback Modal Component.
- * @param {object} props - The component props.
- * @param {boolean} props.isOpen - Whether the modal is open.
- * @param {object} props.feedbackData - The data for the feedback.
- * @param {function} props.onClose - Function to close the modal.
- * @param {function} props.onSubmit - Function to submit the feedback.
- * @param {boolean} props.isDevMode - Flag for development mode.
- */
+// --- Feedback Modal Component ---
 const FeedbackModal = ({
-                         isOpen,
-                         feedbackData,
-                         onClose,
-                         onSubmit,
-                         isDevMode,
-                       }) => {
+  isOpen,
+  feedbackData,
+  onClose,
+  onSubmit,
+  isDevMode,
+}) => {
+  const [actualIntent, setActualIntent] = useState('');
+
   if (!isOpen || !feedbackData) return null;
 
   const handleSubmit = () => {
-    const correctIntent = document.getElementById("correct-intent")?.value;
-    if (correctIntent) {
-      onSubmit(feedbackData.messageId, {
-        satisfied: false,
-        correctIntent,
-      });
-    }
+    onSubmit(
+      feedbackData.text,
+      feedbackData.predicted_intent,
+      actualIntent,
+      false
+    );
+    setActualIntent('');
+    onClose();
   };
 
+  const INTENT_OPTIONS = [
+    { value: '', label: '의도를 선택하세요' },
+    { value: '예약_문의', label: '예약 문의' },
+    { value: '요금_문의', label: '요금 문의' },
+    { value: '이용_방법', label: '이용 방법' },
+    { value: '문제_해결', label: '문제 해결' },
+    { value: '계정_관리', label: '계정 관리' },
+    { value: '인사', label: '인사' },
+    { value: '감사', label: '감사' },
+    { value: '기타_문의', label: '기타 문의' },
+  ];
+
   return (
-      <div className="feedback-modal-overlay">
-        <div className="feedback-modal">
-          <div className="feedback-header">
-            <h3>피드백을 주세요</h3>
-            <button onClick={onClose} aria-label="닫기">
-              ✖
-            </button>
+    <div className="feedback-modal-overlay">
+      <div className="feedback-modal">
+        <div className="feedback-header">
+          <h3>🤖 피드백 제출</h3>
+          <button onClick={onClose} title="닫기">
+            ✖
+          </button>
+        </div>
+
+        <div className="feedback-section">
+          <label>메시지:</label>
+          <p>"{feedbackData.text}"</p>
+        </div>
+
+        {isDevMode && (
+          <div className="feedback-section">
+            <label>예측된 의도:</label>
+            <p>{feedbackData.predicted_intent}</p>
           </div>
-          <div className="feedback-content">
-            <div className="feedback-section">
-              <label>사용자 질문:</label>
-              <p>"{feedbackData.userMessage}"</p>
-            </div>
-            <div className="feedback-section">
-              <label>챗봇 응답:</label>
-              <p>"{feedbackData.botResponse}"</p>
-            </div>
-            {isDevMode && (
-                <div className="feedback-section">
-                  <label>AI 예측:</label>
-                  <p>
-                    {feedbackData.prediction.final_intent} (
-                    {feedbackData.prediction.prediction_source})
-                  </p>
-                </div>
-            )}
-            <div className="feedback-section">
-              <label htmlFor="correct-intent">올바른 의도를 선택해주세요:</label>
-              <select
-                  id="correct-intent"
-                  defaultValue={feedbackData.prediction.final_intent}
-              >
-                {INTENT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="feedback-actions">
-            <button className="btn-secondary" onClick={onClose}>
-              취소
-            </button>
-            <button className="btn-primary" onClick={handleSubmit}>
-              피드백 전송
-            </button>
-          </div>
+        )}
+
+        <div className="feedback-section">
+          <label>실제 의도:</label>
+          <select
+            value={actualIntent}
+            onChange={(e) => setActualIntent(e.target.value)}
+          >
+            {INTENT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="feedback-actions">
+          <button onClick={onClose} className="btn-secondary">
+            취소
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="btn-primary"
+            disabled={!actualIntent}
+          >
+            제출
+          </button>
         </div>
       </div>
+    </div>
   );
 };
 
-/**
- * Chatbot widget with AutoML feedback functionality and Gemini API features.
- */
-const ChatbotWidget = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState("");
-  const [chat, setChat] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [currentFeedback, setCurrentFeedback] = useState(null);
-  const [mlStats, setMlStats] = useState(null);
-  const [sessionId, setSessionId] = useState(null);
-  const [isSummarizing, setIsSummarizing] = useState(false);
-  const [isRephrasing, setIsRephrasing] = useState(false);
-
-  const welcomedRef = useRef(false);
-  const messagesRef = useRef(null);
-  const endRef = useRef(null);
-  const firstScrollDoneRef = useRef(false);
-  const composingRef = useRef(false);
-
-  const isDevMode = process.env.NODE_ENV === "development";
-
-  const BASE_URL = isDevMode
-      ? "http://localhost:5000"
-      : "https://YOUR-PROD-DOMAIN";
-
-  const api = axios.create({
-    baseURL: BASE_URL,
-    timeout: 30000,
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    withCredentials: false,
-  });
-
-  const callGeminiApi = async (prompt) => {
-    const apiKey = ""; // Per instructions, leave empty.
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-    const payload = { contents: [{ parts: [{ text: prompt }] }] };
-
-    try {
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok)
-        throw new Error(`API request failed with status ${response.status}`);
-      const result = await response.json();
-      const candidate = result.candidates?.[0];
-      if (candidate && candidate.content?.parts?.[0]?.text) {
-        return candidate.content.parts[0].text;
-      } else {
-        throw new Error("Invalid response structure from Gemini API");
-      }
-    } catch (error) {
-      console.error("Error calling Gemini API:", error);
-      return null;
+// --- Message Bubble Component ---
+const MessageBubble = ({
+  msg,
+  isDevMode,
+  onOpenFeedback,
+  onSubmitFeedback,
+}) => {
+  const handleQuickFeedback = (satisfied) => {
+    if (msg.ml_prediction) {
+      onSubmitFeedback(
+        msg.text || '',
+        msg.ml_prediction.ml_intent,
+        null,
+        satisfied
+      );
     }
   };
+
+  const openDetailedFeedback = () => {
+    if (msg.ml_prediction) {
+      onOpenFeedback({
+        text: msg.text || '',
+        predicted_intent: msg.ml_prediction.ml_intent,
+        messageId: msg.messageId,
+      });
+    }
+  };
+
+  const bubbleClass = `chat-bubble ${
+    msg.role === 'user'
+      ? 'user'
+      : msg.role === 'error'
+      ? 'error'
+      : msg.role === 'system'
+      ? 'system'
+      : 'bot'
+  }`;
+
+  return (
+    <div className={bubbleClass}>
+      <div className="message-content">{msg.text}</div>
+
+      {isDevMode && msg.ml_prediction && (
+        <div className="ml-prediction-info">
+          🤖 의도: {msg.ml_prediction.ml_intent} | 신뢰도:{' '}
+          {(msg.ml_prediction.ml_confidence * 100).toFixed(1)}% | 최종:{' '}
+          {msg.ml_prediction.final_intent} (
+          {msg.ml_prediction.prediction_source})
+        </div>
+      )}
+
+      {isDevMode &&
+        msg.role === 'assistant' &&
+        msg.ml_prediction &&
+        msg.messageId && (
+          <div className="feedback-buttons">
+            <button
+              onClick={() => handleQuickFeedback(true)}
+              className="feedback-btn"
+              title="좋음"
+            >
+              👍
+            </button>
+            <button
+              onClick={() => handleQuickFeedback(false)}
+              className="feedback-btn"
+              title="나쁨"
+            >
+              👎
+            </button>
+            <button
+              onClick={openDetailedFeedback}
+              className="feedback-btn"
+              title="상세 피드백"
+            >
+              🔧
+            </button>
+          </div>
+        )}
+    </div>
+  );
+};
+
+// --- Main ChatbotWidget Component ---
+const ChatbotWidget = ({ isDevMode = false }) => {
+  // States
+  const [isOpen, setIsOpen] = useState(false);
+  const [chat, setChat] = useState([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRephrasing, setIsRephrasing] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const [mlStats, setMlStats] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [currentFeedback, setCurrentFeedback] = useState(null);
+
+  // Refs
+  const messagesRef = useRef(null);
+  const endRef = useRef(null);
+  const welcomedRef = useRef(false);
+  const composingRef = useRef(false);
+
+  // Inject CSS
+  useEffect(() => {
+    const styleId = 'chatbot-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = cssStyles;
+      document.head.appendChild(style);
+    }
+  }, []);
+
+  // Auto-scroll
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chat]);
+
+  // ✅ 수정된 부분: 안정화된 API 객체 생성
+  const api = useMemo(() => {
+    return axios.create({
+      baseURL:
+        process.env.NODE_ENV === 'production'
+          ? 'https://your-prod-domain'
+          : 'http://localhost:5000',
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }, []);
 
   const generateSessionId = useCallback(() => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -641,22 +687,27 @@ const ChatbotWidget = () => {
     if (!sessionId) {
       const newSessionId = generateSessionId();
       setSessionId(newSessionId);
-      console.log("🆔 New session created:", newSessionId);
+      console.log('🆔 New session created:', newSessionId);
     }
   }, [sessionId, generateSessionId]);
 
+  // ✅ 수정된 부분: ML Stats 로딩 최적화 (무한 호출 방지)
   useEffect(() => {
     const loadMlStats = async () => {
       try {
-        const response = await api.get("/ml_stats");
+        const response = await api.get('/ml_stats');
         setMlStats(response.data);
-        console.log("📊 ML stats loaded:", response.data);
+        console.log('📊 ML stats loaded:', response.data);
       } catch (error) {
-        console.error("Failed to load ML stats:", error);
+        console.error('Failed to load ML stats:', error);
       }
     };
-    if (isDevMode) loadMlStats();
-  }, [isDevMode, api]);
+
+    // 개발 모드이고 아직 ML 통계를 로드하지 않았을 때만 실행
+    if (isDevMode && !mlStats) {
+      loadMlStats();
+    }
+  }, [isDevMode]); // api를 의존성 배열에서 제거
 
   const handleToggleOpen = () => {
     setIsOpen((prev) => {
@@ -664,11 +715,11 @@ const ChatbotWidget = () => {
       if (willOpen && !welcomedRef.current && chat.length === 0) {
         setChat([
           {
-            role: "assistant",
+            role: 'assistant',
             text:
-                "안녕하세요! MOCA 고객지원 챗봇입니다.\n" +
-                "차량 예약, 요금 문의, 이용 방법 등 무엇이든 물어보세요.\n" +
-                "대화 내용을 기억하고 있으니 편하게 대화하세요! 😊",
+              '안녕하세요! MOCA 고객지원 챗봇입니다.\n' +
+              '차량 예약, 요금 문의, 이용 방법 등 무엇이든 물어보세요.\n' +
+              '대화 내용을 기억하고 있으니 편하게 대화하세요! 😊',
             timestamp: new Date().toISOString(),
           },
         ]);
@@ -684,277 +735,210 @@ const ChatbotWidget = () => {
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || isLoading || !sessionId) return;
+
     const userMessage = {
-      role: "user",
+      role: 'user',
       text: input.trim(),
       timestamp: new Date().toISOString(),
     };
+
     appendToChat(userMessage);
-    setInput("");
+    setInput('');
     setIsLoading(true);
 
     try {
-      const res = await api.post("/get_response", {
+      const res = await api.post('/get_response', {
         message: userMessage.text,
         session_id: sessionId,
       });
+
       const botMessage = {
-        role: "assistant",
+        role: 'assistant',
         text: res.data.response,
         timestamp: new Date().toISOString(),
         ml_prediction: res.data.ml_prediction,
         messageId: Date.now(),
       };
+
       appendToChat(botMessage);
+
       if (res.data.session_id && res.data.session_id !== sessionId) {
         setSessionId(res.data.session_id);
       }
     } catch (err) {
-      console.error("❌ Server error:", err);
-      let errorMessage = "서버와 연결할 수 없어요.";
-      // Error handling logic...
+      console.error('❌ Server error:', err);
+      let errorMessage = '서버와 연결할 수 없어요. 잠시 후 다시 시도해주세요.';
+
+      if (err.response?.status === 429) {
+        errorMessage = '요청이 너무 많아요. 잠시 후 다시 시도해주세요.';
+      } else if (err.code === 'ECONNABORTED') {
+        errorMessage = '응답 시간이 초과되었어요. 다시 시도해주세요.';
+      }
+
       appendToChat({
-        role: "assistant",
-        text: `⚠️ ${errorMessage}`,
+        role: 'error',
+        text: errorMessage,
         timestamp: new Date().toISOString(),
-        isError: true,
       });
     } finally {
       setIsLoading(false);
     }
   }, [input, isLoading, sessionId, appendToChat, api]);
 
-  const handleSummarize = useCallback(async () => {
-    if (isSummarizing || chat.length < 2) return;
-    setIsSummarizing(true);
-    appendToChat({
-      role: "system",
-      text: "✨ 대화 내용을 요약하는 중입니다...",
-      timestamp: new Date().toISOString(),
-      isSystem: true,
-    });
-
-    const conversationHistory = chat
-        .filter((msg) => msg.role === "user" || msg.role === "assistant")
-        .map((msg) => `${msg.role === "user" ? "사용자" : "챗봇"}: ${msg.text}`)
-        .join("\n");
-    const prompt = `다음 고객 지원 대화 내용을 한국어로 간결하게 한 문단으로 요약해 주세요:\n\n---\n${conversationHistory}\n---`;
-    const summary = await callGeminiApi(prompt);
-
-    if (summary) {
-      appendToChat({
-        role: "system",
-        text: `✨ 대화 요약:\n${summary}`,
-        timestamp: new Date().toISOString(),
-        isSystem: true,
-      });
-    } else {
-      appendToChat({
-        role: "system",
-        text: "⚠️ 요약 생성에 실패했습니다.",
-        timestamp: new Date().toISOString(),
-        isSystem: true,
-      });
-    }
-    setIsSummarizing(false);
-  }, [chat, isSummarizing, appendToChat]);
-
-  const handleRephrase = useCallback(async () => {
-    if (!input.trim() || isRephrasing) return;
-    setIsRephrasing(true);
-    const originalInput = input;
-    setInput("✨ 문장을 다듬는 중...");
-    const prompt = `다음 고객 지원 문의 내용을 더 명확하고 정중한 한국어 문장으로 바꿔주세요. 결과는 바뀐 문장만 간결하게 보여주세요:\n\n"${originalInput}"`;
-    const rephrasedText = await callGeminiApi(prompt);
-    if (rephrasedText) {
-      setInput(rephrasedText.trim());
-    } else {
-      setInput(originalInput);
-    }
-    setIsRephrasing(false);
-  }, [input, isRephrasing]);
-
-  const submitFeedback = useCallback(
-      async (messageId, feedbackData) => {
-        try {
-          const messageIndex = chat.findIndex(
-              (msg) => msg.messageId === messageId
-          );
-          const message = chat[messageIndex];
-          const userMessage = chat[messageIndex - 1];
-          if (!message || !userMessage || !message.ml_prediction) return;
-          const feedbackPayload = {
-            text: userMessage.text,
-            predicted_intent: message.ml_prediction.final_intent,
-            actual_intent: feedbackData.correctIntent,
-            user_satisfied: feedbackData.satisfied,
-          };
-          await api.post("/feedback", feedbackPayload);
-          setShowFeedback(false);
-          setCurrentFeedback(null);
-          appendToChat({
-            role: "system",
-            text: "📝 피드백 감사합니다!",
-            timestamp: new Date().toISOString(),
-            isSystem: true,
-          });
-        } catch (error) {
-          console.error("❌ Failed to submit feedback:", error);
-        }
-      },
-      [chat, appendToChat, api]
-  );
-
-  const openFeedback = useCallback(
-      (messageId) => {
-        const messageIndex = chat.findIndex((msg) => msg.messageId === messageId);
-        const message = chat[messageIndex];
-        const userMessage = chat[messageIndex - 1];
-        if (message && userMessage && message.ml_prediction) {
-          setCurrentFeedback({
-            messageId,
-            userMessage: userMessage.text,
-            botResponse: message.text,
-            prediction: message.ml_prediction,
-          });
-          setShowFeedback(true);
-        }
-      },
-      [chat]
-  );
-
-  useEffect(() => {
-    if (!isOpen) return;
-    requestAnimationFrame(() => {
-      if (endRef.current) {
-        endRef.current.scrollIntoView({
-          behavior: firstScrollDoneRef.current ? "smooth" : "auto",
-          block: "end",
-        });
-      }
-      firstScrollDoneRef.current = true;
-    });
-  }, [chat, isOpen]);
-
   const handleKeyDown = (e) => {
-    if (composingRef.current) return;
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !composingRef.current) {
       e.preventDefault();
       sendMessage();
     }
   };
 
+  const handleRephrase = async () => {
+    if (!input.trim() || isRephrasing) return;
+
+    setIsRephrasing(true);
+    try {
+      const response = await api.post('/get_response', {
+        message: `다음 문장을 더 정중하고 명확하게 다시 써주세요: "${input}"`,
+        session_id: sessionId,
+      });
+
+      setInput(response.data.response.replace(/["'"]/g, ''));
+    } catch (error) {
+      console.error('문장 다듬기 실패:', error);
+    } finally {
+      setIsRephrasing(false);
+    }
+  };
+
+  const openFeedback = (feedbackData) => {
+    setCurrentFeedback(feedbackData);
+    setShowFeedback(true);
+  };
+
+  const submitFeedback = async (
+    text,
+    predicted_intent,
+    actual_intent,
+    user_satisfied = true
+  ) => {
+    try {
+      await api.post('/feedback', {
+        text,
+        predicted_intent,
+        actual_intent,
+        user_satisfied,
+      });
+
+      console.log('✅ 피드백 제출 완료');
+
+      // 피드백 후 ML 통계 새로고침 (개발 모드에서만)
+      if (isDevMode) {
+        try {
+          const response = await api.get('/ml_stats');
+          setMlStats(response.data);
+        } catch (error) {
+          console.error('ML 통계 새로고침 실패:', error);
+        }
+      }
+    } catch (error) {
+      console.error('❌ 피드백 제출 실패:', error);
+    }
+  };
+
   return (
-      <>
-        <ChatbotStyles />
-        <div className="chatbot-widget">
-          <button
-              className="chatbot-button"
-              onClick={handleToggleOpen}
-              title="MOCA 챗봇"
-              aria-label="챗봇 열기/닫기"
-          >
-            {isOpen ? "✖" : "❔"}
-          </button>
+    <>
+      <div className="chatbot-widget">
+        <button
+          onClick={handleToggleOpen}
+          className="chatbot-button"
+          aria-label="챗봇 열기/닫기"
+        >
+          {isOpen ? '✖' : '💬'}
+        </button>
 
-          {isOpen && (
-              <div className="chatbot-popup">
-                <div className="chatbot-header">
-              <span>
-                MOCA 챗봇
-                {isDevMode && sessionId && (
-                    <span
-                        style={{ fontSize: "10px", opacity: 0.7 }}
-                    >{` (${sessionId.slice(-8)})`}</span>
-                )}
-              </span>
-                  <button
-                      onClick={handleSummarize}
-                      disabled={isSummarizing || chat.length < 2}
-                      className="header-btn summarize-btn"
-                      title="대화 요약"
-                  >
-                    {isSummarizing ? "⏳" : "✨"}
-                  </button>
-                  <button
-                      onClick={() => setIsOpen(false)}
-                      aria-label="챗봇 닫기"
-                      className="header-btn"
-                  >
-                    ✖
-                  </button>
-                </div>
+        {isOpen && (
+          <div className="chatbot-popup">
+            <div className="chatbot-header">
+              <span>🚗 MOCA 고객지원</span>
+              <button
+                onClick={handleToggleOpen}
+                aria-label="챗봇 닫기"
+                className="header-btn"
+              >
+                ✖
+              </button>
+            </div>
 
-                {isDevMode && mlStats && (
-                    <div className="ml-stats-banner">
-                      📊 ML: {mlStats.training_data_count}개 학습, 정확도:{" "}
-                      {(mlStats.recent_accuracy * 100).toFixed(1)}%
-                      {mlStats.model_loaded ? " ✅" : " ❌"}
-                    </div>
-                )}
-
-                <div className="chatbot-messages" ref={messagesRef}>
-                  {chat.map((msg, i) => (
-                      <MessageBubble
-                          key={i}
-                          msg={msg}
-                          isDevMode={isDevMode}
-                          onOpenFeedback={openFeedback}
-                          onSubmitFeedback={submitFeedback}
-                      />
-                  ))}
-                  {isLoading && (
-                      <div className="chat-bubble bot loading">
-                        <div className="typing-animation">
-                          <span />
-                          <span></span>
-                          <span />
-                        </div>
-                      </div>
-                  )}
-                  <div ref={endRef} />
-                </div>
-
-                <div className="chatbot-input">
-                  <input
-                      type="text"
-                      placeholder="메시지를 입력하세요..."
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      onCompositionStart={() => (composingRef.current = true)}
-                      onCompositionEnd={() => (composingRef.current = false)}
-                      disabled={isLoading || isRephrasing}
-                      aria-label="메시지 입력"
-                  />
-                  <button
-                      onClick={handleRephrase}
-                      disabled={isRephrasing || isLoading || !input.trim()}
-                      className="rephrase-btn"
-                      title="문장 다듬기"
-                  >
-                    ✨
-                  </button>
-                  <button
-                      onClick={sendMessage}
-                      disabled={isLoading || !input.trim()}
-                      aria-label="메시지 전송"
-                  >
-                    {isLoading ? "⏳" : "📤"}
-                  </button>
-                </div>
+            {isDevMode && mlStats && (
+              <div className="ml-stats-banner">
+                📊 ML: {mlStats.training_data_count}개 학습, 정확도:{' '}
+                {(mlStats.recent_accuracy * 100).toFixed(1)}%
+                {mlStats.model_loaded ? ' ✅' : ' ❌'}
               </div>
-          )}
+            )}
 
-          <FeedbackModal
-              isOpen={showFeedback}
-              feedbackData={currentFeedback}
-              onClose={() => setShowFeedback(false)}
-              onSubmit={submitFeedback}
-              isDevMode={isDevMode}
-          />
-        </div>
-      </>
+            <div className="chatbot-messages" ref={messagesRef}>
+              {chat.map((msg, i) => (
+                <MessageBubble
+                  key={i}
+                  msg={msg}
+                  isDevMode={isDevMode}
+                  onOpenFeedback={openFeedback}
+                  onSubmitFeedback={submitFeedback}
+                />
+              ))}
+              {isLoading && (
+                <div className="chat-bubble bot loading">
+                  <div className="typing-animation">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                </div>
+              )}
+              <div ref={endRef} />
+            </div>
+
+            <div className="chatbot-input">
+              <input
+                type="text"
+                placeholder="메시지를 입력하세요..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onCompositionStart={() => (composingRef.current = true)}
+                onCompositionEnd={() => (composingRef.current = false)}
+                disabled={isLoading || isRephrasing}
+                aria-label="메시지 입력"
+              />
+              <button
+                onClick={handleRephrase}
+                disabled={isRephrasing || isLoading || !input.trim()}
+                className="rephrase-btn"
+                title="문장 다듬기"
+              >
+                ✨
+              </button>
+              <button
+                onClick={sendMessage}
+                disabled={isLoading || !input.trim()}
+                aria-label="메시지 전송"
+              >
+                {isLoading ? '⏳' : '📤'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <FeedbackModal
+          isOpen={showFeedback}
+          feedbackData={currentFeedback}
+          onClose={() => setShowFeedback(false)}
+          onSubmit={submitFeedback}
+          isDevMode={isDevMode}
+        />
+      </div>
+    </>
   );
 };
 
