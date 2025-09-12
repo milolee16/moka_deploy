@@ -99,6 +99,28 @@ const MyPage = () => {
     }
   };
 
+  const handleReturnReservation = async (reservationId) => {
+    if (!window.confirm("정말로 반납하시겠습니까?")) return;
+
+    try {
+      await axios.put(`${API_BASE_URL}/api/reservations/${reservationId}/complete`, {}, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      // Update local state
+      const updatedReservations = reservations.map(r => 
+        r.id === reservationId ? { ...r, status: 'COMPLETED', displayStatus: 'COMPLETED' } : r
+      );
+      setReservations(updatedReservations);
+      closeModal();
+    } catch (err) {
+      console.error("Failed to complete reservation:", err);
+      alert("반납 처리에 실패했습니다.");
+    }
+  };
+
   const displayName = user?.username || '게스트';
   const profileInitial = user?.role === 'admin' ? 'A' : displayName[0];
 
@@ -133,8 +155,15 @@ const MyPage = () => {
 
             if (status === 'CONFIRMED') {
               const reservationStart = new Date(`${rentalDate}T${rentalTime}`);
-              if (reservationStart > new Date()) {
+              const reservationEnd = new Date(`${res.returnDate}T${res.returnTime}`);
+              const now = new Date();
+
+              if (now < reservationStart) {
                 displayStatus = 'UPCOMING';
+              } else if (now >= reservationStart && now <= reservationEnd) {
+                displayStatus = 'IN_USE';
+              } else {
+                displayStatus = 'COMPLETED';
               }
             }
 
@@ -215,6 +244,11 @@ const MyPage = () => {
               </InfoRow>
             )}
           </ModalContent>
+          {selectedReservation.displayStatus === 'IN_USE' && (
+    <ReturnButton onClick={() => handleReturnReservation(selectedReservation.id)}>
+      반납하기
+    </ReturnButton>
+  )}
           {selectedReservation.displayStatus === 'UPCOMING' && (
             <CancelButton onClick={() => handleCancelReservation(selectedReservation.id)}>
               예약 취소
@@ -225,6 +259,28 @@ const MyPage = () => {
     </PageLayout>
   );
 };
+
+const handleReturnReservation = async (reservationId) => {
+    if (!window.confirm("정말로 반납하시겠습니까?")) return;
+
+    try {
+      await axios.put(`${API_BASE_URL}/api/reservations/${reservationId}/complete`, {}, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      // Update local state
+      const updatedReservations = reservations.map(r => 
+        r.id === reservationId ? { ...r, status: 'COMPLETED', displayStatus: 'COMPLETED' } : r
+      );
+      setReservations(updatedReservations);
+      closeModal();
+    } catch (err) {
+      console.error("Failed to complete reservation:", err);
+      alert("반납 처리에 실패했습니다.");
+    }
+  };
 
 export default MyPage;
 
@@ -356,11 +412,13 @@ const StatusBadge = styled.span`
   align-self: center;
   color: ${({ status }) => {
     if (status === 'UPCOMING') return '#4CAF50';
+    if (status === 'IN_USE') return '#2196F3';
     if (status === 'CANCELLED') return '#F44336';
     return '#757575';
   }};
   background-color: ${({ status }) => {
     if (status === 'UPCOMING') return '#E8F5E9';
+    if (status === 'IN_USE') return '#E3F2FD';
     if (status === 'CANCELLED') return '#FFEBEE';
     return '#F5F5F5';
   }};
@@ -488,6 +546,7 @@ const InfoLabel = styled.span`
 const InfoValue = styled.span`
   color: ${({ status }) => {
     if (status === 'UPCOMING') return '#4CAF50';
+    if (status === 'IN_USE') return '#2196F3';
     if (status === 'CANCELLED') return '#F44336';
     return '#5d4037';
   }};
@@ -509,5 +568,22 @@ const CancelButton = styled.button`
 
   &:hover {
     background-color: #D32F2F;
+  }
+`;
+
+const ReturnButton = styled.button`
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #1976D2;
   }
 `;
