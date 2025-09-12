@@ -1,34 +1,34 @@
-import React, { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { useWebSocket } from "./hooks/useWebSocket";
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { useWebSocket } from './hooks/useWebSocket';
 
 // Page Components
-import Welcome from "./components/Welcome.jsx";
-import Index from "./components/Index.jsx";
-import Reservation from "./components/reservation/Reservation.jsx";
-import Layout from "./components/Layout.jsx";
-import MapPage from "./components/reservation/Map.jsx";
-import CarSelect from "./components/reservation/CarSelect.jsx";
-import InsuranceSelect from "./components/reservation/InsuranceSelect.jsx";
-import Checkout from "./components/reservation/Checkout.jsx";
-import PaymentOptions from "./components/reservation/PaymentOptions.jsx";
-import PaymentResult from "./components/reservation/PaymentResult.jsx";
-import AdminPage from "./pages/AdminPage";
-import OcrPage from "./pages/OcrPage";
-import LoginPage from "./pages/LoginPage.jsx";
-import SignupPage from "./pages/SignupPage.jsx";
-import KakaoCallback from "./components/common/KakaoCallback.jsx";
-import NoticesPage from "./components/notices/Notices.jsx";
-import MyPage from "./pages/MyPage.jsx";
-import ProfileEditPage from "./pages/ProfileEditPage.jsx";
-import FAQPage from "./pages/FAQPage";
-import NoticeWritePage from "./components/notices/NoticeWritePage.jsx";
-import PaymentsAndLicenses from "./pages/PaymentsAndLicenses.jsx";
-import AddPaymentPage from "./pages/AddPaymentPage.jsx";
-import ChatbotWidget from "./components/ChatbotWidget.jsx";
-import ReturnPage from "./pages/ReturnPage.jsx";
-import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
+import Welcome from './components/Welcome.jsx';
+import Index from './components/Index.jsx';
+import Reservation from './components/reservation/Reservation.jsx';
+import Layout from './components/Layout.jsx';
+import MapPage from './components/reservation/Map.jsx';
+import CarSelect from './components/reservation/CarSelect.jsx';
+import InsuranceSelect from './components/reservation/InsuranceSelect.jsx';
+import Checkout from './components/reservation/Checkout.jsx';
+import PaymentOptions from './components/reservation/PaymentOptions.jsx';
+import PaymentResult from './components/reservation/PaymentResult.jsx';
+import AdminPage from './pages/AdminPage';
+import OcrPage from './pages/OcrPage';
+import LoginPage from './pages/LoginPage.jsx';
+import SignupPage from './pages/SignupPage.jsx';
+import KakaoCallback from './components/common/KakaoCallback.jsx';
+import NoticesPage from './components/notices/Notices.jsx';
+import MyPage from './pages/MyPage.jsx';
+import ProfileEditPage from './pages/ProfileEditPage.jsx';
+import FAQPage from './pages/FAQPage';
+import NoticeWritePage from './components/notices/NoticeWritePage.jsx';
+import PaymentsAndLicenses from './pages/PaymentsAndLicenses.jsx';
+import AddPaymentPage from './pages/AddPaymentPage.jsx';
+import ChatbotWidget from './components/ChatbotWidget.jsx';
+import ReturnPage from './pages/ReturnPage.jsx';
+import ProtectedRoute from './components/common/ProtectedRoute.jsx';
 
 const WebSocketInitializer = ({ children }) => {
   const { user } = useAuth();
@@ -79,7 +79,6 @@ function App() {
             />
             <Route path="/add-payment" element={<AddPaymentPage />} />
             <Route path="/faq" element={<FAQPage />} />
-            <Route path="/chatbot" element={<Chatbot />} />
             <Route path="/return" element={<ReturnPage />} />
             <Route path="/test/return" element={<ReturnPage />} />
 
