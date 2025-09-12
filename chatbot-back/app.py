@@ -1,8 +1,8 @@
 # app.py - CORS 문제 해결된 버전
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-import google.generativeai as genai
-from google.generativeai import types
+from google import genai
+from google.genai import types
 import os
 import traceback
 import uuid
