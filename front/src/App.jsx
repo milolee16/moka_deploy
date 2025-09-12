@@ -109,7 +109,8 @@ function App() {
           <Route path="/auth/kakao/callback/test" element={<KakaoCallback />} />
         </Routes>
         {/* 오른쪽 하단 챗봇 위젯 */}
-        <ChatbotWidget /> {/* 🔥 Layout 밖에서 항상 보이도록 */}
+        <ChatbotWidget isDevMode={true} />{' '}
+        {/* 🔥 Layout 밖에서 항상 보이도록 */}
       </WebSocketInitializer>
     </AuthProvider>
   );
