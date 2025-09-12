@@ -26,11 +26,11 @@ const KakaoLoginButton = ({ redirectPath = "/auth/kakao/callback" }) => {
 export default KakaoLoginButton;
 
 const StyledKakaoButton = styled.button`
-    width: 100%;
     border: none;
     background: none;
     padding: 0;
     cursor: pointer;
+    overflow: hidden;
 
     &:disabled {
         cursor: not-allowed;
@@ -38,7 +38,8 @@ const StyledKakaoButton = styled.button`
     }
 
     img {
-        height: 50px; /* Set fixed height */
-        width: 100%; /* Adjust width proportionally */
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
     }
 `;

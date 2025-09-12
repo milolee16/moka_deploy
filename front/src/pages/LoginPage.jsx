@@ -86,15 +86,17 @@ const LoginForm = styled.form`
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   background-color: #fff;
   width: 100%;
-  max-width: 400px;
+  max-width: 300px;
   margin: 20px;
 `;
 
 const Input = styled.input`
-  padding: 12px;
+  height: 52px;
+  padding: 0 20px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 999px;
   font-size: 16px;
+  box-sizing: border-box;
 
   &:disabled {
     background-color: #f5f5f5;
@@ -103,12 +105,12 @@ const Input = styled.input`
 `;
 
 const Button = styled.button`
-  padding: 12px;
   border: none;
-  border-radius: 4px;
+  border-radius: 999px;
   background-color: #5d4037;
   color: white;
   font-size: 16px;
+  font-weight: 800;
   cursor: pointer;
   transition: background-color 0.2s;
 

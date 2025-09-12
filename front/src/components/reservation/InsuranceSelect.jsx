@@ -115,7 +115,7 @@ const InsuranceSelect = () => {
                     onClick={handlePay}
                     aria-disabled={!selected}
                 >
-                    {selected ? `${selected.title}로 결제하기` : "결제하기"}
+                    결제하기
                 </PayButton>
             </PayBar>
         </Wrap>
@@ -244,8 +244,11 @@ const PayBar = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 12px 16px 22px;
+    padding: 12px 32px 22px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #fff 30%);
+    max-width: 560px;
+    margin: 0 auto;
+    box-sizing: border-box;
 `;
 
 const PayButton = styled.button`

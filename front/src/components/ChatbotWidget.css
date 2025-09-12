@@ -18,11 +18,11 @@
   bottom: 24px;
   right: 24px;
   z-index: 9999;
-  font-family: 'Pretendard', 'Noto Sans KR', system-ui, -apple-system,
+  font-family: "Pretendard", "Noto Sans KR", system-ui, -apple-system,
     sans-serif;
 }
 
-/* 플로팅 버튼 (원형, 브라운) */
+/* 플로팅 버튼 */
 .chatbot-button {
   width: 48px;
   height: 48px;
@@ -108,8 +108,18 @@
   gap: 8px;
   color: var(--moca-text);
 }
+.chatbot-messages::-webkit-scrollbar {
+  width: 8px;
+}
+.chatbot-messages::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+.chatbot-messages::-webkit-scrollbar-thumb {
+  background: #cbbba9;
+  border-radius: 8px;
+}
 
-/* 말풍선 공통 */
+/* 말풍선 */
 .chat-bubble {
   padding: 10px 14px;
   border-radius: 18px;
@@ -121,8 +131,6 @@
   position: relative;
   white-space: pre-wrap; /* 줄바꿈 유지 */
 }
-
-/* 사용자 말풍선 (우측, 진브라운) */
 .chat-bubble.user {
   align-self: flex-end;
   background: var(--moca-bubble-user);
@@ -131,8 +139,6 @@
   border-radius: 18px 18px 4px 18px;
   box-shadow: 0 4px 10px rgba(46, 42, 39, 0.18);
 }
-
-/* 봇 말풍선 (좌측, 라이트 베이지) */
 .chat-bubble.bot {
   align-self: flex-start;
   background: var(--moca-bubble-bot);
@@ -203,6 +209,14 @@
   transition: background 0.2s ease, filter 0.2s ease;
   min-width: 60px;
 }
+.chatbot-input button:hover {
+  background: var(--moca-brown-dark);
+  filter: brightness(1.03);
+}
+.chatbot-input button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 .chatbot-input button:hover:not(:disabled) {
   background: var(--moca-brown-dark);
@@ -262,5 +276,23 @@
     --moca-bubble-bot: #3a3530;
     --moca-text: #e8dfd6;
     --moca-sand: #4a453f;
+  }
+}
+.typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
   }
 }

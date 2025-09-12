@@ -174,8 +174,7 @@ const Reservation = () => {
                     padding: 20px;
                     display: flex;
                     justify-content: center;
-                    align-items: center;
-                    min-height: 55vh;
+                    min-height: 90vh;
                 }
                 .box-card {
                     background: #ffffff;
@@ -186,6 +185,8 @@ const Reservation = () => {
                     gap: 16px;
                     width: 100%;
                     max-width: 420px;
+                    height: 390px;
+                    margin-top: 38px;
                 }
                 .section-title {
                     font-size: 16px;
@@ -341,7 +342,7 @@ const Reservation = () => {
                     flex-direction: column;
                     gap: 20px;
                     width: 90%;
-                    max-width: 400px;
+                    max-width: 300px;
                     animation: slideUp 0.4s ease;
                 }
                 .modal-title {

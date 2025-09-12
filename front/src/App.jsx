@@ -26,7 +26,6 @@ import FAQPage from "./pages/FAQPage";
 import NoticeWritePage from "./components/notices/NoticeWritePage.jsx";
 import PaymentsAndLicenses from "./pages/PaymentsAndLicenses.jsx";
 import AddPaymentPage from "./pages/AddPaymentPage.jsx";
-import Chatbot from "./components/Chatbot.jsx";
 import ChatbotWidget from "./components/ChatbotWidget.jsx";
 import ReturnPage from "./pages/ReturnPage.jsx";
 import ProtectedRoute from "./components/common/ProtectedRoute.jsx";

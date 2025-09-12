@@ -95,7 +95,7 @@ const Checkout = () => {
                 <InfoBox>
                     <InfoItem>
                         <span>차량</span>
-                        <Value>{car.name}</Value>
+                        <Value>{car.carName}</Value>
                     </InfoItem>
                     <InfoItem>
                         <span>보험</span>
@@ -106,11 +106,6 @@ const Checkout = () => {
                 <SectionTitle>결제금액</SectionTitle>
                 <FeeBox>
                     <FeeItem>
-                        <span>요금 합계</span>
-                        <Value>{formatCurrencyKRW(totalFee)}원</Value>
-                    </FeeItem>
-                    <Divider />
-                    <FeeItem>
                         <span>대여 요금</span>
                         <span>{formatCurrencyKRW(rentFee)}원</span>
                     </FeeItem>
@@ -118,17 +113,17 @@ const Checkout = () => {
                         <span>면책상품 요금</span>
                         <span>{formatCurrencyKRW(insuranceFee)}원</span>
                     </FeeItem>
+                    <Divider />
+                    <FeeItem>
+                        <strong>총 결제금액</strong>
+                        <Value>{formatCurrencyKRW(totalFee)}원</Value>
+                    </FeeItem>
                 </FeeBox>
-
-                <TotalAmountBox>
-                    <span>총 결제금액</span>
-                    <TotalAmount>{formatCurrencyKRW(totalFee)}원</TotalAmount>
-                </TotalAmountBox>
             </Container>
 
             <PayBar>
                 <PayButton type="button" onClick={handlePay}>
-                    총 {formatCurrencyKRW(totalFee)}원 결제하기
+                    결제하기
                 </PayButton>
             </PayBar>
         </Wrap>
@@ -215,7 +210,7 @@ const FeeItem = styled.div`
 `;
 
 const Value = styled.span`
-  font-weight: 600;
+  font-weight: 800;
 `;
 
 const Divider = styled.hr`
@@ -242,8 +237,11 @@ const PayBar = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 12px 16px 22px;
+  padding: 12px 32px 22px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #fff 30%);
+  max-width: 560px;
+  margin: 0 auto;
+  box-sizing: border-box;
 `;
 
 const PayButton = styled.button`
