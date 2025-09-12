@@ -27,6 +27,7 @@ import NoticeWritePage from "./components/notices/NoticeWritePage.jsx";
 import PaymentsAndLicenses from "./pages/PaymentsAndLicenses.jsx";
 import AddPaymentPage from "./pages/AddPaymentPage.jsx";
 import ChatbotWidget from "./components/ChatbotWidget.jsx";
+import ReturnPage from "./pages/ReturnPage.jsx";
 import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
 
 const WebSocketInitializer = ({ children }) => {
@@ -78,6 +79,9 @@ function App() {
             />
             <Route path="/add-payment" element={<AddPaymentPage />} />
             <Route path="/faq" element={<FAQPage />} />
+            <Route path="/chatbot" element={<Chatbot />} />
+            <Route path="/return" element={<ReturnPage />} />
+            <Route path="/test/return" element={<ReturnPage />} />
 
             {/* Protected Route for My Page */}
             <Route element={<ProtectedRoute />}>

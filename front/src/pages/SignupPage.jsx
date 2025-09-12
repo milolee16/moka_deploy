@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import Modal from "../components/Modal.jsx";
 
 const SignupPage = () => {
     const [formData, setFormData] = useState({
@@ -15,7 +16,10 @@ const SignupPage = () => {
     const [userIdChecked, setUserIdChecked] = useState(false);
     const [userIdAvailable, setUserIdAvailable] = useState(false);
     const [ageValidation, setAgeValidation] = useState({ isValid: true, message: '' });
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [newUserName, setNewUserName] = useState("");
     const { register, checkUserId, loading } = useAuth();
+    const navigate = useNavigate();
 
     const validateAge = useCallback((birthDate) => {
         if (birthDate.length !== 6) {
@@ -133,114 +137,145 @@ const SignupPage = () => {
         year = year >= 30 ? 1900 + year : 2000 + year;
         const fullBirthDateStr = `${year}-${month}-${day}`;
 
-        await register(
+        const userData = await register(
             userId.trim(),
             password,
             userName.trim(),
             fullBirthDateStr,
             phoneNumber.trim()
         );
+
+        if (userData) {
+            setNewUserName(userData.username);
+            setModalOpen(true);
+        }
+    };
+
+    const closeModalAndNavigate = () => {
+        setModalOpen(false);
+        navigate('/home');
     };
 
     return (
-        <SignupContainer>
-            <SignupForm onSubmit={handleSubmit}>
-                <h2>회원가입</h2>
+        <>
+            <SignupContainer>
+                <SignupForm onSubmit={handleSubmit}>
+                    <h2>회원가입</h2>
 
-                <InputGroup>
-                    <InputWrapper>
-                        <Input
-                            type="text"
-                            name="userId"
-                            placeholder="아이디를 입력하세요 (4자 이상)"
-                            value={formData.userId}
-                            onChange={handleInputChange}
-                            disabled={loading}
-                            required
-                        />
-                        <CheckButton
-                            type="button"
-                            onClick={handleUserIdCheck}
-                            disabled={loading || !formData.userId.trim()}
-                        >
-                            중복확인
-                        </CheckButton>
-                    </InputWrapper>
-                    {userIdChecked && (
-                        <CheckMessage $available={userIdAvailable}>
-                            {userIdAvailable ? "사용 가능한 ID입니다" : "이미 사용 중인 ID입니다"}
-                        </CheckMessage>
-                    )}
-                </InputGroup>
+                    <InputGroup>
+                        <InputWrapper>
+                            <Input
+                                type="text"
+                                name="userId"
+                                placeholder="아이디를 입력하세요 (4자 이상)"
+                                value={formData.userId}
+                                onChange={handleInputChange}
+                                disabled={loading}
+                                required
+                            />
+                            <CheckButton
+                                type="button"
+                                onClick={handleUserIdCheck}
+                                disabled={loading || !formData.userId.trim()}
+                            >
+                                중복확인
+                            </CheckButton>
+                        </InputWrapper>
+                        {userIdChecked && (
+                            <CheckMessage $available={userIdAvailable}>
+                                {userIdAvailable ? "사용 가능한 ID입니다" : "이미 사용 중인 ID입니다"}
+                            </CheckMessage>
+                        )}
+                    </InputGroup>
 
-                <Input
-                    type="text"
-                    name="userName"
-                    placeholder="이름을 입력하세요"
-                    value={formData.userName}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    required
-                />
-
-                <InputGroup>
                     <Input
                         type="text"
-                        name="birthDate"
-                        placeholder="생년월일 6자리를 입력해주세요 (예: 990101)"
-                        value={formData.birthDate}
+                        name="userName"
+                        placeholder="이름을 입력하세요"
+                        value={formData.userName}
                         onChange={handleInputChange}
-                        maxLength="6"
                         disabled={loading}
                         required
                     />
-                    {!ageValidation.isValid && (
-                        <CheckMessage $available={false}>
-                            {ageValidation.message}
-                        </CheckMessage>
-                    )}
-                </InputGroup>
 
-                <Input
-                    type="tel"
-                    name="phoneNumber"
-                    placeholder="휴대폰 번호 (010-1234-5678)"
-                    value={formData.phoneNumber}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    required
-                />
+                    <InputGroup>
+                        <Input
+                            type="text"
+                            name="birthDate"
+                            placeholder="생년월일 6자리를 입력해주세요 (예: 990101)"
+                            value={formData.birthDate}
+                            onChange={handleInputChange}
+                            maxLength="6"
+                            disabled={loading}
+                            required
+                        />
+                        {!ageValidation.isValid && (
+                            <CheckMessage $available={false}>
+                                {ageValidation.message}
+                            </CheckMessage>
+                        )}
+                    </InputGroup>
 
-                <Input
-                    type="password"
-                    name="password"
-                    placeholder="비밀번호를 입력하세요 (4자 이상)"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    required
-                />
+                    <Input
+                        type="tel"
+                        name="phoneNumber"
+                        placeholder="휴대폰 번호 (010-1234-5678)"
+                        value={formData.phoneNumber}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                        required
+                    />
 
-                <Input
-                    type="password"
-                    name="confirmPassword"
-                    placeholder="비밀번호를 다시 입력하세요"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    required
-                />
+                    <Input
+                        type="password"
+                        name="password"
+                        placeholder="비밀번호를 입력하세요 (4자 이상)"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                        required
+                    />
 
-                <Button type="submit" disabled={loading}>
-                    {loading ? "가입 중..." : "회원가입"}
-                </Button>
+                    <Input
+                        type="password"
+                        name="confirmPassword"
+                        placeholder="비밀번호를 다시 입력하세요"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                        required
+                    />
 
-                <LinkSection>
-                    <Link to="/login">이미 계정이 있으신가요? 로그인하기</Link>
-                    <HomeLink to="/">메인 페이지로 돌아가기</HomeLink>
-                </LinkSection>
-            </SignupForm>
-        </SignupContainer>
+                    <Button type="submit" disabled={loading}>
+                        {loading ? "가입 중..." : "회원가입"}
+                    </Button>
+
+                    <LinkSection>
+                        <Link to="/login">이미 계정이 있으신가요? 로그인하기</Link>
+                        <HomeLink to="/">메인 페이지로 돌아가기</HomeLink>
+                    </LinkSection>
+                </SignupForm>
+            </SignupContainer>
+
+            <Modal isOpen={isModalOpen} onClose={closeModalAndNavigate}>
+                <ModalContent>
+                    <h3>{newUserName}님, 환영합니다!</h3>
+                    <p>가입이 완료되었습니다.</p>
+                    <p>실제 차량을 예약하려면 운전면허증 등록이 필요해요.</p>
+                </ModalContent>
+                <ModalActions>
+                    <ModalButton
+                        primary
+                        onClick={() => navigate('/ocr')}
+                    >
+                        지금 면허증 등록하기
+                    </ModalButton>
+                    <ModalButton onClick={closeModalAndNavigate}>
+                        다음에 할게요
+                    </ModalButton>
+                </ModalActions>
+            </Modal>
+        </>
     );
 };
 
@@ -363,4 +398,51 @@ const LinkSection = styled.div`
 
 const HomeLink = styled(Link)`
   color: #aaa !important;
+`;
+
+const ModalContent = styled.div`
+    text-align: center;
+    h3 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    p {
+        margin: 4px 0;
+        color: #666;
+        font-size: 0.95rem;
+    }
+`;
+
+const ModalActions = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+`;
+
+const ModalButton = styled.button`
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+
+    ${({ primary }) => primary ? `
+        background-color: #795548;
+        color: white;
+        border-color: #795548;
+        &:hover {
+            background-color: #5d4037;
+            border-color: #5d4037;
+        }
+    ` : `
+        background-color: #fff;
+        color: #555;
+        &:hover {
+            background-color: #f1f3f5;
+        }
+    `}
 `;
