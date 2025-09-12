@@ -19,6 +19,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByLocationName(String locationName);
     List<Reservation> findByStatus(String status);
     List<Reservation> findByDate(LocalDate date);
+    List<Reservation> findByDateAndStatusIn(LocalDate date, List<String> statuses);
 
     // 범위 조회 - 파생 메서드(포함 범위)
     List<Reservation> findByDateBetween(LocalDate startDate, LocalDate endDate);

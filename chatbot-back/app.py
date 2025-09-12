@@ -2,8 +2,8 @@
 # --- 1. Imports ---
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-from google import genai
-from google.genai import types
+import google.generativeai as genai
+from google.generativeai import types
 import os
 import traceback
 import uuid

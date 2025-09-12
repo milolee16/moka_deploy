@@ -1,2 +1,6 @@
 Flask
 google-cloud-automl
+Flask-Cors
+google-generativeai
+gunicorn
+werkzeug

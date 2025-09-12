@@ -115,6 +115,7 @@ const MyPage = () => {
       );
       setReservations(updatedReservations);
       closeModal();
+      navigate('/return');
     } catch (err) {
       console.error("Failed to complete reservation:", err);
       alert("반납 처리에 실패했습니다.");
