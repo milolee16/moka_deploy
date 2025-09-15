@@ -24,7 +24,7 @@ const ProfileEditPage = () => {
             if (user) {
                 try {
                     setLoading(true);
-                    const response = await apiClient.get('/api/user/profile');
+                    const response = await apiClient.get('/api/users/profile');
                     const { username, birthDate, phoneNumber } = response.data;
                     setFormData(prev => ({
                         ...prev,
@@ -115,7 +115,7 @@ const ProfileEditPage = () => {
                 delete payload.newPassword;
             }
 
-            const response = await apiClient.put('/api/user/profile', payload);
+            const response = await apiClient.put('/api/users/profile', payload);
             alert(response.data.message || '프로필이 성공적으로 업데이트되었습니다.');
             navigate('/mypage');
         } catch (error) {

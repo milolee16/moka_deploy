@@ -56,10 +56,7 @@ const KakaoCallback = () => {
     }, [location, navigate, loginWithToken]);
 
     return (
-        <div>
-            {/* 사용자에게 현재 상태를 명확히 보여줌 */}
-            <h1>{message}</h1>
-        </div>
+        <></>
     );
 };
 
