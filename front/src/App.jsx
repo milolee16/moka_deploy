@@ -18,7 +18,7 @@ import AdminPage from './pages/AdminPage';
 import OcrPage from './pages/OcrPage';
 import LoginPage from './pages/LoginPage.jsx';
 import SignupPage from './pages/SignupPage.jsx';
-import KakaoCallback from './components/common/KakaoCallback';
+import KakaoCallback from './components/common/KakaoCallback.jsx';
 import NoticesPage from './components/notices/Notices.jsx';
 import MyPage from './pages/MyPage.jsx';
 import ProfileEditPage from './pages/ProfileEditPage.jsx';
@@ -31,7 +31,7 @@ import ReturnPage from './pages/ReturnPage.jsx';
 import ProtectedRoute from './components/common/ProtectedRoute.jsx';
 
 const WebSocketInitializer = ({ children }) => {
-  console.log("test11");
+  console.log("test111");
 
 
 
