@@ -18,5 +18,6 @@ export default defineConfig({
         secure: false,
       }
     }
-  }
+  },
+  base: "/moka_deploy/",
 })

@@ -31,6 +31,10 @@ import ReturnPage from './pages/ReturnPage.jsx';
 import ProtectedRoute from './components/common/ProtectedRoute.jsx';
 
 const WebSocketInitializer = ({ children }) => {
+  console.log("test1");
+
+
+
   const { user } = useAuth();
   const { connect, disconnect } = useWebSocket();
 
@@ -59,6 +63,7 @@ function App() {
     <AuthProvider>
       <WebSocketInitializer>
         <Routes>
+
           {/* Routes with the common Layout */}
           <Route element={<Layout />}>
             <Route path="/" element={<Welcome />} />
