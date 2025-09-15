@@ -1,4 +1,4 @@
-// front/src/hooks/useNotifications.js (WebSocket 연동 버전)
+// front/src/hooks/useNotifications.js (완전 수정된 버전 - 예약 완료 이벤트 리스너 포함)
 import { useState, useEffect, useCallback } from 'react';
 import { notificationService } from '../services/notificationService';
 import { useAuth } from '../contexts/AuthContext';
@@ -47,7 +47,7 @@ export const useNotifications = () => {
     try {
       await notificationService.markAsRead(notificationId);
 
-      // 로컬 상태 업데이트
+      // 즉시 로컬 상태 업데이트
       setNotifications((prev) =>
         prev.map((notification) =>
           notification.id === notificationId
@@ -56,9 +56,15 @@ export const useNotifications = () => {
         )
       );
 
-      // WebSocket을 통해 읽지 않은 개수가 업데이트되므로 별도 호출 불필요
+      // 로컬에서도 unreadCount 즉시 업데이트 (WebSocket 응답 대기하지 않음)
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+
+      console.log('알림 읽음 처리 완료:', notificationId);
     } catch (err) {
       console.error('알림 읽음 처리 실패:', err);
+      // 에러 발생 시 원래 상태로 복원
+      fetchNotifications();
+      fetchUnreadCount();
     }
   };
 
@@ -67,14 +73,18 @@ export const useNotifications = () => {
     try {
       await notificationService.markAllAsRead();
 
-      // 로컬 상태 업데이트
+      // 즉시 로컬 상태 업데이트
       setNotifications((prev) =>
         prev.map((notification) => ({ ...notification, isRead: true }))
       );
+      setUnreadCount(0);
 
-      // WebSocket을 통해 읽지 않은 개수가 0으로 업데이트됨
+      console.log('모든 알림 읽음 처리 완료');
     } catch (err) {
       console.error('모든 알림 읽음 처리 실패:', err);
+      // 에러 발생 시 원래 상태로 복원
+      fetchNotifications();
+      fetchUnreadCount();
     }
   };
 
@@ -83,9 +93,11 @@ export const useNotifications = () => {
     try {
       await notificationService.deleteAllNotifications();
 
-      // 로컬 상태 업데이트
+      // 즉시 로컬 상태 업데이트
       setNotifications([]);
       setUnreadCount(0);
+
+      console.log('모든 알림 삭제 완료');
     } catch (err) {
       console.error('모든 알림 삭제 실패:', err);
       throw err; // 컴포넌트에서 에러 처리할 수 있도록
@@ -97,10 +109,16 @@ export const useNotifications = () => {
     try {
       await notificationService.deleteReadNotifications();
 
-      // 로컬 상태 업데이트 - 읽지 않은 알림만 남김
-      setNotifications((prev) =>
-        prev.filter((notification) => !notification.isRead)
-      );
+      // 즉시 로컬 상태 업데이트 - 읽지 않은 알림만 남김
+      setNotifications((prev) => {
+        const unreadNotifications = prev.filter(
+          (notification) => !notification.isRead
+        );
+        // unreadCount는 변경되지 않음 (읽지 않은 알림만 남기므로)
+        return unreadNotifications;
+      });
+
+      console.log('읽은 알림 삭제 완료');
     } catch (err) {
       console.error('읽은 알림 삭제 실패:', err);
       throw err;
@@ -110,20 +128,25 @@ export const useNotifications = () => {
   // 특정 알림 삭제
   const deleteNotification = async (notificationId) => {
     try {
+      // 삭제할 알림의 읽음 상태 확인
+      const targetNotification = notifications.find(
+        (n) => n.id === notificationId
+      );
+      const wasUnread = targetNotification && !targetNotification.isRead;
+
       await notificationService.deleteNotification(notificationId);
 
-      // 로컬 상태 업데이트
+      // 즉시 로컬 상태 업데이트
       setNotifications((prev) =>
         prev.filter((notification) => notification.id !== notificationId)
       );
 
-      // 삭제된 알림이 읽지 않은 상태였다면 읽지 않은 개수도 업데이트
-      const deletedNotification = notifications.find(
-        (n) => n.id === notificationId
-      );
-      if (deletedNotification && !deletedNotification.isRead) {
+      // 읽지 않은 알림이었다면 unreadCount도 감소
+      if (wasUnread) {
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
+
+      console.log('알림 삭제 완료:', notificationId);
     } catch (err) {
       console.error('알림 삭제 실패:', err);
       throw err;
@@ -135,12 +158,18 @@ export const useNotifications = () => {
     if (user) {
       fetchNotifications();
       fetchUnreadCount();
+    } else {
+      // 로그아웃 시 상태 초기화
+      setNotifications([]);
+      setUnreadCount(0);
     }
   }, [user, fetchNotifications, fetchUnreadCount]);
 
   // WebSocket 이벤트 구독
   useEffect(() => {
     if (!user) return;
+
+    console.log('WebSocket 이벤트 구독 시작');
 
     // 새로운 알림 수신
     const unsubscribeNotification = subscribe(
@@ -156,6 +185,9 @@ export const useNotifications = () => {
           return [newNotification, ...prev];
         });
 
+        // 새 알림이므로 unreadCount 증가
+        setUnreadCount((prev) => prev + 1);
+
         // 브라우저 알림 표시 (권한이 있는 경우)
         if (Notification.permission === 'granted') {
           new Notification('새 알림', {
@@ -167,9 +199,9 @@ export const useNotifications = () => {
       }
     );
 
-    // 읽지 않은 개수 업데이트
+    // 읽지 않은 개수 업데이트 (백엔드에서 전송)
     const unsubscribeUnreadCount = subscribe('unreadCount', (count) => {
-      console.log('읽지 않은 알림 개수 업데이트:', count);
+      console.log('WebSocket으로부터 읽지 않은 알림 개수 업데이트:', count);
       setUnreadCount(count);
     });
 
@@ -185,6 +217,7 @@ export const useNotifications = () => {
     });
 
     return () => {
+      console.log('WebSocket 이벤트 구독 해제');
       unsubscribeNotification();
       unsubscribeUnreadCount();
       unsubscribeConnection();
@@ -204,12 +237,14 @@ export const useNotifications = () => {
   useEffect(() => {
     const handleFocus = () => {
       if (user) {
+        console.log('페이지 포커스, 알림 상태 동기화');
         fetchUnreadCount();
       }
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && user) {
+        console.log('페이지 가시성 변경, 알림 상태 동기화');
         fetchUnreadCount();
       }
     };
@@ -222,6 +257,46 @@ export const useNotifications = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [user, fetchUnreadCount]);
+
+  // 🔥 예약 완료 시 알림 새로고침 이벤트 리스너
+  useEffect(() => {
+    if (!user) return;
+
+    const handleReservationCreated = (event) => {
+      console.log('🎉 예약 생성 완료 감지:', event.detail);
+
+      // 2초 후 알림 새로고침 (백엔드에서 알림 생성 완료 대기)
+      setTimeout(() => {
+        console.log('🔄 예약 완료로 인한 알림 새로고침');
+        fetchNotifications();
+        fetchUnreadCount();
+      }, 2000);
+    };
+
+    const handleRefreshNotifications = (event) => {
+      console.log('🔄 알림 새로고침 이벤트 수신:', event.detail);
+
+      // 즉시 새로고침
+      fetchNotifications();
+      fetchUnreadCount();
+    };
+
+    // 이벤트 리스너 등록
+    window.addEventListener('reservationCreated', handleReservationCreated);
+    window.addEventListener('refreshNotifications', handleRefreshNotifications);
+
+    // 정리
+    return () => {
+      window.removeEventListener(
+        'reservationCreated',
+        handleReservationCreated
+      );
+      window.removeEventListener(
+        'refreshNotifications',
+        handleRefreshNotifications
+      );
+    };
+  }, [user, fetchNotifications, fetchUnreadCount]);
 
   return {
     notifications,

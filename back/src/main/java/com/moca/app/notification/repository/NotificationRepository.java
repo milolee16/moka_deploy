@@ -1,3 +1,4 @@
+// back/src/main/java/com/moca/app/notification/repository/NotificationRepository.java (수정된 버전)
 package com.moca.app.notification.repository;
 
 import com.moca.app.notification.Notification;
@@ -39,6 +40,13 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByReservationId(Long reservationId);
 
     /**
+     * 특정 알림을 읽음 처리 (개별 알림용) - 새로 추가
+     */
+    @Modifying
+    @Query("UPDATE Notification n SET n.isRead = true WHERE n.id = :notificationId AND n.userId = :userId AND n.isRead = false")
+    int markAsReadByIdAndUserId(@Param("notificationId") Long notificationId, @Param("userId") String userId);
+
+    /**
      * 사용자의 모든 알림을 읽음 처리
      */
     @Modifying
@@ -56,7 +64,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      */
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.userId = :userId")
-    void deleteAllByUserId(@Param("userId") String userId);
+    void deleteByUserId(@Param("userId") String userId);
 
     /**
      * 사용자의 읽은 알림만 삭제

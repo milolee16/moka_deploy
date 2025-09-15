@@ -1,5 +1,5 @@
-// src/components/notification/NotificationList.jsx (업데이트된 버전)
-import React, { useState, useEffect } from 'react';
+// front/src/components/notification/NotificationList.jsx (props로 받는 버전)
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { notificationService } from '../../services/notificationService';
 import {
@@ -8,62 +8,44 @@ import {
   HiOutlineCheck,
 } from 'react-icons/hi';
 
-const NotificationList = ({ onClose }) => {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const NotificationList = ({ onClose, notificationsData }) => {
+  const {
+    notifications,
+    loading,
+    error,
+    markAsRead,
+    markAllAsRead,
+    deleteAllNotifications,
+    deleteReadNotifications,
+    deleteNotification,
+  } = notificationsData; // props로 받은 데이터 사용
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
-  useEffect(() => {
-    loadNotifications();
-  }, []);
-
-  const loadNotifications = async () => {
-    try {
-      setLoading(true);
-      const data = await notificationService.getNotifications();
-      setNotifications(data);
-    } catch (err) {
-      setError(err.message);
-      console.error('알림 로드 실패:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 개별 알림 읽음 처리
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await notificationService.markAsRead(notificationId);
-      setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.id === notificationId
-            ? { ...notification, isRead: true }
-            : notification
-        )
-      );
+      await markAsRead(notificationId);
     } catch (err) {
       console.error('알림 읽음 처리 실패:', err);
+      alert('알림 읽음 처리 중 오류가 발생했습니다.');
     }
   };
 
+  // 모든 알림 읽음 처리
   const handleMarkAllAsRead = async () => {
     try {
-      await notificationService.markAllAsRead();
-      setNotifications((prev) =>
-        prev.map((notification) => ({ ...notification, isRead: true }))
-      );
+      await markAllAsRead();
     } catch (err) {
       console.error('모든 알림 읽음 처리 실패:', err);
+      alert('모든 알림 읽음 처리 중 오류가 발생했습니다.');
     }
   };
 
   // 개별 알림 삭제
   const handleDeleteNotification = async (notificationId) => {
     try {
-      await notificationService.deleteNotification(notificationId);
-      setNotifications((prev) =>
-        prev.filter((notification) => notification.id !== notificationId)
-      );
+      await deleteNotification(notificationId);
       setShowDeleteConfirm(null);
     } catch (err) {
       console.error('알림 삭제 실패:', err);
@@ -78,8 +60,7 @@ const NotificationList = ({ onClose }) => {
     }
 
     try {
-      await notificationService.deleteAllNotifications();
-      setNotifications([]);
+      await deleteAllNotifications();
       alert('모든 알림이 삭제되었습니다.');
     } catch (err) {
       console.error('모든 알림 삭제 실패:', err);
@@ -94,10 +75,7 @@ const NotificationList = ({ onClose }) => {
     }
 
     try {
-      await notificationService.deleteReadNotifications();
-      setNotifications((prev) =>
-        prev.filter((notification) => !notification.isRead)
-      );
+      await deleteReadNotifications();
       alert('읽은 알림이 삭제되었습니다.');
     } catch (err) {
       console.error('읽은 알림 삭제 실패:', err);
@@ -124,7 +102,9 @@ const NotificationList = ({ onClose }) => {
           <Title>알림</Title>
           <CloseButton onClick={onClose}>×</CloseButton>
         </Header>
-        <ErrorText>{error}</ErrorText>
+        <ErrorText>
+          {error.message || '알림을 불러오는데 실패했습니다.'}
+        </ErrorText>
       </Container>
     );
   }
@@ -140,7 +120,8 @@ const NotificationList = ({ onClose }) => {
           {unreadNotifications.length > 0 && (
             <ActionButton onClick={handleMarkAllAsRead}>
               <HiOutlineCheck size={16} />
-              모두 읽음
+              <span>모두 읽음</span>{' '}
+              {/* span으로 감싸서 모바일에서 숨길 수 있도록 */}
             </ActionButton>
           )}
           <CloseButton onClick={onClose}>×</CloseButton>
@@ -233,19 +214,39 @@ const NotificationList = ({ onClose }) => {
   );
 };
 
-// 기존 스타일 컴포넌트들은 유지하고 새로운 스타일 추가
+// 스타일 컴포넌트들 (기존과 동일)
 const Container = styled.div`
   position: fixed;
-  top: 70px;
-  right: 20px;
-  width: 400px;
-  max-height: 500px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
   z-index: 1000;
   overflow: hidden;
+
+  /* 데스크탑 */
+  @media (min-width: 769px) {
+    top: 70px;
+    right: 20px;
+    width: 400px;
+    max-height: 500px;
+  }
+
+  /* 모바일 */
+  @media (max-width: 768px) {
+    top: 70px;
+    right: 15px;
+    width: 350px;
+    max-width: calc(100vw - 30px);
+    max-height: calc(100vh - 100px);
+  }
+
+  /* 작은 모바일 */
+  @media (max-width: 480px) {
+    right: 10px;
+    width: 320px;
+    max-width: calc(100vw - 20px);
+  }
 `;
 
 const Header = styled.div`
@@ -255,8 +256,12 @@ const Header = styled.div`
   padding: 16px 20px;
   border-bottom: 1px solid #e5e7eb;
   background: #f9fafb;
-`;
 
+  /* 모바일에서 패딩 줄이기 */
+  @media (max-width: 768px) {
+    padding: 12px 16px;
+  }
+`;
 const Title = styled.h3`
   margin: 0;
   font-size: 18px;
@@ -268,6 +273,11 @@ const HeaderActions = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+
+  /* 모바일에서 간격 줄이기 */
+  @media (max-width: 768px) {
+    gap: 8px;
+  }
 `;
 
 const ActionButton = styled.button`
@@ -284,6 +294,14 @@ const ActionButton = styled.button`
 
   &:hover {
     background: #eff6ff;
+  }
+
+  /* 모바일에서 텍스트 숨기고 아이콘만 표시 */
+  @media (max-width: 480px) {
+    padding: 6px;
+    span {
+      display: none;
+    }
   }
 `;
 
@@ -305,18 +323,25 @@ const CloseButton = styled.button`
   }
 `;
 
-// 새로 추가된 삭제 관련 스타일들
 const DeleteActions = styled.div`
   display: flex;
   gap: 8px;
   padding: 12px 20px;
   border-bottom: 1px solid #f3f4f6;
   background: #fafafa;
+
+  /* 모바일에서 세로 배치 */
+  @media (max-width: 480px) {
+    flex-direction: column;
+    padding: 8px 16px;
+    gap: 6px;
+  }
 `;
 
 const DeleteButton = styled.button`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   padding: 6px 12px;
   border: none;
@@ -324,6 +349,13 @@ const DeleteButton = styled.button`
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+
+  /* 모바일에서 전체 너비 */
+  @media (max-width: 480px) {
+    width: 100%;
+    padding: 8px 12px;
+  }
 
   ${(props) => {
     switch (props.variant) {
@@ -394,6 +426,11 @@ const NotificationContent = styled.div`
   padding: 16px 20px;
   flex: 1;
   cursor: ${(props) => (props.isRead ? 'default' : 'pointer')};
+
+  /* 모바일에서 패딩 줄이기 */
+  @media (max-width: 768px) {
+    padding: 12px 16px;
+  }
 `;
 
 const ContentWrapper = styled.div`
@@ -409,20 +446,20 @@ const NotificationIcon = styled.div`
 const NotificationTitle = styled.div`
   font-weight: ${(props) => (props.isRead ? '500' : '600')};
   color: ${(props) => (props.isRead ? '#6b7280' : '#111827')};
+  font-size: 14px;
   margin-bottom: 4px;
-  line-height: 1.4;
 `;
 
 const NotificationMessage = styled.div`
-  font-size: 14px;
   color: #6b7280;
+  font-size: 13px;
   line-height: 1.4;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 `;
 
 const NotificationTime = styled.div`
-  font-size: 12px;
   color: #9ca3af;
+  font-size: 11px;
 `;
 
 const UnreadDot = styled.div`
@@ -430,25 +467,28 @@ const UnreadDot = styled.div`
   height: 8px;
   background: #3b82f6;
   border-radius: 50%;
-  margin-top: 6px;
-  margin-left: 8px;
+  position: absolute;
+  top: 16px;
+  right: 60px;
 `;
 
 const NotificationActions = styled.div`
   position: relative;
-  padding: 16px 8px;
+  padding: 16px 20px 16px 0;
+
+  /* 모바일에서 패딩 줄이기 */
+  @media (max-width: 768px) {
+    padding: 12px 16px 12px 0;
+  }
 `;
 
 const ActionIcon = styled.button`
   background: none;
   border: none;
-  color: #9ca3af;
   cursor: pointer;
+  color: #9ca3af;
   padding: 4px;
   border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
   &:hover {
     background: #f3f4f6;
@@ -458,39 +498,41 @@ const ActionIcon = styled.button`
 
 const ActionMenu = styled.div`
   position: absolute;
-  top: 100%;
-  right: 0;
+  top: 40px;
+  right: 20px;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 10;
-  min-width: 80px;
+
+  /* 모바일에서 화면 끝에 맞춰 조정 */
+  @media (max-width: 768px) {
+    right: 16px;
+  }
+
+  @media (max-width: 480px) {
+    right: 8px;
+    left: auto;
+    transform: translateX(0);
+  }
 `;
 
 const ActionMenuItem = styled.button`
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
   padding: 8px 12px;
-  background: none;
   border: none;
-  color: #ef4444;
-  font-size: 13px;
+  background: none;
+  font-size: 12px;
+  color: #6b7280;
   cursor: pointer;
-  text-align: left;
 
   &:hover {
-    background: #fef2f2;
-  }
-
-  &:first-child {
-    border-radius: 6px 6px 0 0;
-  }
-
-  &:last-child {
-    border-radius: 0 0 6px 6px;
+    background: #f9fafb;
+    color: #ef4444;
   }
 `;
 
