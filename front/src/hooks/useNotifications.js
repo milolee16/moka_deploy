@@ -1,4 +1,4 @@
-// front/src/hooks/useNotifications.js (개선된 실시간 업데이트 버전)
+// front/src/hooks/useNotifications.js (완전 수정된 버전 - 예약 완료 이벤트 리스너 포함)
 import { useState, useEffect, useCallback } from 'react';
 import { notificationService } from '../services/notificationService';
 import { useAuth } from '../contexts/AuthContext';
@@ -257,6 +257,46 @@ export const useNotifications = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [user, fetchUnreadCount]);
+
+  // 🔥 예약 완료 시 알림 새로고침 이벤트 리스너
+  useEffect(() => {
+    if (!user) return;
+
+    const handleReservationCreated = (event) => {
+      console.log('🎉 예약 생성 완료 감지:', event.detail);
+
+      // 2초 후 알림 새로고침 (백엔드에서 알림 생성 완료 대기)
+      setTimeout(() => {
+        console.log('🔄 예약 완료로 인한 알림 새로고침');
+        fetchNotifications();
+        fetchUnreadCount();
+      }, 2000);
+    };
+
+    const handleRefreshNotifications = (event) => {
+      console.log('🔄 알림 새로고침 이벤트 수신:', event.detail);
+
+      // 즉시 새로고침
+      fetchNotifications();
+      fetchUnreadCount();
+    };
+
+    // 이벤트 리스너 등록
+    window.addEventListener('reservationCreated', handleReservationCreated);
+    window.addEventListener('refreshNotifications', handleRefreshNotifications);
+
+    // 정리
+    return () => {
+      window.removeEventListener(
+        'reservationCreated',
+        handleReservationCreated
+      );
+      window.removeEventListener(
+        'refreshNotifications',
+        handleRefreshNotifications
+      );
+    };
+  }, [user, fetchNotifications, fetchUnreadCount]);
 
   return {
     notifications,
