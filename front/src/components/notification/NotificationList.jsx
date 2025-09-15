@@ -1,5 +1,5 @@
-// src/components/notification/NotificationList.jsx (업데이트된 버전)
-import React, { useState, useEffect } from 'react';
+// front/src/components/notification/NotificationList.jsx (props로 받는 버전)
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { notificationService } from '../../services/notificationService';
 import {
@@ -8,62 +8,44 @@ import {
   HiOutlineCheck,
 } from 'react-icons/hi';
 
-const NotificationList = ({ onClose }) => {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const NotificationList = ({ onClose, notificationsData }) => {
+  const {
+    notifications,
+    loading,
+    error,
+    markAsRead,
+    markAllAsRead,
+    deleteAllNotifications,
+    deleteReadNotifications,
+    deleteNotification,
+  } = notificationsData; // props로 받은 데이터 사용
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
-  useEffect(() => {
-    loadNotifications();
-  }, []);
-
-  const loadNotifications = async () => {
-    try {
-      setLoading(true);
-      const data = await notificationService.getNotifications();
-      setNotifications(data);
-    } catch (err) {
-      setError(err.message);
-      console.error('알림 로드 실패:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 개별 알림 읽음 처리
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await notificationService.markAsRead(notificationId);
-      setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.id === notificationId
-            ? { ...notification, isRead: true }
-            : notification
-        )
-      );
+      await markAsRead(notificationId);
     } catch (err) {
       console.error('알림 읽음 처리 실패:', err);
+      alert('알림 읽음 처리 중 오류가 발생했습니다.');
     }
   };
 
+  // 모든 알림 읽음 처리
   const handleMarkAllAsRead = async () => {
     try {
-      await notificationService.markAllAsRead();
-      setNotifications((prev) =>
-        prev.map((notification) => ({ ...notification, isRead: true }))
-      );
+      await markAllAsRead();
     } catch (err) {
       console.error('모든 알림 읽음 처리 실패:', err);
+      alert('모든 알림 읽음 처리 중 오류가 발생했습니다.');
     }
   };
 
   // 개별 알림 삭제
   const handleDeleteNotification = async (notificationId) => {
     try {
-      await notificationService.deleteNotification(notificationId);
-      setNotifications((prev) =>
-        prev.filter((notification) => notification.id !== notificationId)
-      );
+      await deleteNotification(notificationId);
       setShowDeleteConfirm(null);
     } catch (err) {
       console.error('알림 삭제 실패:', err);
@@ -78,8 +60,7 @@ const NotificationList = ({ onClose }) => {
     }
 
     try {
-      await notificationService.deleteAllNotifications();
-      setNotifications([]);
+      await deleteAllNotifications();
       alert('모든 알림이 삭제되었습니다.');
     } catch (err) {
       console.error('모든 알림 삭제 실패:', err);
@@ -94,10 +75,7 @@ const NotificationList = ({ onClose }) => {
     }
 
     try {
-      await notificationService.deleteReadNotifications();
-      setNotifications((prev) =>
-        prev.filter((notification) => !notification.isRead)
-      );
+      await deleteReadNotifications();
       alert('읽은 알림이 삭제되었습니다.');
     } catch (err) {
       console.error('읽은 알림 삭제 실패:', err);
@@ -124,7 +102,9 @@ const NotificationList = ({ onClose }) => {
           <Title>알림</Title>
           <CloseButton onClick={onClose}>×</CloseButton>
         </Header>
-        <ErrorText>{error}</ErrorText>
+        <ErrorText>
+          {error.message || '알림을 불러오는데 실패했습니다.'}
+        </ErrorText>
       </Container>
     );
   }
@@ -233,7 +213,7 @@ const NotificationList = ({ onClose }) => {
   );
 };
 
-// 기존 스타일 컴포넌트들은 유지하고 새로운 스타일 추가
+// 스타일 컴포넌트들 (기존과 동일)
 const Container = styled.div`
   position: fixed;
   top: 70px;
@@ -305,7 +285,6 @@ const CloseButton = styled.button`
   }
 `;
 
-// 새로 추가된 삭제 관련 스타일들
 const DeleteActions = styled.div`
   display: flex;
   gap: 8px;
@@ -409,20 +388,20 @@ const NotificationIcon = styled.div`
 const NotificationTitle = styled.div`
   font-weight: ${(props) => (props.isRead ? '500' : '600')};
   color: ${(props) => (props.isRead ? '#6b7280' : '#111827')};
+  font-size: 14px;
   margin-bottom: 4px;
-  line-height: 1.4;
 `;
 
 const NotificationMessage = styled.div`
-  font-size: 14px;
   color: #6b7280;
+  font-size: 13px;
   line-height: 1.4;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 `;
 
 const NotificationTime = styled.div`
-  font-size: 12px;
   color: #9ca3af;
+  font-size: 11px;
 `;
 
 const UnreadDot = styled.div`
@@ -430,25 +409,23 @@ const UnreadDot = styled.div`
   height: 8px;
   background: #3b82f6;
   border-radius: 50%;
-  margin-top: 6px;
-  margin-left: 8px;
+  position: absolute;
+  top: 16px;
+  right: 60px;
 `;
 
 const NotificationActions = styled.div`
   position: relative;
-  padding: 16px 8px;
+  padding: 16px 20px 16px 0;
 `;
 
 const ActionIcon = styled.button`
   background: none;
   border: none;
-  color: #9ca3af;
   cursor: pointer;
+  color: #9ca3af;
   padding: 4px;
   border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
   &:hover {
     background: #f3f4f6;
@@ -458,39 +435,30 @@ const ActionIcon = styled.button`
 
 const ActionMenu = styled.div`
   position: absolute;
-  top: 100%;
-  right: 0;
+  top: 40px;
+  right: 20px;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 10;
-  min-width: 80px;
 `;
 
 const ActionMenuItem = styled.button`
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
   padding: 8px 12px;
-  background: none;
   border: none;
-  color: #ef4444;
-  font-size: 13px;
+  background: none;
+  font-size: 12px;
+  color: #6b7280;
   cursor: pointer;
-  text-align: left;
 
   &:hover {
-    background: #fef2f2;
-  }
-
-  &:first-child {
-    border-radius: 6px 6px 0 0;
-  }
-
-  &:last-child {
-    border-radius: 0 0 6px 6px;
+    background: #f9fafb;
+    color: #ef4444;
   }
 `;
 

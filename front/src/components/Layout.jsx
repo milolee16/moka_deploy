@@ -1,3 +1,4 @@
+// front/src/components/Layout.jsx (수정된 버전)
 import { useState, useRef, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
@@ -6,14 +7,17 @@ import SideMenu from './common/SideMenu';
 import logoSrc from '../assets/MocaLogo.png';
 import NotificationModal from './common/NotificationModal';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../hooks/useNotifications'; // 추가
+import { useNotifications } from '../hooks/useNotifications'; // 여기서 한 번만 사용
 import NotificationBell from './notification/NotificationBell';
 
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { unreadCount } = useNotifications(); // 추가
+
+  // Layout에서 useNotifications 훅 사용
+  const notificationsData = useNotifications();
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const notificationRef = useRef(null);
@@ -38,8 +42,7 @@ const Layout = () => {
     };
   }, [isNotificationOpen]);
 
-  const hasNewNotifications = unreadCount > 0; // 실제 데이터로 변경
-    const noPadding =
+  const noPadding =
     location.pathname === '/notices' ||
     location.pathname === '/mypage' ||
     location.pathname === '/faq' ||
@@ -56,21 +59,9 @@ const Layout = () => {
         <HeaderActions>
           {/* 로그인된 사용자만 알림 아이콘 표시 */}
           {user && (
-            // <NotificationWrapper ref={notificationRef}>
-            //     <IconButton
-            //         onClick={() => setIsNotificationOpen((prev) => !prev)}
-            //         aria-label="알림"
-            //     >
-            //         <HiOutlineBell size={22}/>
-            //         {hasNewNotifications && (
-            //             <NotificationBadge>
-            //                 {unreadCount > 99 ? '99+' : unreadCount}
-            //             </NotificationBadge>
-            //         )}
-            //     </IconButton>
-            //     <NotificationModal show={isNotificationOpen}/>
-            // </NotificationWrapper>
-            <NotificationBell />
+            <NotificationBell
+              notificationsData={notificationsData} // props로 전달
+            />
           )}
           {/* 햄버거 메뉴는 항상 표시 */}
           <IconButton onClick={() => setIsMenuOpen(true)} aria-label="메뉴">
@@ -87,6 +78,7 @@ const Layout = () => {
     </>
   );
 };
+
 export default Layout;
 
 /* ============ styles ============ */
@@ -126,35 +118,6 @@ const IconButton = styled.button`
   border: none;
   background: transparent;
   color: #5d4037; /* Moca: Dark Brown */
-`;
-
-const NotificationWrapper = styled.div`
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-// NotificationBadge 스타일 수정 (숫자 표시 지원)
-const NotificationBadge = styled.span`
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  background-color: #e74c3c;
-  color: white;
-  border-radius: 10px;
-  width: ${(props) =>
-    props.children && props.children.toString().length > 1 ? '20px' : '8px'};
-  height: ${(props) =>
-    props.children && props.children.toString().length > 1 ? '16px' : '8px'};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: bold;
-  min-width: 16px;
-  padding: ${(props) =>
-    props.children && props.children.toString().length > 1 ? '0 2px' : '0'};
 `;
 
 const Main = styled.main`

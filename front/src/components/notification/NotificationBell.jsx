@@ -1,14 +1,12 @@
-// front/src/components/notification/NotificationBell.jsx (WebSocket 연동 버전)
+// front/src/components/notification/NotificationBell.jsx (props로 받는 버전)
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { HiOutlineBell } from 'react-icons/hi';
-import { useNotifications } from '../../hooks/useNotifications';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import NotificationList from './NotificationList';
 
-const NotificationBell = () => {
+const NotificationBell = ({ notificationsData }) => {
   const [showNotifications, setShowNotifications] = useState(false);
-  const { unreadCount } = useNotifications();
   const { getConnectionStatus } = useWebSocket();
 
   const handleBellClick = () => {
@@ -26,16 +24,16 @@ const NotificationBell = () => {
       <BellContainer onClick={handleBellClick}>
         <BellWrapper>
           <HiOutlineBell size={22} />
-          {unreadCount > 0 && (
-            <Badge>{unreadCount > 99 ? '99+' : unreadCount}</Badge>
-          )}
-          {/* 연결 상태 표시 (선택사항) */}
-          <ConnectionIndicator connected={connectionStatus.isConnected} />
+          {/* props로 받은 unreadCount 사용 */}
+          {notificationsData.unreadCount > 0 && <RedDot />}
         </BellWrapper>
       </BellContainer>
 
       {showNotifications && (
-        <NotificationList onClose={handleCloseNotifications} />
+        <NotificationList
+          onClose={handleCloseNotifications}
+          notificationsData={notificationsData} // props로 전달
+        />
       )}
     </>
   );
@@ -60,34 +58,16 @@ const BellWrapper = styled.div`
   justify-content: center;
 `;
 
-const Badge = styled.div`
+/* 기존 배지 스타일을 간단한 빨간 점으로 변경 */
+const RedDot = styled.div`
   position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #ef4444;
-  color: white;
-  border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 11px;
-  font-weight: 600;
-  min-width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid white;
-`;
-
-const ConnectionIndicator = styled.div`
-  position: absolute;
-  bottom: -2px;
+  top: -2px;
   right: -2px;
   width: 8px;
   height: 8px;
+  background: #ef4444;
   border-radius: 50%;
-  background-color: ${(props) => (props.connected ? '#10b981' : '#ef4444')};
-  border: 1px solid white;
-  opacity: 0.8;
+  border: 2px solid white;
 `;
 
 export default NotificationBell;
