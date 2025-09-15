@@ -180,7 +180,7 @@ const BackButton = styled.button`
     font-weight: bold;
     color: #5d4037;
     cursor: pointer;
-    padding-right: 16px;
+    padding: 0 16px 0 0;
     line-height: 1;
 `;
 
